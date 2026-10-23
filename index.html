@@ -1837,12 +1837,13 @@ window.MBEnvironment={
       });
 
       // Движение атмосферного тумана и пылинок
+      const mistTime = t * .5;
       smokeLayers.forEach((s) => {
-        s.mesh.position.x = s.baseX + Math.sin(t * s.speed + s.phase) * 4.8 * s.direction;
-        s.mesh.position.y = s.baseY + Math.sin(t * .20 + s.phase) * .24;
-        s.mesh.scale.set(1 + Math.sin(t * .18 + s.phase) * .10,
-          1.4 + Math.sin(t * .24 + s.phase) * .20, 1);
-        s.mesh.material.opacity = lightReveal * (.84 + Math.sin(t * .28 + s.phase) * .14);
+        s.mesh.position.x = s.baseX + Math.sin(mistTime * s.speed + s.phase) * 4.8 * s.direction;
+        s.mesh.position.y = s.baseY + Math.sin(mistTime * .20 + s.phase) * .24;
+        s.mesh.scale.set(1 + Math.sin(mistTime * .18 + s.phase) * .10,
+          1.4 + Math.sin(mistTime * .24 + s.phase) * .20, 1);
+        s.mesh.material.opacity = lightReveal * (.84 + Math.sin(mistTime * .28 + s.phase) * .14);
       });
       dustParticles.rotation.y = t * 0.025;
       dustParticles.position.y = Math.sin(t * 0.4) * 0.08;
