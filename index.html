@@ -1847,7 +1847,7 @@ window.MBEnvironment={
 
       // Мягкий расфокус переднего камня нарастает только при входе и сохраняется.
       foregroundRockBottomLeft.material.userData.defocus.amount.value=studioEntered
-        ? 9.0*THREE.MathUtils.smoothstep(entryElapsed/ENTRY_DURATION,0.12,1.0):0;
+        ? 7.0*THREE.MathUtils.smoothstep(entryElapsed/ENTRY_DURATION,0.12,1.0):0;
       // Параллакс камней
       foregroundRockBottomLeft.position.x = -4.3 - mouseX * 0.24;
       foregroundRockBottomLeft.position.z = 4.85 + mouseY * 0.12;
