@@ -846,12 +846,39 @@ window.MBEnvironment={
         ramp(masterGain.gain,isMuted||document.hidden?0:.65,1.4);return audioCtx.state==='running';
       }catch(e){return false}
     }
-    function playWhooshSound(){
-      if(!audioCtx||isMuted||audioCtx.state!=='running')return;
-      const osc=audioCtx.createOscillator(),gain=audioCtx.createGain(),now=audioCtx.currentTime;
-      osc.frequency.setValueAtTime(125,now);osc.frequency.exponentialRampToValueAtTime(48,now+.42);
-      gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(.045,now+.035);gain.gain.exponentialRampToValueAtTime(.0001,now+.4);gain.gain.linearRampToValueAtTime(0,now+.45);
-      osc.connect(gain);gain.connect(masterGain);osc.start(now);osc.stop(now+.47);osc.onended=()=>{osc.disconnect();gain.disconnect()};
+    let windBuffer=null,windVoice=null;
+    function stopWhooshSound(){
+      if(!windVoice)return;
+      const voice=windVoice;windVoice=null;
+      ramp(voice.gain.gain,0,.06);
+      try{voice.source.stop(audioCtx.currentTime+.07)}catch(e){}
+    }
+    function playWhooshSound(duration=.8,kind='forward'){
+      stopWhooshSound();
+      if(!audioCtx||isMuted||document.hidden||audioCtx.state!=='running')return;
+      if(!windBuffer){
+        windBuffer=audioCtx.createBuffer(2,audioCtx.sampleRate*2,audioCtx.sampleRate);
+        for(let channel=0;channel<2;channel++){
+          const data=windBuffer.getChannelData(channel);
+          for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;
+        }
+      }
+      const source=audioCtx.createBufferSource(),low=audioCtx.createBiquadFilter();
+      const high=audioCtx.createBiquadFilter(),gain=audioCtx.createGain();
+      const now=audioCtx.currentTime,d=Math.max(.16,duration),reverse=kind==='return';
+      source.buffer=windBuffer;source.loop=true;
+      high.type='highpass';high.frequency.value=240;high.Q.value=.5;
+      low.type='lowpass';low.Q.value=.45;
+      low.frequency.setValueAtTime(reverse?1800:550,now);
+      low.frequency.exponentialRampToValueAtTime(reverse?650:2200,now+d*.55);
+      low.frequency.exponentialRampToValueAtTime(450,now+d);
+      const envelope=new Float32Array(64),level=kind==='entry'?.16:reverse?.09:.13;
+      for(let i=0;i<envelope.length;i++)envelope[i]=level*Math.pow(Math.sin(Math.PI*i/(envelope.length-1)),2);
+      gain.gain.setValueCurveAtTime(envelope,now,d);
+      source.connect(high);high.connect(low);low.connect(gain);gain.connect(masterGain);
+      const voice={source,gain};windVoice=voice;
+      source.onended=()=>{source.disconnect();high.disconnect();low.disconnect();gain.disconnect();if(windVoice===voice)windVoice=null};
+      source.start(now);source.stop(now+d+.02);
     }
     function stopGlitchSound(){if(!glitchVoice)return;const v=glitchVoice;glitchVoice=null;ramp(v.bus.gain,0,.055);v.sources.forEach(s=>{try{s.stop(audioCtx.currentTime+.07)}catch(e){}})}
     function playGlitchSound(duration){
@@ -898,9 +925,9 @@ window.MBEnvironment={
       }
       soundWave.setAttribute('d',d);
     }
-    soundButton.addEventListener('click',async()=>{isMuted=!isMuted;try{localStorage.setItem('mb-muted',isMuted?'1':'0')}catch(e){}updateSoundLabel();await initAudio();if(masterGain)ramp(masterGain.gain,isMuted?0:.65,isMuted ? .35 : 1.4);updateSoundLabel()});
+    soundButton.addEventListener('click',async()=>{isMuted=!isMuted;if(isMuted)stopWhooshSound();try{localStorage.setItem('mb-muted',isMuted?'1':'0')}catch(e){}updateSoundLabel();await initAudio();if(masterGain)ramp(masterGain.gain,isMuted?0:.65,isMuted ? .35 : 1.4);updateSoundLabel()});
     let audioSuspendTimer;
-    document.addEventListener('visibilitychange',()=>{clearTimeout(audioSuspendTimer);if(document.hidden){backgroundMusic.pause();finishGlitch();if(audioCtx){ramp(masterGain.gain,0,.15);audioSuspendTimer=setTimeout(()=>{if(document.hidden)audioCtx.suspend()},180)}}else if(studioEntered&&!isMuted)initAudio()});
+    document.addEventListener('visibilitychange',()=>{clearTimeout(audioSuspendTimer);if(document.hidden){stopWhooshSound();backgroundMusic.pause();finishGlitch();if(audioCtx){ramp(masterGain.gain,0,.15);audioSuspendTimer=setTimeout(()=>{if(document.hidden)audioCtx.suspend()},180)}}else if(studioEntered&&!isMuted)initAudio()});
 
     /* =========================================================
        2. ПРЕЛОАДЕР И ПЛАВНЫЙ ЗАПУСК СВЕТА В СТУДИИ
@@ -912,7 +939,7 @@ window.MBEnvironment={
       phase='entering';entryElapsed=0;loaderBtn.disabled=true;
       camera.position.copy(BASE_CAM_POS).add(new THREE.Vector3(0,0,8));camera.lookAt(BASE_LOOK_AT);
       preloader.classList.add('entering');preloader.setAttribute('aria-hidden','true');
-      await initAudio();playWhooshSound();canvas.focus({preventScroll:true});
+      await initAudio();playWhooshSound(Math.max(.16,ENTRY_DURATION-entryElapsed),'entry');canvas.focus({preventScroll:true});
     }
     loaderBtn.addEventListener('click',enterStudio);
 
@@ -1377,7 +1404,7 @@ window.MBEnvironment={
     function fillSection(index){const item=SLATES_DATA[index];document.getElementById('modalTitle').textContent=item.title;document.getElementById('modalDesc').textContent=item.text;document.getElementById('modalGrid').innerHTML=item.cards.map(c=>`<div class="modal-card"><h4>${c.h}</h4><p>${c.p}</p></div>`).join('')}
     function focusTile(index){
       if(!studioEntered||['entering','diving','section','returning'].includes(phase))return;
-      initAudio();playWhooshSound();selectedIndex=index;
+      initAudio();selectedIndex=index;
       targetProgress=currentProgress;velocity=coastVelocity=0;phase='focusing';zoomState=1;pendingDive=false;cursorLabel.textContent='ВОЙТИ';
       const entry=slateObjects[index];
       const initialProgress=currentProgress,finalProgress=index+SLATES_DATA.length*Math.round((currentProgress-index)/SLATES_DATA.length);
@@ -1388,22 +1415,25 @@ window.MBEnvironment={
       const distance=Math.max(size[1]/(2*halfTan),size[0]/(2*halfTan*camera.aspect))*1.12+.3;
       const to=centre.clone().addScaledVector(normal,distance),tmp=camera.clone();tmp.position.copy(to);tmp.lookAt(centre);
       travel={...cameraJourney(to,tmp.quaternion.clone()),centre,normal,initialZoom:zoomFactor,initialProgress,finalProgress};
+      playWhooshSound(travel.duration);
     }
-    function returnToOrbit(){if(['entering','diving','returning','section'].includes(phase))return;phase='orbit';zoomState=0;travel=null;pendingDive=false;coastVelocity=0;cursorLabel.textContent='ОТКРЫТЬ'}
+    function returnToOrbit(){if(['entering','diving','returning','section'].includes(phase))return;if(zoomState)playWhooshSound(.85,'return');phase='orbit';zoomState=0;travel=null;pendingDive=false;coastVelocity=0;cursorLabel.textContent='ОТКРЫТЬ'}
 
     function startDive(){
       if(phase==='focusing'){pendingDive=true;return}if(phase!=='focused')return;
-      phase='diving';pendingDive=false;playWhooshSound();
+      phase='diving';pendingDive=false;
       const obj=slateObjects[selectedIndex].holder;obj.updateWorldMatrix(true,false);
       const centre=obj.getWorldPosition(new THREE.Vector3()),normal=new THREE.Vector3(0,0,1).applyQuaternion(obj.getWorldQuaternion(new THREE.Quaternion()));
       const end=centre.clone().addScaledVector(normal,-.85),aim=centre.clone().addScaledVector(normal,-3);
       const tmp=camera.clone();tmp.position.copy(end);tmp.lookAt(aim);
       travel={...cameraJourney(end,tmp.quaternion.clone()),centre,normal,focusPosition:camera.position.clone(),focusQuaternion:camera.quaternion.clone()};
+      playWhooshSound(travel.duration);
     }
     function openEcosystemModal(){fillSection(selectedIndex);phase='section';ecosystemModal.classList.add('active');ecosystemModal.style.opacity='1';ecosystemModal.inert=false;canvas.inert=true;document.getElementById('modalCloseBtn').focus({preventScroll:true});veil.style.opacity='0'}
     function closeEcosystemModal(){
-      if(phase!=='section')return;playWhooshSound();ecosystemModal.style.opacity='0';ecosystemModal.classList.remove('active');ecosystemModal.inert=true;canvas.inert=false;phase='returning';
+      if(phase!=='section')return;ecosystemModal.style.opacity='0';ecosystemModal.classList.remove('active');ecosystemModal.inert=true;canvas.inert=false;phase='returning';
       travel={...cameraJourney(travel.focusPosition.clone(),travel.focusQuaternion.clone()),centre:travel.centre,normal:travel.normal};
+      playWhooshSound(travel.duration,'return');
     }
     document.getElementById('modalCloseBtn').addEventListener('click',closeEcosystemModal);
     bottomCaption.addEventListener('click',()=>focusTile(activeIndex));
