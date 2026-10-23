@@ -660,7 +660,7 @@ window.MBTileArt={
   const a=1-Math.max(0,Math.min(1,focus)),p=index*2.17;
   const g=inset.group,b=inset.baseRotation;
   g.position.set(Math.sin(time*.63+p)*.020*a,(-Math.sin(time*(.95+index*.13)+index*2.1)*.032+Math.sin(time*.48+p)*.014)*a,0);
-  g.rotation.set(b.x+Math.sin(time*.52+p)*.003*a,b.y+Math.sin(time*.57+p)*.004*a,b.z+(-outerRoll*.65+Math.sin(time*.46+p)*.014)*a);
+  g.rotation.set((b.x+Math.sin(time*.52+p)*.003)*a,(b.y+Math.sin(time*.57+p)*.004)*a,(b.z-outerRoll*.65+Math.sin(time*.46+p)*.014)*a);
  },
  roundedShape(T,w,h,r){const s=new T.Shape(),x=-w/2,y=-h/2;r=Math.min(r,w/2,h/2);s.moveTo(x+r,y);s.lineTo(x+w-r,y);s.quadraticCurveTo(x+w,y,x+w,y+r);s.lineTo(x+w,y+h-r);s.quadraticCurveTo(x+w,y+h,x+w-r,y+h);s.lineTo(x+r,y+h);s.quadraticCurveTo(x,y+h,x,y+h-r);s.lineTo(x,y+r);s.quadraticCurveTo(x,y,x+r,y);return s},
  box(T,w,h,d,r=.10){const b=Math.min(.025,d*.18);const geo=new T.ExtrudeGeometry(this.roundedShape(T,w-2*b,h-2*b,r),{depth:d-2*b,bevelEnabled:true,bevelThickness:b,bevelSize:b,bevelSegments:3,steps:1,curveSegments:8});geo.translate(0,0,-(d-2*b)/2);return geo},
@@ -1776,7 +1776,10 @@ window.MBEnvironment={
 
         const floatY = Math.sin(poseTime*(.95+i*.13)+obj.phase)*.14;
         const floatRoll=Math.cos(poseTime*(.81+i*.04)+obj.phase)*.022;
-        window.MBTileArt.animateInset(obj.inset,poseTime,i,floatRoll,zoomFactor);
+        // Align roll/pitch and inset throughout the existing camera approach.
+        const focusAlign = i!==selectedIndex ? 0 : phase==='focusing'
+          ? easeTravel(Math.min(1,(travel.elapsed+dt)/travel.duration)) : zoomFactor;
+        window.MBTileArt.animateInset(obj.inset,poseTime,i,floatRoll,focusAlign);
         obj.reflectedInset.position.copy(obj.inset.group.position);
         obj.reflectedInset.quaternion.copy(obj.inset.group.quaternion);
         obj.hover=THREE.MathUtils.lerp(obj.hover||0,hoverIndex===i?1:0,1-Math.exp(-8*dt));
@@ -1789,14 +1792,10 @@ window.MBEnvironment={
         const rotZ = floatRoll;
 
         if(phase==='orbit'||phase==='focusing'){
-          const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(rotX,rotY,rotZ));
+          const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(rotX*(1-focusAlign),rotY,rotZ*(1-focusAlign)));
           const frontGate=1-THREE.MathUtils.smoothstep(Math.abs(offset),.02,.12);
-          let align=phase==='orbit'?zoomFactor:0;
-          if(phase==='focusing'){
-            const p=Math.min(1,(travel.elapsed+dt)/travel.duration);
-            align=easeTravel(THREE.MathUtils.clamp((p-.65)/.35,0,1));
-          }
-          if(i===selectedIndex)q.slerp(new THREE.Quaternion(),align*frontGate);
+          // Keep the collision-safe yaw until the card reaches the front.
+          if(i===selectedIndex)q.slerp(new THREE.Quaternion(),focusAlign*frontGate);
           obj.holder.quaternion.copy(q);
         }
 
