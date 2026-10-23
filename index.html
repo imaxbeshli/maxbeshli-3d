@@ -1179,7 +1179,7 @@ window.MBEnvironment={
     // A photographic cutout on a shallow relief mesh: fixed in world space,
     // so camera travel and the existing water reflection use the same geometry.
     function createPedestalRock() {
-      const geo=new THREE.PlaneGeometry(5.7,.86,40,12);
+      const geo=new THREE.PlaneGeometry(5.7,.86,64,12);
       const positions=geo.attributes.position,uv=geo.attributes.uv;
       for(let i=0;i<positions.count;i++){
         const u=uv.getX(i),v=uv.getY(i);
@@ -1190,11 +1190,53 @@ window.MBEnvironment={
       geo.computeVertexNormals();geo.computeBoundingSphere();
       window.MBLoading.island=false;
       const map=new THREE.TextureLoader().load(window.MB_ISLAND_URL,()=>{
+        // Seat the cutout's irregular lower silhouette on the waterline.
+        // Read alpha only; the photographic asset itself remains unchanged.
+        const image=map.image,canvas=document.createElement('canvas');
+        canvas.width=image.width;canvas.height=image.height;
+        const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);
+        const pixels=ctx.getImageData(0,0,image.width,image.height).data,bottoms=[];
+        for(let column=0;column<=64;column++){
+          const x=Math.round(12+column/64*2128);let bottom=null;
+          for(let row=585;row>=208;row--){
+            if(pixels[(row*image.width+x)*4+3]>32){bottom=row;break;}
+          }
+          bottoms.push(bottom===null?null:(586-bottom)/378);
+        }
+        // Transparent end columns inherit their nearest solid shoreline sample.
+        for(let column=0;column<=64;column++)if(bottoms[column]===null){
+          let distance=1;
+          while(distance<=64){
+            const neighbor=[column-distance,column+distance].find(j=>j>=0&&j<=64&&bottoms[j]!==null);
+            if(neighbor!==undefined){bottoms[column]=bottoms[neighbor];break;}distance++;
+          }
+        }
+        for(let i=0;i<positions.count;i++){
+          const u=(positions.getX(i)+2.85)/5.7,v=(uv.getY(i)*731-145)/378;
+          const height=v-bottoms[Math.round(u*64)];
+          positions.setY(i,-.315+height*.76);
+          positions.setZ(i,.2-height*.3+Math.sin(Math.PI*u)*Math.sin(Math.PI*height)*.07);
+        }
+        positions.needsUpdate=true;geo.computeVertexNormals();geo.computeBoundingSphere();
         window.MBLoading.island=true;
       },undefined,()=>{throw new Error('Unable to load basalt island texture')});
       map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
-      const mat=new THREE.MeshBasicMaterial({map,transparent:true,alphaTest:.035,
+      const mat=new THREE.MeshBasicMaterial({map,transparent:true,alphaTest:.125,
         depthWrite:true,side:THREE.DoubleSide,fog:false,toneMapped:false});
+      const glow={strength:{value:0},point:{value:new THREE.Vector3()}};
+      mat.userData.hoverGlow=glow;
+      mat.onBeforeCompile=shader=>{
+        shader.uniforms.uIslandHover=glow.strength;shader.uniforms.uIslandLight=glow.point;
+        shader.vertexShader='varying vec3 vIslandWorld;\n'+shader.vertexShader;
+        shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+          '#include <begin_vertex>\nvIslandWorld=(modelMatrix*vec4(transformed,1.0)).xyz;');
+        shader.fragmentShader='uniform float uIslandHover; uniform vec3 uIslandLight; varying vec3 vIslandWorld;\n'+shader.fragmentShader;
+        shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
+          float spread=exp(-pow((vIslandWorld.x-uIslandLight.x)/1.65,2.0));
+          float upper=.45+.55*smoothstep(-2.04,-1.25,vIslandWorld.y);
+          diffuseColor.rgb+=uIslandHover*spread*upper*(vec3(.055,.075,.085)+diffuseColor.rgb*.28);`);
+      };
+      mat.customProgramCacheKey=()=> 'basalt-island-hover-v1';
       return new THREE.Mesh(geo,mat);
     }
 
@@ -1582,6 +1624,8 @@ window.MBEnvironment={
       }
       customCursor.classList.toggle('hover-3d',hoverIndex>=0||(phase==='focused'&&mouseNDC.length()<1.5));
       hoverLight.intensity=THREE.MathUtils.lerp(hoverLight.intensity,hoverIndex>=0?2.2:0,1-Math.exp(-7*dt));
+      rightPedestalRock.material.userData.hoverGlow.strength.value=hoverLight.intensity/2.2;
+      rightPedestalRock.material.userData.hoverGlow.point.value.copy(hoverLight.position);
       if(phase==='orbit'){
         const settling=!isDragging&&Math.abs(coastVelocity)<.12&&performance.now()-lastOrbitInput>160;
         settleBlend+=(Number(settling)-settleBlend)*(1-Math.exp(-4*dt));
