@@ -892,7 +892,7 @@ window.MBEnvironment={
       return level;
     }
     let glitchBuffer=null;
-    function playGlitchSound(duration){
+    function playGlitchSound(duration,offset=0){
       stopGlitchSound();if(!audioCtx||isMuted||document.hidden||audioCtx.state!=='running')return;
       const now=audioCtx.currentTime,bus=audioCtx.createGain(),filter=audioCtx.createBiquadFilter();
       bus.gain.value=.22;
@@ -912,7 +912,7 @@ window.MBEnvironment={
         }
       }
       const noise=audioCtx.createBufferSource();noise.buffer=glitchBuffer;noise.connect(filter);
-      const v={bus,sources:[noise]};glitchVoice=v;noise.start(now);
+      const v={bus,sources:[noise]};glitchVoice=v;noise.start(now,Math.min(offset,duration-.001));
       noise.onended=()=>{noise.disconnect();filter.disconnect();bus.disconnect();if(glitchVoice===v)glitchVoice=null};
     }
     const soundButton=document.getElementById('soundToggle');
@@ -1469,7 +1469,7 @@ window.MBEnvironment={
     document.getElementById('infoClose').addEventListener('click',()=>document.getElementById('infoDialog').close());
     const logoGlitch=document.getElementById('logoGlitch'),heroLeft=document.getElementById('heroLeft'),heroLeftInner=document.getElementById('heroLeftInner');
     const heroTitle=document.getElementById('heroTitle'),heroSubtitle=document.getElementById('heroSubtitle'),heroDesc=document.getElementById('heroDesc');
-    const originals=[heroTitle,heroSubtitle,heroDesc].map(el=>({el,text:el.textContent})),GLITCH_DURATION=1.65;
+    const originals=[heroTitle,heroSubtitle,heroDesc].map(el=>({el,text:el.textContent})),GLITCH_DURATION=2.4;
     const reducedGlitchMotion=matchMedia('(prefers-reduced-motion: reduce)');
     let glitchStart=null,glitchToken=0,lastGlitchFrame=-1;
     function finishGlitch(){
@@ -1477,25 +1477,32 @@ window.MBEnvironment={
       heroLeftInner.classList.remove('glitching');heroLeftInner.style.transform='none';heroLeftInner.style.filter='none';
       heroTitle.style.textShadow='';stopGlitchSound();
     }
-    logoGlitch.addEventListener('click',async e=>{
-      e.preventDefault();const token=++glitchToken;finishGlitch();await initAudio();
-      if(token!==glitchToken||document.hidden)return;
-      glitchStart=performance.now()/1000;playGlitchSound(GLITCH_DURATION);
+    logoGlitch.addEventListener('click',e=>{
+      e.preventDefault();const token=++glitchToken;finishGlitch();
+      if(document.hidden)return;
+      // Visual feedback starts on the click, even if audio resume is delayed.
+      glitchStart=performance.now()/1000;
       heroLeftInner.classList.add('glitching');updateGlitch();
+      initAudio().then(()=>{
+        if(token!==glitchToken||glitchStart===null||document.hidden)return;
+        const offset=performance.now()/1000-glitchStart;
+        if(offset<GLITCH_DURATION)playGlitchSound(GLITCH_DURATION,offset);
+      });
     });
     function updateGlitch(){
       if(glitchStart===null)return;
       const t=performance.now()/1000-glitchStart,p=t/GLITCH_DURATION;
       if(p>=1){finishGlitch();return}
-      const pulse=glitchEnvelope(p),strength=reducedGlitchMotion.matches?0:pulse;
-      const split=2.2*strength;
-      heroLeftInner.style.transform=`translateX(${Math.sin(t*105)*1.5*strength}px) skewX(${Math.sin(t*71)*.3*strength}deg)`;
-      heroTitle.style.textShadow=strength>.01?`${split}px 0 rgba(255,143,92,${.65*strength}), ${-split}px 0 rgba(100,211,235,${.7*strength})`:'none';
+      const pulse=glitchEnvelope(p),settle=1-THREE.MathUtils.smoothstep(p,.5,1);
+      const strength=reducedGlitchMotion.matches?0:(.6+.4*pulse)*settle;
+      const split=3.2*strength;
+      heroLeftInner.style.transform=`translateX(${Math.cos(t*53)*2*strength}px) skewX(${Math.sin(t*71)*.3*strength}deg)`;
+      heroTitle.style.textShadow=reducedGlitchMotion.matches?'0 0 8px rgba(255,180,110,.35)':strength>.01?`${split}px 0 rgba(255,143,92,${.65*strength}), ${-split}px 0 rgba(100,211,235,${.7*strength})`:'none';
       // Keep supporting copy readable; briefly disturb only a few title glyphs.
-      const frame=Math.floor(t*24);
+      const frame=Math.floor(t*12);
       if(frame===lastGlitchFrame)return;lastGlitchFrame=frame;
       heroTitle.textContent=Array.from(originals[0].text).map((ch,i)=>{
-        if(/\s/.test(ch)||strength<.22||(frame+i*3)%7>1)return ch;
+        if(/\s/.test(ch)||strength<.22||(frame+i*3)%5>1)return ch;
         return 'MAXBESHLI0127'[(frame+i*5)%13];
       }).join('');
     }
