@@ -1389,16 +1389,16 @@ window.MBEnvironment={
       const glassMat = new THREE.MeshPhysicalMaterial({
         color: 0xffffff,
         transparent: true,
-        opacity: 0.62,
-        roughness: 0.07,
+        opacity: 0.34,
+        roughness: 0.035,
         metalness: 0,
-        transmission: 0.88,
+        transmission: 0.96,
         envMap: glassEnvironment,
-        envMapIntensity: 0.85,
+        envMapIntensity: 0.45,
         depthWrite: false,
-        reflectivity: 1.0,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.03
+        reflectivity: 0.5,
+        clearcoat: 0.12,
+        clearcoatRoughness: 0.06
       });
       const glassMesh = new THREE.Mesh(glassGeo, glassMat);
       glassMesh.userData.slateIndex = index;
@@ -1407,14 +1407,14 @@ window.MBEnvironment={
 
       const outerEdges = new THREE.LineSegments(
         new THREE.EdgesGeometry(glassGeo,30),
-        new THREE.LineBasicMaterial({ color: 0xffe4c4, transparent: true, opacity: 0.65 })
+        new THREE.LineBasicMaterial({ color: 0xffe4c4, transparent: true, opacity: 0.18 })
       );
       holder.add(outerEdges);
 
       const innerRimGeo = new THREE.BoxGeometry(w * 0.965, h * 0.955, depth * 0.92);
       const innerEdges = new THREE.LineSegments(
         new THREE.EdgesGeometry(innerRimGeo),
-        new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.26 })
+        new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.035 })
       );
       holder.add(innerEdges);
 
@@ -1771,10 +1771,13 @@ window.MBEnvironment={
         obj.blurHaloMat.opacity = defocus * 0.16;
 
         // Грани и стекло на задних плитках при наезде полностью гаснут, чтобы не было резких линий
-        obj.outerEdgesMat.opacity = (0.2+depthFactor*.48+obj.hover*.22)*Math.pow(1-defocus,3);
-        obj.innerEdgesMat.opacity = 0.26 * Math.pow(1 - defocus, 3);
-        obj.glassMat.opacity=(.62+obj.hover*.06)*(1-defocus*.92);obj.glassMat.roughness=.075-obj.hover*.025;
-        obj.backPlateMat.opacity = baseOp * .035 * (1 - defocus * .82);
+        const glassNormal=new THREE.Vector3(0,0,1).applyQuaternion(obj.holder.quaternion);
+        const glassView=camera.position.clone().sub(obj.holder.getWorldPosition(new THREE.Vector3())).normalize();
+        const grazing=1-Math.abs(glassNormal.dot(glassView));
+        obj.outerEdgesMat.opacity = (.11+depthFactor*.07+grazing*.16+obj.hover*.08)*Math.pow(1-defocus,3);
+        obj.innerEdgesMat.opacity = (.025+grazing*.035) * Math.pow(1 - defocus, 3);
+        obj.glassMat.opacity=(.34+obj.hover*.025)*(1-defocus*.92);obj.glassMat.roughness=.035-obj.hover*.01;
+        obj.backPlateMat.opacity = baseOp * .012 * (1 - defocus * .82);
         let insetFade=baseOp*Math.pow(1-defocus,3);
         if(i===selectedIndex&&['diving','returning','section'].includes(phase)&&travel){const d=camera.position.clone().sub(travel.centre).dot(travel.normal);insetFade*=THREE.MathUtils.smoothstep(d,.12,1.35)}
         obj.inset.materials.forEach(m=>m.opacity=m.userData.baseOpacity*insetFade);
