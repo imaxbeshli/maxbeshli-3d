@@ -1174,8 +1174,60 @@ window.MBEnvironment={
       const mesh=new THREE.Mesh(geo,mat);mesh.castShadow=true;mesh.receiveShadow=true;return mesh;
     }
 
+    // Detailed, angular basalt island. One indexed mesh; all relief is static.
+    function createPedestalRock() {
+      const hash=(x,z)=>{const n=Math.sin(x*127.1+z*311.7+19.3)*43758.5453;return n-Math.floor(n)};
+      const noise=(x,z)=>{
+        const ix=Math.floor(x),iz=Math.floor(z),fx=x-ix,fz=z-iz;
+        const u=fx*fx*(3-2*fx),v=fz*fz*(3-2*fz);
+        return THREE.MathUtils.lerp(THREE.MathUtils.lerp(hash(ix,iz),hash(ix+1,iz),u),
+          THREE.MathUtils.lerp(hash(ix,iz+1),hash(ix+1,iz+1),u),v);
+      };
+      const geo=new THREE.PlaneGeometry(5.8,3.5,180,108);
+      geo.rotateX(-Math.PI/2);
+      const positions=geo.attributes.position,colors=[];
+      for(let i=0;i<positions.count;i++){
+        const x=positions.getX(i),z=positions.getZ(i);
+        // Unequal cut faces give the island a long, broken outline, not an ellipse.
+        const boundary=Math.min(2.65-x,2.6+x,1.36-z,1.35+z,
+          3.05-x-z*.8,3.0+x+z*.65);
+        const edge=THREE.MathUtils.smoothstep(boundary+(noise(x*5,z*5)-.5)*.24,0,.48);
+        const qx=x*3.1,qz=z*3.1,ix=Math.floor(qx),iz=Math.floor(qz);
+        let nearest=10,second=10,block=0;
+        for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){
+          const cx=ix+dx,cz=iz+dz;
+          const d=Math.hypot(qx-cx-.15-.7*hash(cx,cz),qz-cz-.15-.7*hash(cx+73,cz-21));
+          if(d<nearest){second=nearest;nearest=d;block=hash(cx+19,cz+91)}else if(d<second)second=d;
+        }
+        const crack=1-THREE.MathUtils.smoothstep(second-nearest,0,.12);
+        const large=noise(x*1.1+5,z*1.3),medium=noise(x*7,z*7);
+        const relief=.32+large*.55+block*.08-crack*.10+(medium-.5)*.045
+          +(noise(x*24,z*24)-.5)*.012;
+        const y=-.25+edge*relief;
+        positions.setY(i,y);
+        const shade=.018+large*.012+medium*.006-crack*.005;
+        const wet=THREE.MathUtils.lerp(.65,1,THREE.MathUtils.smoothstep(y,-.12,.3));
+        colors.push(shade*.88*wet,shade*.94*wet,shade*wet);
+      }
+      geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+      geo.computeVertexNormals();geo.computeBoundingSphere();
+      // Fine isotropic grain adds small highlights without the old stripe texture.
+      const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
+      const ctx=canvas.getContext('2d'),pixels=ctx.createImageData(256,256);
+      for(let y=0;y<256;y++)for(let x=0;x<256;x++){
+        const value=Math.round(255*(.65*noise(x*.14,y*.14)+.35*hash(x,y)));
+        const i=(y*256+x)*4;pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=value;pixels.data[i+3]=255;
+      }
+      ctx.putImageData(pixels,0,0);
+      const grain=new THREE.CanvasTexture(canvas);
+      const mat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.48,metalness:.02,
+        bumpMap:grain,bumpScale:.009});
+      const mesh=new THREE.Mesh(geo,mat);mesh.castShadow=true;mesh.receiveShadow=true;
+      return mesh;
+    }
+
     // 1. Каменная плита-пьедестал СПРАВА
-    const rightPedestalRock = createJaggedRock(1.42, 1.85, 0.66, 1.12);
+    const rightPedestalRock = createPedestalRock();
     rightPedestalRock.position.set(1.52,-2.15,.58);
     rightPedestalRock.name = 'Rock island below tiles';
     rightPedestalRock.rotation.y = -0.26;
