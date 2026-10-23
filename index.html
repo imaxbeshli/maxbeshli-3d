@@ -230,7 +230,8 @@
       transition: opacity 0.2s ease;
     }
 
-    #logoGlitch .logo-dot { transform: translateY(8px); }
+    .logo-mark { display: inline-flex; align-items: baseline; line-height: 1; }
+    #logoGlitch .logo-dot { margin-left: 0; }
 
     .logo:hover {
       opacity: 0.85;
@@ -591,7 +592,7 @@
 
   <div class="ui-layer">
     <header id="mainHeader">
-      <a href="#" class="logo interactive-el" id="logoGlitch" title="Нажмите для глитч-эффекта">MB<span class="logo-dot"></span></a>
+      <a href="#" class="logo interactive-el" id="logoGlitch" title="Нажмите для глитч-эффекта"><span class="logo-mark">MB<span class="logo-dot"></span></span></a>
       <nav>
         <a href="#works" class="interactive-el">Работы</a>
         <a href="#services" class="interactive-el">Услуги</a>
@@ -674,7 +675,7 @@ window.MBTileArt={
   function text(t,px,py,size,color='#edf3f7',weight='400'){x.fillStyle=color;x.font=weight+' '+size+'px Inter, Arial, sans-serif';x.fillText(t,px,py)}
   function rect(px,py,w,h,color){x.fillStyle=color;x.fillRect(px,py,w,h)}
   function circle(px,py,r,color){x.fillStyle=color;x.beginPath();x.arc(px,py,r,0,Math.PI*2);x.fill()}
-  function paintPhoto(img){const sw=img.naturalWidth||img.width,sh=img.naturalHeight||img.height,ratio=Math.max(c.width/sw,c.height/sh);x.drawImage(img,(c.width-sw*ratio)/2,(c.height-sh*ratio)/2,sw*ratio,sh*ratio);const g=x.createLinearGradient(0,460,0,750);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.75)');x.fillStyle=g;x.fillRect(0,0,1200,750);text('MAX BESHLI',45,64,22,'#fff','600');text('SHOWREEL',44,653,56,'#fff','500');text('FILM  /  EDIT  /  AI',48,701,20,'#d5d8d8');circle(1100,657,34,'rgba(255,255,255,.16)');x.fillStyle='#fff';x.beginPath();x.moveTo(1092,640);x.lineTo(1115,657);x.lineTo(1092,674);x.fill()}
+  function paintPhoto(img){const sw=img.videoWidth||img.naturalWidth||img.width,sh=img.videoHeight||img.naturalHeight||img.height,ratio=Math.max(c.width/sw,c.height/sh);x.drawImage(img,(c.width-sw*ratio)/2,(c.height-sh*ratio)/2,sw*ratio,sh*ratio);const g=x.createLinearGradient(0,460,0,750);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.75)');x.fillStyle=g;x.fillRect(0,0,1200,750);text('MAX BESHLI',45,64,22,'#fff','600');text('SHOWREEL',44,653,56,'#fff','500');text('FILM  /  EDIT  /  AI',48,701,20,'#d5d8d8');circle(1100,657,34,'rgba(255,255,255,.16)');x.fillStyle='#fff';x.beginPath();x.moveTo(1092,640);x.lineTo(1115,657);x.lineTo(1092,674);x.fill()}
   if(type==='video_ai'){const g=x.createLinearGradient(0,0,1200,750);g.addColorStop(0,'#334455');g.addColorStop(.55,'#b69a74');g.addColorStop(1,'#18202a');x.fillStyle=g;x.fillRect(0,0,1200,750);text('SHOWREEL',44,653,56);text('FILM  /  EDIT  /  AI',48,701,20)}
   else if(type==='web_3d'){
    rect(0,0,1200,750,'#10151d');rect(0,0,1200,62,'#222a35');['#f18a7c','#ecc779','#83bb96'].forEach((v,i)=>circle(28+i*27,31,7,v));rect(230,18,740,28,'#151c25');text('maxbeshli.studio / experience',430,39,16,'#9fa9b5');
@@ -692,8 +693,38 @@ window.MBTileArt={
   const sharpTex=new T.CanvasTexture(c),blurCanvas=document.createElement('canvas'),reflCanvas=document.createElement('canvas');blurCanvas.width=reflCanvas.width=400;blurCanvas.height=reflCanvas.height=type==='tg_miniapp'?800:250;
   const blurTex=new T.CanvasTexture(blurCanvas),reflTex=new T.CanvasTexture(reflCanvas);[sharpTex,blurTex,reflTex].forEach(t=>{t.encoding=T.sRGBEncoding;t.anisotropy=4});
   function refresh(){for(const [canvas,tex,blur] of [[blurCanvas,blurTex,24],[reflCanvas,reflTex,5]]){const q=canvas.getContext('2d');q.clearRect(0,0,canvas.width,canvas.height);q.filter='blur('+blur+'px)';q.drawImage(c,0,0,canvas.width,canvas.height);q.filter='none';tex.needsUpdate=true}sharpTex.needsUpdate=true}
-  refresh();if(type==='video_ai'&&typeof Image!=='undefined'){window.MBLoading.art=false;const img=new Image();img.onload=()=>{paintPhoto(img);refresh();window.MBLoading.art=true};img.onerror=()=>{window.MBLoading.art=true};img.src=window.MB_SHOWREEL_URL||'assets/showreel.png'}
-  return {sharpTex,blurTex,reflTex};
+  // Keep the existing artwork and all three texture maps, including reflections.
+  let video=null,playbackActive=false,hasVideoFrame=false,lastVideoTime=-1;
+  refresh();if(type==='video_ai'&&typeof Image!=='undefined'){window.MBLoading.art=false;const img=new Image();img.onload=()=>{if(!hasVideoFrame){paintPhoto(img);refresh()}window.MBLoading.art=true};img.onerror=()=>{window.MBLoading.art=true};img.src=window.MB_SHOWREEL_URL||'assets/showreel.png'}
+  function paintVideoFrame(){
+   if(!video||video.readyState<2||!video.videoWidth)return;
+   paintPhoto(video);refresh();hasVideoFrame=true;lastVideoTime=video.currentTime;
+  }
+  if(type==='video_ai'){
+   video=document.createElement('video');
+   video.muted=true;video.defaultMuted=true;video.loop=true;video.playsInline=true;
+   video.setAttribute('muted','');video.setAttribute('playsinline','');video.preload='metadata';
+   video.src='assets/SHOWREEL.mp4';
+   if('requestVideoFrameCallback' in video){
+    const onFrame=()=>{paintVideoFrame();video.requestVideoFrameCallback(onFrame)};
+    video.requestVideoFrameCallback(onFrame);
+   }
+   video.addEventListener('pause',paintVideoFrame);
+   document.addEventListener('visibilitychange',()=>{if(document.hidden)setPlaybackActive(false)});
+  }
+  function setPlaybackActive(active){
+   if(!video)return;
+   active=Boolean(active&&!document.hidden);
+   if(active!==playbackActive){
+    playbackActive=active;
+    if(active){video.muted=true;video.play().catch(error=>{
+     if(error.name!=='AbortError')console.warn('SHOWREEL playback unavailable:',error.name);
+    })}else video.pause();
+   }
+   // Fallback for browsers without decoded-frame callbacks.
+   if(active&&!('requestVideoFrameCallback' in video)&&video.currentTime!==lastVideoTime)paintVideoFrame();
+  }
+  return {sharpTex,blurTex,reflTex,setPlaybackActive};
  },
  content(T,w,h,type,screenMat,env){
   const group=new T.Group();group.name='Inset '+type;const materials=[];const remember=m=>{m.userData.baseOpacity=m.opacity;materials.push(m);return m};
@@ -1474,7 +1505,7 @@ window.MBEnvironment={
     SLATES_DATA.forEach((item, index) => {
       const [w, h] = item.size;
       const depth = 0.36;
-      const { sharpTex, blurTex, reflTex } = createSlateTextureSet(item.type);
+      const { sharpTex, blurTex, reflTex, setPlaybackActive } = createSlateTextureSet(item.type);
 
       // 1. Основная плитка
       const holder = new THREE.Group();
@@ -1601,7 +1632,7 @@ window.MBEnvironment={
 
       slateObjects.push({
         holder,
-        inset,reflectedInset,reflectedMaterials,
+        inset,reflectedInset,reflectedMaterials,setPlaybackActive,
         glassMat,glassSideMat,
         screenMat,
         blurScreenMat,
@@ -1850,6 +1881,7 @@ window.MBEnvironment={
       const total = SLATES_DATA.length;
       const nearestIndex = Math.round(currentProgress);
       updateCaption(nearestIndex);
+      slateObjects[0].setPlaybackActive(studioEntered && activeIndex===0);
 
       // Круговая 3D-орбита СПРАВА
       const radiusX = 2.05;
