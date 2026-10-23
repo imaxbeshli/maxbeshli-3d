@@ -1204,7 +1204,9 @@ window.MBEnvironment={
         const relief=.32+large*.55+block*.08-crack*.10+(medium-.5)*.045
           +(noise(x*24,z*24)-.5)*.012;
         const y=-.25+edge*relief;
-        positions.setY(i,y);
+        // Lift only the low interior pockets; leave the shoreline and peaks intact.
+        const pocketLift=Math.max(0,.24+medium*.035-y)*THREE.MathUtils.smoothstep(boundary,.25,.6);
+        positions.setY(i,y+pocketLift);
         const shade=.018+large*.012+medium*.006-crack*.005;
         const wet=THREE.MathUtils.lerp(.65,1,THREE.MathUtils.smoothstep(y,-.12,.3));
         colors.push(shade*.88*wet,shade*.94*wet,shade*wet);
