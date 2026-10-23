@@ -1029,33 +1029,38 @@ window.MBEnvironment={
     // Мягкие облака тумана в глубине сцены
     function createSmokeTexture() {
       const c = document.createElement('canvas');
-      c.width = 512;
-      c.height = 512;
+      c.width = 512; c.height = 128;
       const ctx = c.getContext('2d');
-      const g = ctx.createRadialGradient(256, 256, 10, 256, 256, 250);
-      g.addColorStop(0, 'rgba(195, 205, 225, 0.13)');
-      g.addColorStop(0.5, 'rgba(120, 130, 150, 0.04)');
-      g.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, 512, 512);
+      // Overlapping soft wisps, generated once; transparent at every edge.
+      for (let i = 0; i < 11; i++) {
+        const x = 65 + i * 38, y = 64 + Math.sin(i * 2.3) * 13;
+        ctx.save(); ctx.translate(x, y); ctx.scale(1.65, .65);
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 38);
+        g.addColorStop(0, 'rgba(225,235,245,0.28)');
+        g.addColorStop(.45, 'rgba(225,235,245,0.12)');
+        g.addColorStop(1, 'rgba(225,235,245,0)');
+        ctx.fillStyle = g; ctx.fillRect(-38, -38, 76, 76); ctx.restore();
+      }
       return new THREE.CanvasTexture(c);
     }
     const smokeTex = createSmokeTexture();
     const smokeLayers = [];
+    const shoreMistGeometry = new THREE.PlaneGeometry(23, 4.2);
     for (let i = 0; i < 4; i++) {
       const sMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(12, 7.5),
+        shoreMistGeometry,
         new THREE.MeshBasicMaterial({
-          map: smokeTex,
-          transparent: true,
-          opacity: 0.48,
-          depthWrite: false,
+          map: smokeTex, color: i < 2 ? 0xffc59a : 0x9abdd5,
+          transparent: true, opacity: 0,
+          depthWrite: false, fog: false, toneMapped: false,
           blending: THREE.AdditiveBlending
         })
       );
-      sMesh.position.set(-1.5 + i * 2.2, -0.4 + (i % 2) * 0.9, -4.4 - i * 0.7);
+      sMesh.name = 'Distant shoreline mist ' + (i + 1);
+      sMesh.position.set([-18, -8, 8, 18][i], -.65 + (i % 2) * .12, -22.3 + i * .25);
       scene.add(sMesh);
-      smokeLayers.push({ mesh: sMesh, baseX: sMesh.position.x, speed: 0.18 + i * 0.05, phase: i * 1.7 });
+      smokeLayers.push({ mesh: sMesh, baseX: sMesh.position.x, baseY: sMesh.position.y,
+        speed: .12 + i * .018, phase: i * 1.7 });
     }
 
     // Освещение сцены
@@ -1655,7 +1660,9 @@ window.MBEnvironment={
 
       // Движение атмосферного тумана и пылинок
       smokeLayers.forEach((s) => {
-        s.mesh.position.x = s.baseX + Math.sin(t * s.speed + s.phase) * 0.45;
+        s.mesh.position.x = s.baseX + Math.sin(t * s.speed + s.phase) * 1.25;
+        s.mesh.position.y = s.baseY + Math.sin(t * .09 + s.phase) * .09;
+        s.mesh.material.opacity = lightReveal * (.48 + Math.sin(t * .16 + s.phase) * .08);
       });
       dustParticles.rotation.y = t * 0.025;
       dustParticles.position.y = Math.sin(t * 0.4) * 0.08;
