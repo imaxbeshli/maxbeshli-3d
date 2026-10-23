@@ -1576,10 +1576,11 @@ window.MBEnvironment={
     canvas.addEventListener('wheel',e=>{if(!studioEntered||['entering','diving','section','returning'].includes(phase))return;e.preventDefault();if(zoomState){returnToOrbit();return}lastOrbitInput=performance.now();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);coastVelocity=THREE.MathUtils.clamp(coastVelocity+delta*.012,-3.8,3.8)},{passive:false});
     canvas.addEventListener('pointerdown',e=>{if(!studioEntered||e.button!==0||phase!=='orbit')return;isDragging=true;lastOrbitInput=performance.now();prevX=e.clientX;lastPointerTime=performance.now();dragDelta=0;releaseVelocity=0;coastVelocity=0;canvas.setPointerCapture(e.pointerId)});
     canvas.addEventListener('pointerdown',e=>{if(studioEntered&&phase==='orbit'){hitAt(e);water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft])}});
+    window.addEventListener('pointerdown',e=>{if(studioEntered&&phase==='orbit'&&e.button===0&&heroLeft.contains(e.target)){hitAt(e);water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft])}});
     window.addEventListener('pointermove',e=>{
       customCursor.style.transform=`translate3d(${e.clientX}px,${e.clientY}px,0) translate(-50%,-50%)`;
       mouseX=e.clientX/innerWidth*2-1;mouseY=e.clientY/innerHeight*2-1;mouseNDC.set(mouseX,-mouseY);
-      if(studioEntered&&phase==='orbit'&&!isDragging&&e.target===canvas)water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft]);
+      if(studioEntered&&phase==='orbit'&&!isDragging&&(e.target===canvas||heroLeft.contains(e.target)))water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft]);
       if(!isDragging)return;lastOrbitInput=performance.now();const now=performance.now(),dt=Math.max(.008,(now-lastPointerTime)/1000),dx=e.clientX-prevX;prevX=e.clientX;lastPointerTime=now;dragDelta+=Math.abs(dx);
       const delta=-dx*.0038;targetProgress+=delta;releaseVelocity=THREE.MathUtils.lerp(releaseVelocity,THREE.MathUtils.clamp(delta/dt,-5,5),.4);
     });
