@@ -881,26 +881,38 @@ window.MBEnvironment={
       source.start(now);source.stop(now+d+.02);
     }
     function stopGlitchSound(){if(!glitchVoice)return;const v=glitchVoice;glitchVoice=null;ramp(v.bus.gain,0,.055);v.sources.forEach(s=>{try{s.stop(audioCtx.currentTime+.07)}catch(e){}})}
+    // Shared rhythm keeps the digital accents and RGB displacement together.
+    const glitchPulses=[[.02,.09,1],[.16,.055,.65],[.29,.12,.8],[.51,.08,.45]];
+    function glitchEnvelope(p){
+      let level=0;
+      for(const [start,width,amplitude] of glitchPulses){
+        const u=(p-start)/width;
+        if(u>0&&u<1)level+=Math.sin(Math.PI*u)**2*amplitude;
+      }
+      return level;
+    }
+    let glitchBuffer=null;
     function playGlitchSound(duration){
-      stopGlitchSound();if(!audioCtx||isMuted||audioCtx.state!=='running')return;
+      stopGlitchSound();if(!audioCtx||isMuted||document.hidden||audioCtx.state!=='running')return;
       const now=audioCtx.currentTime,bus=audioCtx.createGain(),filter=audioCtx.createBiquadFilter();
-      bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(.38,now+.06);bus.gain.setValueAtTime(.38,now+duration-.65);bus.gain.linearRampToValueAtTime(0,now+duration);
-      filter.type='lowpass';filter.frequency.value=4400;filter.Q.value=.45;filter.connect(bus);bus.connect(masterGain);
-      const noise=audioCtx.createBufferSource(),buffer=audioCtx.createBuffer(2,Math.ceil(audioCtx.sampleRate*duration),audioCtx.sampleRate);
-      for(let channel=0;channel<2;channel++){
-        const data=buffer.getChannelData(channel);let low=0,hold=0,phase=0,grain=0,next=0,grainEnd=0,grainStart=0;
-        for(let i=0;i<data.length;i++){
-          const t=i/audioCtx.sampleRate,white=Math.random()*2-1;low+=.045*(white-low);
-          if(i%9===0)hold=white;
-          if(t>=next){grainStart=t;grainEnd=t+.018+Math.random()*.075;next=grainEnd+.025+Math.random()*.07;grain=.4+Math.random()*.5}
-          const attack=Math.min(1,(t-grainStart)/.004),release=Math.max(0,Math.min(1,(grainEnd-t)/.02));
-          const packet=grain*attack*release;
-          phase+=2*Math.PI*(64-18*t/duration)/audioCtx.sampleRate;
-          const texture=.4*low+.16*white+.48*hold*packet+.13*Math.sin(phase)*(1-t/duration);
-          data[i]=Math.tanh(texture*1.8)*Math.min(1,t/.008,(duration-t)/.025);
+      bus.gain.value=.22;
+      filter.type='lowpass';filter.frequency.value=2800;filter.Q.value=.5;filter.connect(bus);bus.connect(masterGain);
+      if(!glitchBuffer){
+        glitchBuffer=audioCtx.createBuffer(2,Math.ceil(audioCtx.sampleRate*duration),audioCtx.sampleRate);
+        for(let channel=0;channel<2;channel++){
+          const data=glitchBuffer.getChannelData(channel);let phase=0,softNoise=0;
+          for(let i=0;i<data.length;i++){
+            const t=i/audioCtx.sampleRate,p=t/duration,packet=glitchEnvelope(p);
+            softNoise+=.18*(Math.random()*2-1-softNoise);
+            phase+=2*Math.PI*(740-420*p)/audioCtx.sampleRate;
+            // Rounded digital ticks with a quiet, descending tonal tail.
+            const tail=p>.6?Math.sin(Math.PI*(p-.6)/.4)**2:0;
+            data[i]=packet*(.24*softNoise+.055*Math.sin(phase+channel*.12))+.018*tail*Math.sin(phase*.5);
+          }
         }
       }
-      noise.buffer=buffer;noise.connect(filter);const v={bus,sources:[noise]};glitchVoice=v;noise.start(now);noise.stop(now+duration+.025);
+      const noise=audioCtx.createBufferSource();noise.buffer=glitchBuffer;noise.connect(filter);
+      const v={bus,sources:[noise]};glitchVoice=v;noise.start(now);
       noise.onended=()=>{noise.disconnect();filter.disconnect();bus.disconnect();if(glitchVoice===v)glitchVoice=null};
     }
     const soundButton=document.getElementById('soundToggle');
@@ -925,7 +937,7 @@ window.MBEnvironment={
       }
       soundWave.setAttribute('d',d);
     }
-    soundButton.addEventListener('click',async()=>{isMuted=!isMuted;if(isMuted)stopWhooshSound();try{localStorage.setItem('mb-muted',isMuted?'1':'0')}catch(e){}updateSoundLabel();await initAudio();if(masterGain)ramp(masterGain.gain,isMuted?0:.65,isMuted ? .35 : 1.4);updateSoundLabel()});
+    soundButton.addEventListener('click',async()=>{isMuted=!isMuted;if(isMuted){stopWhooshSound();stopGlitchSound();}try{localStorage.setItem('mb-muted',isMuted?'1':'0')}catch(e){}updateSoundLabel();await initAudio();if(masterGain)ramp(masterGain.gain,isMuted?0:.65,isMuted ? .35 : 1.4);updateSoundLabel()});
     let audioSuspendTimer;
     document.addEventListener('visibilitychange',()=>{clearTimeout(audioSuspendTimer);if(document.hidden){stopWhooshSound();backgroundMusic.pause();finishGlitch();if(audioCtx){ramp(masterGain.gain,0,.15);audioSuspendTimer=setTimeout(()=>{if(document.hidden)audioCtx.suspend()},180)}}else if(studioEntered&&!isMuted)initAudio()});
 
@@ -1457,29 +1469,35 @@ window.MBEnvironment={
     document.getElementById('infoClose').addEventListener('click',()=>document.getElementById('infoDialog').close());
     const logoGlitch=document.getElementById('logoGlitch'),heroLeft=document.getElementById('heroLeft'),heroLeftInner=document.getElementById('heroLeftInner');
     const heroTitle=document.getElementById('heroTitle'),heroSubtitle=document.getElementById('heroSubtitle'),heroDesc=document.getElementById('heroDesc');
-    const originals=[heroTitle,heroSubtitle,heroDesc].map(el=>({el,text:el.textContent})),GLITCH_DURATION=3.6;
-    let glitchStart=null,glitchToken=0,lastGlitchFrame=0;
-    function finishGlitch(){glitchStart=null;originals.forEach(r=>r.el.textContent=r.text);heroLeftInner.classList.remove('glitching');heroLeftInner.style.transform='none';heroLeftInner.style.filter='none';stopGlitchSound()}
-    logoGlitch.addEventListener('click',async e=>{e.preventDefault();const token=++glitchToken;finishGlitch();await initAudio();if(token!==glitchToken)return;glitchStart=audioCtx?.state==='running'?audioCtx.currentTime:performance.now()/1000;playGlitchSound(GLITCH_DURATION);heroLeftInner.classList.add('glitching');updateGlitch()});
+    const originals=[heroTitle,heroSubtitle,heroDesc].map(el=>({el,text:el.textContent})),GLITCH_DURATION=1.65;
+    const reducedGlitchMotion=matchMedia('(prefers-reduced-motion: reduce)');
+    let glitchStart=null,glitchToken=0,lastGlitchFrame=-1;
+    function finishGlitch(){
+      glitchStart=null;lastGlitchFrame=-1;originals.forEach(r=>r.el.textContent=r.text);
+      heroLeftInner.classList.remove('glitching');heroLeftInner.style.transform='none';heroLeftInner.style.filter='none';
+      heroTitle.style.textShadow='';stopGlitchSound();
+    }
+    logoGlitch.addEventListener('click',async e=>{
+      e.preventDefault();const token=++glitchToken;finishGlitch();await initAudio();
+      if(token!==glitchToken||document.hidden)return;
+      glitchStart=performance.now()/1000;playGlitchSound(GLITCH_DURATION);
+      heroLeftInner.classList.add('glitching');updateGlitch();
+    });
     function updateGlitch(){
       if(glitchStart===null)return;
-      const now=audioCtx?.state==='running'?audioCtx.currentTime:performance.now()/1000,p=(now-glitchStart)/GLITCH_DURATION;
+      const t=performance.now()/1000-glitchStart,p=t/GLITCH_DURATION;
       if(p>=1){finishGlitch();return}
-      const settle=THREE.MathUtils.smoothstep(p,.48,.98),strength=1-settle;
-      heroLeftInner.style.transform=`translate(${Math.sin(now*83)*3*strength}px,${Math.cos(now*67)*strength}px) skewX(${Math.sin(now*51)*strength}deg)`;
-      heroLeftInner.style.filter=`drop-shadow(${3*strength}px 0 rgba(255,35,60,${.8*strength})) drop-shadow(${-3*strength}px 0 rgba(0,215,255,${.8*strength}))`;
-      // Settled characters never scramble again. Each character has its own slower tick.
-      originals.forEach(r=>{
-        const chars=Array.from(r.text),count=chars.length;
-        r.el.textContent=chars.map((ch,i)=>{
-          if(/\s/.test(ch))return ch;
-          const end=.50+.46*(i+1)/count;
-          if(p>=end)return ch;
-          const tick=Math.floor(48*.72*Math.log(1+(now-glitchStart)/.72));
-          const key=tick*31+i*17;
-          return '01234567890123456789ABCDEF#%'[((key*13)^(key>>>2))%26];
-        }).join('');
-      });
+      const pulse=glitchEnvelope(p),strength=reducedGlitchMotion.matches?0:pulse;
+      const split=2.2*strength;
+      heroLeftInner.style.transform=`translateX(${Math.sin(t*105)*1.5*strength}px) skewX(${Math.sin(t*71)*.3*strength}deg)`;
+      heroTitle.style.textShadow=strength>.01?`${split}px 0 rgba(255,143,92,${.65*strength}), ${-split}px 0 rgba(100,211,235,${.7*strength})`:'none';
+      // Keep supporting copy readable; briefly disturb only a few title glyphs.
+      const frame=Math.floor(t*24);
+      if(frame===lastGlitchFrame)return;lastGlitchFrame=frame;
+      heroTitle.textContent=Array.from(originals[0].text).map((ch,i)=>{
+        if(/\s/.test(ch)||strength<.22||(frame+i*3)%7>1)return ch;
+        return 'MAXBESHLI0127'[(frame+i*5)%13];
+      }).join('');
     }
     const clock=new THREE.Clock(),currentLookAt=BASE_LOOK_AT.clone();let elapsed=0,poseTime=0;
 
