@@ -1414,6 +1414,33 @@ window.MBEnvironment={
       const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));return geo;
     }
 
+    function roundedGlassGeometry(w,h,depth,r=.24,bevel=.10){
+      const positions=[],normals=[],uvs=[];
+      const vertex=(x,y,z,nx,ny,nz)=>{positions.push(x,y,z);normals.push(nx,ny,nz);uvs.push(x/w+.5,y/h+.5)};
+      const cap=new THREE.ShapeGeometry(glassOutline(w-2*bevel,h-2*bevel,r-bevel),32).toNonIndexed();
+      const cp=cap.attributes.position;
+      for(const sign of [1,-1])for(let i=0;i<cp.count;i+=3)for(const j of (sign>0?[0,1,2]:[2,1,0]))vertex(cp.getX(i+j),cp.getY(i+j),sign*depth/2,0,0,sign);
+      const capCount=positions.length/3;cap.dispose();
+      const rings=[];
+      for(const sign of [-1,1])for(let step=0;step<=12;step++){
+        const angle=(sign<0?12-step:step)/12*Math.PI/2;
+        const inset=bevel*(1-Math.cos(angle)),radius=r-inset;
+        const z=sign*(depth/2-bevel+Math.sin(angle)*bevel),ring=[];
+        const centers=[[w/2-r,-h/2+r],[w/2-r,h/2-r],[-w/2+r,h/2-r],[-w/2+r,-h/2+r]];
+        centers.forEach(([cx,cy],corner)=>{for(let k=0;k<=32;k++){
+          const a=-Math.PI/2+corner*Math.PI/2+k/32*Math.PI/2,co=Math.cos(a),si=Math.sin(a);
+          ring.push([cx+radius*co,cy+radius*si,z,co*Math.cos(angle),si*Math.cos(angle),sign*Math.sin(angle)]);
+        }});rings.push(ring);
+      }
+      for(let j=0;j<rings.length-1;j++)for(let k=0;k<rings[j].length;k++){
+        const next=(k+1)%rings[j].length,a=rings[j][k],b=rings[j][next],c=rings[j+1][k],d=rings[j+1][next];
+        for(const v of [a,b,c,b,d,c])vertex(...v);
+      }
+      const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+      geo.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+      geo.addGroup(0,capCount,0);geo.addGroup(capCount,positions.length/3-capCount,1);return geo;
+    }
+
     // Static material maps: scratches affect reflected light, not the screen artwork.
     function createGlassWear(w,h,seed){
       let state=seed+73;const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296};
@@ -1449,15 +1476,8 @@ window.MBEnvironment={
       // 1. Основная плитка
       const holder = new THREE.Group();
 
-      const glassGeo = new THREE.ExtrudeGeometry(glassOutline(w-.13,h-.13,.125),{
-        depth:depth-.13,bevelEnabled:true,bevelThickness:.065,bevelSize:.065,
-        bevelSegments:12,steps:1,curveSegments:32
-      });
-      glassGeo.translate(0,0,-(depth-.13)/2);
-      const glassUV=glassGeo.attributes.uv,glassPos=glassGeo.attributes.position;
-      for(let j=0;j<glassUV.count;j++)glassUV.setXY(j,glassPos.getX(j)/w+.5,glassPos.getY(j)/h+.5);
-      window.MBEnvironment.smoothRock(glassGeo);
-      const roundedEdgeGeo=glassEdgeGeometry(w,h,.19,depth);
+      const glassGeo=roundedGlassGeometry(w,h,depth);
+      const roundedEdgeGeo=glassEdgeGeometry(w-.20,h-.20,.14,depth);
       const wear=createGlassWear(w,h,index);
       const glassMat = new THREE.MeshPhysicalMaterial({
         color: 0xffffff,
@@ -1468,9 +1488,9 @@ window.MBEnvironment={
         bumpMap: wear.bumpMap,
         bumpScale: .008,
         metalness: 0,
-        transmission: 0.85,
+        transmission: 0.80,
         envMap: glassEnvironment,
-        envMapIntensity: 0.85,
+        envMapIntensity: 1.0,
         depthWrite: false,
         reflectivity: 0.5,
         clearcoat: 0.45,
@@ -1478,8 +1498,9 @@ window.MBEnvironment={
       });
       const glassSideMat=glassMat.clone();
       glassSideMat.roughnessMap=null;glassSideMat.bumpMap=null;
-      glassSideMat.roughness=.075;glassSideMat.envMapIntensity=1.5;
-      glassSideMat.opacity=.78;glassSideMat.clearcoat=.5;
+      glassSideMat.roughness=.10;glassSideMat.envMapIntensity=2.4;
+      glassSideMat.transmission=.78;glassSideMat.color.set(0xb7c6cc);
+      glassSideMat.opacity=.82;glassSideMat.clearcoat=1;glassSideMat.clearcoatRoughness=.08;
       const glassMesh = new THREE.Mesh(glassGeo, [glassMat,glassSideMat]);
       glassMesh.userData.slateIndex = index;
       holder.add(glassMesh);
@@ -1592,6 +1613,40 @@ window.MBEnvironment={
         phase: index * 2.1
       });
     });
+
+    // Render each transparent card as a coherent stack. Sorting its individual
+    // screen, coating and bevel against other cards causes intermittent occlusion.
+    for(const obj of slateObjects){
+      obj.holder.traverse(o=>{if(o.isMesh){
+        for(const m of (Array.isArray(o.material)?o.material:[o.material]))m.depthWrite=false;
+      }});
+      const content=[...obj.inset.group.children].filter(o=>o.isMesh).sort((a,b)=>a.position.z-b.position.z||a.id-b.id);
+      content.forEach((o,i)=>o.renderOrder=10+i);
+      obj.holder.children.forEach(o=>{
+        if(o.isMesh)o.renderOrder=Array.isArray(o.material)?80:o.material===obj.backPlateMat?0:2;
+        if(o.isLineSegments)o.renderOrder=90;
+      });
+    }
+    const glassSortPoint=new THREE.Vector3();
+    const glassSortByCamera=new WeakMap();
+    scene.onBeforeRender=(render,renderScene,viewCamera)=>{
+      let glassSortEntries=glassSortByCamera.get(viewCamera);
+      const firstPass=!glassSortEntries;
+      if(firstPass){glassSortEntries=slateObjects.map(obj=>({obj,depth:0}));glassSortByCamera.set(viewCamera,glassSortEntries);}
+      for(const entry of glassSortEntries){
+        entry.obj.holder.getWorldPosition(glassSortPoint).applyMatrix4(viewCamera.matrixWorldInverse);
+        entry.depth=glassSortPoint.z;
+      }
+      if(firstPass)glassSortEntries.sort((a,b)=>a.depth-b.depth||a.obj.holder.id-b.obj.holder.id);
+      // Near-equal rear-card depths must not flip order with tiny cursor parallax.
+      for(let pass=0;pass<glassSortEntries.length;pass++)for(let i=1;i<glassSortEntries.length;i++){
+        if(glassSortEntries[i-1].depth-glassSortEntries[i].depth>.18)
+          [glassSortEntries[i-1],glassSortEntries[i]]=[glassSortEntries[i],glassSortEntries[i-1]];
+      }
+      glassSortEntries.forEach((entry,rank)=>entry.obj.holder.traverse(o=>{
+        if(o.isGroup)o.renderOrder=10+rank;
+      }));
+    };
 
     /* =========================================================
        5. УПРАВЛЕНИЕ ОРБИТОЙ, НАЕЗДОМ И МОДАЛЬНЫМ ОКНОМ
@@ -1857,10 +1912,10 @@ window.MBEnvironment={
         const glassNormal=new THREE.Vector3(0,0,1).applyQuaternion(obj.holder.quaternion);
         const glassView=camera.position.clone().sub(obj.holder.getWorldPosition(new THREE.Vector3())).normalize();
         const grazing=1-Math.abs(glassNormal.dot(glassView));
-        obj.outerEdgesMat.opacity = (.16+depthFactor*.10+grazing*.12+obj.hover*.08)*Math.pow(1-defocus,3);
-        obj.innerEdgesMat.opacity = (.04+grazing*.025) * Math.pow(1 - defocus, 3);
+        obj.outerEdgesMat.opacity = (.05+depthFactor*.04+grazing*.08+obj.hover*.04)*Math.pow(1-defocus,3);
+        obj.innerEdgesMat.opacity = (.02+grazing*.02) * Math.pow(1 - defocus, 3);
         obj.glassMat.opacity=(.48+obj.hover*.025)*(1-defocus*.92);obj.glassMat.roughness=.26;
-        obj.glassSideMat.opacity=(.78+obj.hover*.025)*(1-defocus*.92);
+        obj.glassSideMat.opacity=(.82+obj.hover*.025)*(1-defocus*.92);
         obj.backPlateMat.opacity = baseOp * .02 * (1 - defocus * .82);
         let insetFade=baseOp*Math.pow(1-defocus,3);
         if(i===selectedIndex&&['diving','returning','section'].includes(phase)&&travel){const d=camera.position.clone().sub(travel.centre).dot(travel.normal);insetFade*=THREE.MathUtils.smoothstep(d,.12,1.35)}
