@@ -972,12 +972,34 @@ window.MBEnvironment={
     }
 
     const backdropMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(38, 22),
+      new THREE.PlaneGeometry(46, 26.6),
       new THREE.MeshBasicMaterial({ map: createBackdropTexture(), depthWrite: false, fog: false, toneMapped: false })
     );
     backdropMesh.name = 'Reference cave background';
-    backdropMesh.position.set(0, .18, -18);
+    backdropMesh.position.set(0, .64, -24);
     scene.add(backdropMesh);
+
+    // Keep the photographed shoreline at water level and cover the camera frustum.
+    const backdropCorners = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+    const backdropRay = new THREE.Vector3();
+    function fitBackdropToCamera() {
+      let halfWidth = 0, top = FLOOR_Y;
+      for (const [x, y] of backdropCorners) {
+        backdropRay.set(x, y, .5).unproject(camera).sub(camera.position);
+        if (backdropRay.z >= -1e-6) continue;
+        const distance = (backdropMesh.position.z - camera.position.z) / backdropRay.z;
+        halfWidth = Math.max(halfWidth, Math.abs(camera.position.x + backdropRay.x * distance));
+        top = Math.max(top, camera.position.y + backdropRay.y * distance);
+      }
+      const scale = Math.max(1, halfWidth * 2 * 1.06 / 46,
+        (top - FLOOR_Y) * 1.06 / (26.6 * .6));
+      backdropMesh.scale.set(scale, scale, 1);
+      // The cliff bases are 60% down the image; anchor that row to the water.
+      backdropMesh.position.y = FLOOR_Y + 26.6 * scale * .1;
+      backdropMesh.updateMatrixWorld();
+      shorelineBlend.scale.x = Math.min(60, 46 * scale);
+      shorelineBlend.material.uniforms.uBackdropWidth.value = 46 * scale;
+    }
 
     // Мягкие облака тумана в глубине сцены
     function createSmokeTexture() {
@@ -1038,6 +1060,31 @@ window.MBEnvironment={
     // Влажный рельефный базальтовый пол
     const FLOOR_Y = -2.02;
     const water=window.MBEnvironment.water(THREE,scene,renderer,FLOOR_Y);
+
+    // A short transparent shoreline skirt matches the plate to the existing water.
+    // It uses the same image, leaves the water shader intact, and is backface-culled
+    // in the reflection camera below the surface.
+    const shorelineBlend = new THREE.Mesh(
+      new THREE.PlaneGeometry(1, 6),
+      new THREE.ShaderMaterial({
+        uniforms: {
+          uBackdrop: { value: backdropMesh.material.map },
+          uBackdropWidth: { value: 46 }
+        },
+        vertexShader: `varying vec2 vUv; varying float vWorldX;
+          void main(){vUv=uv;vec4 world=modelMatrix*vec4(position,1.0);
+            vWorldX=world.x;gl_Position=projectionMatrix*viewMatrix*world;}`,
+        fragmentShader: `uniform sampler2D uBackdrop; uniform float uBackdropWidth;
+          varying vec2 vUv; varying float vWorldX;
+          void main(){vec3 shore=texture2D(uBackdrop,vec2(vWorldX/uBackdropWidth+.5,.4)).rgb;
+            gl_FragColor=vec4(shore,smoothstep(0.0,1.0,vUv.y));}`,
+        transparent: true, depthWrite: false, toneMapped: false
+      })
+    );
+    shorelineBlend.name = 'Soft background-water join';
+    shorelineBlend.rotation.x = -Math.PI / 2;
+    shorelineBlend.position.set(0, FLOOR_Y + .012, -21);
+    scene.add(shorelineBlend);
 
     // Мягкий тёплый блик на полу от контрового света
     function createFloorGlowTexture(innerAlpha, outerColor) {
@@ -1605,6 +1652,7 @@ window.MBEnvironment={
         camera.position.lerp(targetCam,1-Math.exp(-4.5*dt));currentLookAt.lerp(targetLook,1-Math.exp(-5*dt));camera.lookAt(currentLookAt);
       }
       updateSpatialUI();
+      fitBackdropToCamera();
       water.update(t,camera,lightReveal);
       renderer.render(scene,camera);window.MBLoading.scene=window.MBLoading.art!==false&&window.MBLoading.stone!==false&&window.MBLoading.backdrop!==false;
     }
