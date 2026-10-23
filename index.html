@@ -1060,7 +1060,7 @@ window.MBEnvironment={
       sMesh.position.set([-18, -8, 8, 18][i], -.65 + (i % 2) * .12, -22.3 + i * .25);
       scene.add(sMesh);
       smokeLayers.push({ mesh: sMesh, baseX: sMesh.position.x, baseY: sMesh.position.y,
-        speed: .12 + i * .018, phase: i * 1.7 });
+        speed: .18 + i * .024, direction: i % 2 ? -1 : 1, phase: i * 1.7 });
     }
 
     // Освещение сцены
@@ -1838,9 +1838,11 @@ window.MBEnvironment={
 
       // Движение атмосферного тумана и пылинок
       smokeLayers.forEach((s) => {
-        s.mesh.position.x = s.baseX + Math.sin(t * s.speed + s.phase) * 1.25;
-        s.mesh.position.y = s.baseY + Math.sin(t * .09 + s.phase) * .09;
-        s.mesh.material.opacity = lightReveal * (.48 + Math.sin(t * .16 + s.phase) * .08);
+        s.mesh.position.x = s.baseX + Math.sin(t * s.speed + s.phase) * 2.4 * s.direction;
+        s.mesh.position.y = s.baseY + Math.sin(t * .12 + s.phase) * .16;
+        s.mesh.scale.set(1 + Math.sin(t * .10 + s.phase) * .04,
+          1.12 + Math.sin(t * .14 + s.phase) * .12, 1);
+        s.mesh.material.opacity = lightReveal * (.62 + Math.sin(t * .18 + s.phase) * .10);
       });
       dustParticles.rotation.y = t * 0.025;
       dustParticles.position.y = Math.sin(t * 0.4) * 0.08;
