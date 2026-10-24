@@ -59,11 +59,11 @@ window.MBArchitectureDemo = {
     boundary.computeLineDistances();scene.add(boundary);
     const stages=[];
     function stage(name,start,end){const g=new T.Group();g.name=name;scene.add(g);stages.push({name,start,end,group:g});return g}
-    const foundation=stage('foundation',5,8);
+    const foundation=stage('foundation',.25,2.3);
     block(foundation,8.8,.4,5.8,0,.08,0,concrete);
     for(const z of [-2.55,0,2.55])block(foundation,8.2,.35,.3,0,.44,z,white);
     for(const xx of [-3.95,0,3.95])block(foundation,.3,.35,5.4,xx,.44,0,white);
-    const first=stage('first-floor',8,12);
+    const first=stage('first-floor',1.6,6.5);
     block(first,8.5,.18,5.5,0,.57,0,concrete);
     block(first,8.2,2.6,.22,0,1.96,-2.62,white);
     block(first,.22,2.6,5.3,-4.02,1.96,0,white);
@@ -76,17 +76,17 @@ window.MBArchitectureDemo = {
     block(first,1.1,.1,.7,-1.9,.94,2.1,timber);
     block(first,.12,.32,.12,-1.9,.73,2.1,bronze);
     block(first,2.1,.85,.8,2.3,1.08,-.9,woodLight);
-    const upper=stage('second-floor',11.4,16);
+    const upper=stage('second-floor',6,11);
     block(upper,5.75,.18,5.4,1.25,3.63,0,concrete);
     block(upper,5.65,2.55,.22,1.25,5,-2.6,white);
     block(upper,.22,2.55,5.25,4,5,0,concrete);
     block(upper,.22,2.55,2.15,-1.5,5,-1.6,concrete);
     block(upper,2.0,1.0,.18,-2.8,4.02,-2.65,white);
-    const roof=stage('roof',14.8,18);
+    const roof=stage('roof',10,14);
     block(roof,6.1,.28,5.8,1.25,6.42,.02,white);
     block(roof,6.13,.08,5.83,1.25,6.57,.02,dark);
     block(roof,2.65,.1,5.4,-2.8,3.63,0,dark);
-    const glazing=stage('glazing',17,20.7);
+    const glazing=stage('glazing',13,17);
     function facade(px,y,pz,w,h){
       block(glazing,w,h,.035,px,y,pz,glass,false);
       for(const dx of [-w/2,0,w/2])block(glazing,.045,h,.09,px+dx,y,pz+.03,bronze);
@@ -102,19 +102,19 @@ window.MBArchitectureDemo = {
     const stripMat=new T.MeshBasicMaterial({color:'#ffe0a0',transparent:true,opacity:0});
     block(glazing,7.6,.035,.025,0,3.18,2.59,stripMat,false);
     block(glazing,5.3,.035,.025,1.25,6.2,2.6,stripMat,false);
-    const finish=stage('timber-finish',19,22.5);
+    const finish=stage('timber-finish',15,19);
     const slats=new T.InstancedMesh(boxGeo,woodLight,28),dummy=new T.Object3D();
     for(let i=0;i<28;i++){dummy.position.set(4.15,5,-2.45+i*.18);dummy.scale.set(.09,2.55,.09);dummy.updateMatrix();slats.setMatrixAt(i,dummy.matrix)}
     slats.castShadow=true;slats.receiveShadow=true;finish.add(slats);
     block(finish,1.35,2.5,.12,-3.25,1.96,2.57,timber);
-    const terrace=stage('terrace',20.5,24);
+    const terrace=stage('terrace',17.5,21);
     block(terrace,10.2,.18,2.0,.2,.2,3.82,timber);
     for(let i=0;i<15;i++)block(terrace,10.15,.016,.015,.2,.3,2.94+i*.12,woodLight,false);
     for(let i=0;i<3;i++)block(terrace,2.1,.12,.4,3.1,.12-i*.08,5.0+i*.32,concrete);
     const railMat=mat('rail','#b8c7c6',{transparent:true,opacity:.26,roughness:.2,depthWrite:false});
     block(terrace,2.25,.9,.04,-2.85,4.16,2.7,railMat,false);
     block(terrace,2.25,.035,.06,-2.85,4.62,2.7,bronze);
-    const garden=stage('landscape',23,26.5);
+    const garden=stage('landscape',21,24);
     for(const v of [[-5.4,-1.6,2.3],[5.7,-2.8,2.8],[5.5,2.0,1.8]])tree(garden,...v);
     block(garden,3.9,.15,1.7,-2.7,-.03,5.55,concrete);
     const waterMat=mat('pool','#5c9297',{metalness:.35,roughness:.17});
@@ -134,7 +134,7 @@ window.MBArchitectureDemo = {
       // Return to the original plot only behind an opaque page transition.
       const buildTime=t<29?t:0;
       stages.forEach(s=>{const p=smooth(s.start,s.end,buildTime);s.group.visible=p>0;s.group.scale.y=Math.max(.001,p);s.group.position.y=-(1-p)*.12});
-      daylight=clamp(1-smooth(10,17,buildTime)+smooth(21,26,buildTime));
+      daylight=clamp(1-smooth(8,15,buildTime)+smooth(19,25,buildTime));
       const night=1-daylight;
       scene.background.copy(skyNight).lerp(skyDay,daylight);scene.fog.color.copy(scene.background);
       materials.ground.color.set('#414b46').lerp(new T.Color('#cecfbf'),daylight);
@@ -144,16 +144,17 @@ window.MBArchitectureDemo = {
       glowMat.opacity=night*.67;stripMat.opacity=night*.94;
       glass.envMapIntensity=.18+daylight*.45;glass.emissive.set('#ffad54');glass.emissiveIntensity=night*.9;
       renderer.toneMappingExposure=1.0;
-      boundary.material.opacity=.48*(1-smooth(6,11,buildTime));
+      boundary.material.opacity=.48*(1-smooth(1,5,buildTime));
       // Move only the camera INSIDE the website, never the portfolio camera.
-      const approach=smooth(5,15,buildTime),angle=.75+Math.sin(buildTime/30*Math.PI*2)*.055;
+      // A steady 45-degree arc keeps the glazed front visible throughout construction.
+      const approach=smooth(.4,9,buildTime),orbit=clamp(buildTime/28),angle=.35+.78*orbit;
       const radius=24.5-approach*3.2;
-      camera.position.set(Math.sin(angle)*radius,12.6-approach*1.8,Math.cos(angle)*radius);
+      camera.position.set(Math.sin(angle)*radius,12.6-approach*1.8+Math.sin(orbit*Math.PI)*.35,Math.cos(angle)*radius);
       camera.lookAt(-1.4,2.0,-.1);camera.updateMatrixWorld();
     }
     function site(t){
       const effective=t<29?t:0;
-      const scroll=smooth(4.8,10.5,effective),night=1-daylight;
+      const scroll=smooth(.6,4,effective),night=1-daylight;
       const ink=night>.45?'#f0f1e9':'#283430',softInk=night>.45?'#aebbbd':'#6e786e';
       rect(0,0,W,H,'#edece4');
       ctx.drawImage(renderer.domElement,0,132,W,548);
@@ -166,13 +167,13 @@ window.MBArchitectureDemo = {
       rule(32,131,1136,'#c9cec1');
       // The scroll-driven heading makes this read as a website, not a standalone film.
       ctx.save();ctx.beginPath();ctx.rect(0,133,W,547);ctx.clip();
-      ctx.globalAlpha=1-smooth(5,7.2,effective);ctx.translate(0,-scroll*100);
+      ctx.globalAlpha=1-smooth(.8,2.8,effective);ctx.translate(0,-scroll*100);
       text('ЧАСТНАЯ АРХИТЕКТУРА / 01',38,194,13,softInk,500);
       text('От замысла —',34,265,51,ink,500);text('к пространству.',34,326,51,ink,500);
       text('Дом начинается с идеи.',38,374,18,softInk);text('Прокрутите, чтобы увидеть путь.',38,404,18,softInk);
       rule(38,438,210,'#a5afa0');text('Листайте вниз  ↓',38,470,15,ink,500);
       ctx.restore();
-      const cardReveal=smooth(7.6,10.5,effective);
+      const cardReveal=smooth(3.1,5,effective);
       if(cardReveal>0){
         ctx.save();ctx.globalAlpha=cardReveal;ctx.translate(0,(1-cardReveal)*18);
         rect(33,198,244,191,'#efeee4',4);
@@ -182,9 +183,9 @@ window.MBArchitectureDemo = {
         rule(52,328,204,'#c5cbbf');text('Бетон. Стекло. Дерево.',52,357,14,'#647263');
         ctx.restore();
       }
-      const stageLabel=effective<5?'УЧАСТОК':effective<8?'ФУНДАМЕНТ':effective<12?'ПЕРВЫЙ ЭТАЖ':effective<17?'ОБЪЁМ И КРОВЛЯ':effective<23?'СТЕКЛО И ОТДЕЛКА':'ГОТОВОЕ ПРОСТРАНСТВО';
+      const stageLabel=effective<.25?'УЧАСТОК':effective<1.6?'ФУНДАМЕНТ':effective<6?'ПЕРВЫЙ ЭТАЖ':effective<13?'ОБЪЁМ И КРОВЛЯ':effective<21?'СТЕКЛО И ОТДЕЛКА':'ГОТОВОЕ ПРОСТРАНСТВО';
       text(stageLabel,38,638,13,ink,600);
-      text(daylight>.7?'ДНЕВНОЙ СВЕТ':daylight<.2?'НОЧЬ / ТЁПЛЫЙ СВЕТ':effective<20?'ЗАКАТ':'РАССВЕТ',38,658,10,softInk,500);
+      text(daylight>.7?'ДНЕВНОЙ СВЕТ':daylight<.2?'НОЧЬ / ТЁПЛЫЙ СВЕТ':effective<18?'ЗАКАТ':'РАССВЕТ',38,658,10,softInk,500);
       // Slim scroll indicator and construction progress.
       rect(1165,168,3,438,night>.45?'#46535d':'#c2c9bc',2);rect(1165,168+scroll*300,3,80,night>.45?'#dae5dc':'#42513d',2);
       rect(0,680,W,70,'#f1f0e9');rule(32,680,1136,'#c9cec1');
@@ -210,7 +211,7 @@ window.MBArchitectureDemo = {
         last=now;active=running;
         if(running&&now-lastPaint>=1000/24){render(time);lastPaint=now;}
       },
-      get state(){return {time,active,duration:30,renderedTime,daylight,stages:stages.filter(s=>s.group.visible).map(s=>s.name)};}
+      get state(){return {time,active,duration:30,renderedTime,daylight,cameraPosition:camera.position.toArray(),stages:stages.filter(s=>s.group.visible).map(s=>s.name)};}
     };
   }
 };
