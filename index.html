@@ -1010,39 +1010,29 @@ window.MBArchitectureDemo = {
     const waterMat=mat('pool','#5c9297',{metalness:.35,roughness:.17});
     block(garden,3.65,.025,1.45,-2.7,.055,5.55,waterMat,false);
     for(let i=0;i<5;i++)block(garden,.82,.07,.65,3.3,-.03,6.1+i*.86,white,false);
-    // A single world-space reveal front rises through the entire structure.
-    // Apply it to shadow depth as well, so unbuilt geometry casts no shadow.
-    const revealHeight={value:-.5};
-    function revealMaterial(material,fade,shadow=false,solid=false){
-      material.onBeforeCompile=shader=>{
-        shader.uniforms.buildHeight=revealHeight;shader.uniforms.buildFade=fade;
-        shader.vertexShader='varying float buildWorldY;\n'+shader.vertexShader;
-        shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',`#include <project_vertex>
-          vec4 buildPosition=vec4(transformed,1.0);
-          #ifdef USE_INSTANCING
-            buildPosition=instanceMatrix*buildPosition;
-          #endif
-          buildWorldY=(modelMatrix*buildPosition).y;`);
-        shader.fragmentShader='varying float buildWorldY; uniform float buildHeight; uniform float buildFade;\n'+shader.fragmentShader;
-        shader.fragmentShader=shader.fragmentShader.replace('#include <alphatest_fragment>',`
-          diffuseColor.a *= (1.0-smoothstep(buildHeight-.65,buildHeight,buildWorldY))*buildFade;
-          ${shadow||solid ? 'float coverage=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453); if(diffuseColor.a<coverage) discard; diffuseColor.a=1.0;' : 'if(diffuseColor.a<.001) discard;'}
-          #include <alphatest_fragment>`);
-      };
-      material.customProgramCacheKey=()=> shadow||solid?'continuous-solid-coverage-v3':'continuous-world-reveal-v3';
-    }
+    // Build with real geometric movement. No dissolve, dithering or reveal shaders.
     stages.forEach(s=>{
-      s.fade={value:1};s.materials=[];
-      s.group.traverse(mesh=>{if(!mesh.isMesh)return;
-        if(mesh.material!==glowMat&&mesh.material!==stripMat)mesh.material=mesh.material.clone();
-        mesh.material.transparent=true;
-        // Coverage grows smoothly; opaque surfaces retain correct depth and layering.
-        const solid=mesh.material.opacity===1;
-        mesh.material.depthWrite=solid;
-        revealMaterial(mesh.material,s.fade,false,solid);s.materials.push(mesh.material);
-        mesh.customDepthMaterial=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking});
-        revealMaterial(mesh.customDepthMaterial,s.fade,true);
-      });
+      s.materials=[];
+      const children=[...s.group.children];
+      s.parts=children.map(object=>{
+        object.updateMatrixWorld(true);
+        const bounds=new T.Box3().setFromObject(object);
+        // Three r128 does not include instance transforms in Box3.setFromObject.
+        if(object.isInstancedMesh){
+          object.geometry.computeBoundingBox();bounds.makeEmpty();
+          const matrix=new T.Matrix4();
+          for(let i=0;i<object.count;i++){
+            object.getMatrixAt(i,matrix);
+            bounds.union(object.geometry.boundingBox.clone().applyMatrix4(matrix).applyMatrix4(object.matrixWorld));
+          }
+        }
+        const size=bounds.getSize(new T.Vector3());
+        const base=bounds.min.y;
+        const pivot=new T.Group();pivot.position.y=base;
+        s.group.add(pivot);pivot.add(object);object.position.y-=base;
+        object.traverse(mesh=>{if(mesh.isMesh)s.materials.push(mesh.material)});
+        return {pivot,base,horizontal:size.y<.5,progress:0};
+      }).sort((a,b)=>a.base-b.base);
     });
     let time=0,active=false,last=0,lastPaint=-Infinity,renderedTime=0,daylight=1;
     function rect(px,py,w,h,color,r=0){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(px,py,w,h,r);ctx.fill()}
@@ -1053,11 +1043,18 @@ window.MBArchitectureDemo = {
     function configure(t){
       // Return to the original plot only behind an opaque page transition.
       const buildTime=t<29?t:0;
-      revealHeight.value=-.14+7.5*(.65*clamp((buildTime-.25)/14.75)+.35*smooth(.25,15,buildTime));
       stages.forEach(s=>{
-        const isFinish=['glazing','timber-finish','terrace','landscape'].includes(s.name);
-        s.fade.value=isFinish?smooth(s.start,s.end,buildTime):1;
-        s.group.visible=buildTime>.25 && s.fade.value>0;
+        s.group.visible=buildTime>s.start;
+        s.parts.forEach((part,i)=>{
+          const duration=s.end-s.start;
+          const delay=.3*i/Math.max(1,s.parts.length-1);
+          const p=smooth(s.start+delay*duration,s.start+(delay+.7)*duration,buildTime);
+          part.progress=p;part.pivot.visible=p>0;
+          // Slabs extend in plan as they rise; walls and windows grow from their sill.
+          // A short eased width expansion prevents a full top face appearing at once.
+          const width=part.horizontal?p:smooth(0,.3,p);
+          part.pivot.scale.set(Math.max(.000001,width),Math.max(.000001,p),Math.max(.000001,width));
+        });
       });
       daylight=clamp(1-smooth(4,16,buildTime)+smooth(17,28,buildTime));
       const night=1-daylight;
@@ -1149,7 +1146,7 @@ window.MBArchitectureDemo = {
         last=now;active=running;
         if(running&&now-lastPaint>=1000/60-.5){render(time);lastPaint=now;}
       },
-      get state(){return {time,active,duration:30,renderedTime,daylight,revealHeight:revealHeight.value,cameraPosition:camera.position.toArray(),stages:stages.filter(s=>s.group.visible).map(s=>s.name)};}
+      get state(){return {time,active,duration:30,renderedTime,daylight,parts:stages.flatMap(s=>s.parts.map(p=>({stage:s.name,progress:p.progress}))),cameraPosition:camera.position.toArray(),stages:stages.filter(s=>s.group.visible).map(s=>s.name)};}
     };
   }
 };
