@@ -7,8 +7,8 @@ window.MBArchitectureDemo = {
     const clamp=v=>Math.max(0,Math.min(1,v));
     const smooth=(a,b,t)=>{const v=clamp((t-a)/(b-a));return v*v*(3-2*v)};
     const scene=new T.Scene();
-    const skyDay=new T.Color('#e3e7e1'),skyNight=new T.Color('#172435');
-    scene.background=skyDay.clone();scene.fog=new T.Fog(skyDay,26,72);
+    const skyDay=new T.Color('#c9dce3'),skyNight=new T.Color('#172435');
+    scene.background=skyDay.clone();scene.fog=new T.Fog(skyDay,35,100);
     const camera=new T.PerspectiveCamera(38,1200/548,.1,120);
     const renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});
     renderer.setPixelRatio(1);renderer.setSize(1000,457,false);
@@ -44,14 +44,56 @@ window.MBArchitectureDemo = {
       m.castShadow=shadow;m.receiveShadow=true;parent.add(m);return m;
     }
     block(scene,14.3,.12,10.8,0,-.16,.4,soil);
-    // Existing site context: restrained landscaping outside the construction plot.
-    function tree(parent,px,pz,h=3.2){
-      const trunk=new T.Mesh(new T.CylinderGeometry(.07,.1,h*.62,5),timber);
-      trunk.position.set(px,h*.31-.12,pz);parent.add(trunk);trunk.castShadow=true;
-      const crown=new T.Mesh(new T.IcosahedronGeometry(1,1),leaf);
-      crown.scale.set(h*.32,h*.45,h*.32);crown.position.set(px,h*.72,pz);crown.castShadow=true;parent.add(crown);
+    // Seeded textures and layered foliage keep the scene self-contained and repeatable.
+    let seed=77;
+    function random(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
+    function surface(material,base,grain,repeat){
+      const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');
+      x.fillStyle=base;x.fillRect(0,0,256,256);
+      for(let i=0;i<9500;i++){x.fillStyle=`rgba(${grain},${.04+random()*.12})`;x.fillRect(random()*256,random()*256,1+random()*3,1+random()*2)}
+      const map=new T.CanvasTexture(c);map.wrapS=map.wrapT=T.RepeatWrapping;map.repeat.set(repeat,repeat);map.encoding=T.sRGBEncoding;
+      material.map=map;material.bumpMap=map;material.bumpScale=.035;material.needsUpdate=true;
     }
-    [[-8,-5,3.5],[8,-6,4.2],[9,1,3.1],[-7,5,2.8]].forEach(v=>tree(scene,...v));
+    surface(concrete,'#d4d0c4','70,65,55',2);
+    surface(white,'#eee9db','135,128,110',2);
+    surface(materials.ground,'#839276','30,55,23',55);
+    surface(timber,'#987552','45,25,10',3);
+    const foliageGeo=new T.SphereGeometry(1,8,6);
+    const leafCanvas=document.createElement('canvas');leafCanvas.width=leafCanvas.height=128;
+    const leafCtx=leafCanvas.getContext('2d');
+    for(let i=0;i<480;i++){
+      leafCtx.fillStyle=['#253e20','#3a542e','#506c37','#6b8245'][Math.floor(random()*4)];
+      leafCtx.beginPath();leafCtx.ellipse(random()*128,random()*128,2+random()*5,1+random()*3,random()*Math.PI,0,Math.PI*2);leafCtx.fill();
+    }
+    const leafMap=new T.CanvasTexture(leafCanvas);leafMap.encoding=T.sRGBEncoding;
+    const foliageMaterials=['#344c32','#46613b','#5d7546','#718352'].map(color=>new T.MeshStandardMaterial({color:'#d4dfbe',map:leafMap,alphaTest:.45,side:T.DoubleSide,roughness:1}));
+    function tree(parent,px,pz,h=3.2){
+      const g=new T.Group();g.position.set(px,-.12,pz);parent.add(g);
+      const trunk=new T.Mesh(new T.CylinderGeometry(.035*h,.055*h,h*.68,8),timber);
+      trunk.position.y=h*.34;g.add(trunk);trunk.castShadow=true;
+      for(let j=0;j<4;j++){
+        const branch=new T.Mesh(new T.CylinderGeometry(.014*h,.025*h,h*.36,6),timber);
+        const angle=j*2.4;branch.position.set(Math.sin(angle)*h*.09,h*(.46+j*.035),Math.cos(angle)*h*.09);
+        branch.rotation.set(Math.cos(angle)*.55,0,Math.sin(angle)*.55);g.add(branch);
+      }
+      // Many overlapping irregular crowns, instead of a single faceted solid.
+      const crowns=new T.InstancedMesh(foliageGeo,foliageMaterials[Math.floor(random()*4)],48);
+      const pose=new T.Object3D();
+      for(let j=0;j<48;j++){
+        const angle=j*2.399,r=Math.sqrt(random())*h*.27;
+        pose.position.set(Math.cos(angle)*r,h*(.6+random()*.35),Math.sin(angle)*r);
+        pose.scale.set(h*(.12+random()*.09),h*(.14+random()*.1),h*(.12+random()*.09));
+        pose.rotation.set(random(),random(),random());pose.updateMatrix();crowns.setMatrixAt(j,pose.matrix);
+      }
+      crowns.castShadow=true;crowns.receiveShadow=true;g.add(crowns);return g;
+    }
+    [[-8,-5,4.8],[8,-6,5.4],[10,1,4.2],[-9,6,3.6]].forEach(v=>tree(scene,...v));
+    // A wooded horizon and low rolling terrain give the architecture a real setting.
+    for(let i=0;i<32;i++){const a=2.2+i*.11;const r=20+random()*13;tree(scene,Math.cos(a)*r,Math.sin(a)*r-15,4+random()*4)}
+    for(let i=0;i<7;i++){
+      const hill=new T.Mesh(new T.SphereGeometry(1,24,12),grass);
+      hill.position.set(-50+i*17,-1.8,-43-random()*10);hill.scale.set(18,3+random()*4,12);hill.receiveShadow=true;scene.add(hill);
+    }
     const boundaryGeo=new T.BufferGeometry().setFromPoints([
       new T.Vector3(-4.45,-.08,-2.95),new T.Vector3(4.45,-.08,-2.95),new T.Vector3(4.45,-.08,2.95),
       new T.Vector3(-4.45,-.08,2.95),new T.Vector3(-4.45,-.08,-2.95)]);
@@ -124,6 +166,20 @@ window.MBArchitectureDemo = {
       block(garden,1.1,.35,1.1,pos[0],.05,pos[1],concrete);
       const bush=new T.Mesh(new T.IcosahedronGeometry(.6,1),grass);bush.position.set(pos[0],.54,pos[1]);bush.scale.y=.7;garden.add(bush);bush.castShadow=true;
     }
+    // Animate each component separately, preserving its full-size silhouette.
+    // Per-component materials allow opacity to reach zero before visibility changes.
+    stages.forEach(s=>{
+      s.parts=s.group.children.map((object,i,all)=>{
+        const fadeMaterials=[];
+        object.traverse(mesh=>{if(!mesh.isMesh)return;
+          // Emissive window panels are controlled by the day/night lighting below.
+          if(mesh.material===glowMat||mesh.material===stripMat)return;
+          mesh.material=mesh.material.clone();
+          fadeMaterials.push({material:mesh.material,opacity:mesh.material.opacity,transparent:mesh.material.transparent});
+        });
+        return {object,baseY:object.position.y,delay:i/Math.max(1,all.length-1)*.45,fadeMaterials};
+      });
+    });
     let time=0,active=false,last=0,lastPaint=-Infinity,renderedTime=0,daylight=1;
     function rect(px,py,w,h,color,r=0){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(px,py,w,h,r);ctx.fill()}
     function text(value,px,py,size,color='#242d2b',weight=400,align='left'){
@@ -133,16 +189,29 @@ window.MBArchitectureDemo = {
     function configure(t){
       // Return to the original plot only behind an opaque page transition.
       const buildTime=t<29?t:0;
-      stages.forEach(s=>{const p=smooth(s.start,s.end,buildTime);s.group.visible=p>0;s.group.scale.y=Math.max(.001,p);s.group.position.y=-(1-p)*.12});
+      stages.forEach(s=>{
+        s.group.visible=buildTime>s.start;
+        s.parts.forEach(part=>{
+          const length=s.end-s.start;
+          const p=smooth(s.start+part.delay*length,s.start+(part.delay+.55)*length,buildTime);
+          part.object.visible=p>0;part.object.position.y=part.baseY-(1-p)*.45;
+          part.fadeMaterials.forEach(({material,opacity,transparent})=>{
+            const blending=transparent||p<1;
+            if(material.transparent!==blending){material.transparent=blending;material.needsUpdate=true}
+            material.opacity=opacity*p;material.depthWrite=!blending;
+          });
+        });
+      });
       daylight=clamp(1-smooth(8,15,buildTime)+smooth(19,25,buildTime));
       const night=1-daylight;
       scene.background.copy(skyNight).lerp(skyDay,daylight);scene.fog.color.copy(scene.background);
-      materials.ground.color.set('#414b46').lerp(new T.Color('#cecfbf'),daylight);
+      materials.ground.color.set('#7c878b').lerp(new T.Color('#ffffff'),daylight);
       sun.intensity=.08+daylight*1.9;hemi.intensity=.16+daylight*.6;fill.intensity=.12+night*.08;
       sun.color.set('#b6c9ed').lerp(new T.Color('#fff0d5'),daylight);
       sun.position.set(-10+smooth(0,27,buildTime)*15,5+daylight*10,9);
       glowMat.opacity=night*.67;stripMat.opacity=night*.94;
       glass.envMapIntensity=.18+daylight*.45;glass.emissive.set('#ffad54');glass.emissiveIntensity=night*.9;
+      stages.forEach(s=>s.parts.forEach(part=>part.fadeMaterials.forEach(({material})=>{if(material.envMap===env){material.envMapIntensity=glass.envMapIntensity;material.emissive.copy(glass.emissive);material.emissiveIntensity=glass.emissiveIntensity}})));
       renderer.toneMappingExposure=1.0;
       boundary.material.opacity=.48*(1-smooth(1,5,buildTime));
       // Move only the camera INSIDE the website, never the portfolio camera.
@@ -176,7 +245,7 @@ window.MBArchitectureDemo = {
       const cardReveal=smooth(3.1,5,effective);
       if(cardReveal>0){
         ctx.save();ctx.globalAlpha=cardReveal;ctx.translate(0,(1-cardReveal)*18);
-        rect(33,198,244,191,'#efeee4',4);
+        rect(33,198,244,191,'rgba(245,244,234,0.94)',12);
         text('HOUSE 01',52,230,13,'#6d7969',600);
         text('Дом у леса',52,274,28,'#28362c',500);
         text('280 м² / два этажа',52,308,15,'#647263');
@@ -184,6 +253,7 @@ window.MBArchitectureDemo = {
         ctx.restore();
       }
       const stageLabel=effective<.25?'УЧАСТОК':effective<1.6?'ФУНДАМЕНТ':effective<6?'ПЕРВЫЙ ЭТАЖ':effective<13?'ОБЪЁМ И КРОВЛЯ':effective<21?'СТЕКЛО И ОТДЕЛКА':'ГОТОВОЕ ПРОСТРАНСТВО';
+      rect(25,613,276,57,night>.45?'rgba(20,33,36,.82)':'rgba(245,244,234,.9)',8);
       text(stageLabel,38,638,13,ink,600);
       text(daylight>.7?'ДНЕВНОЙ СВЕТ':daylight<.2?'НОЧЬ / ТЁПЛЫЙ СВЕТ':effective<18?'ЗАКАТ':'РАССВЕТ',38,658,10,softInk,500);
       // Slim scroll indicator and construction progress.
