@@ -5,13 +5,13 @@ window.MBArchitectureDemo = {
   create(canvas, T, onFrame) {
     const ctx=canvas.getContext('2d'), W=1200, H=750;
     const clamp=v=>Math.max(0,Math.min(1,v));
-    const smooth=(a,b,t)=>{const v=clamp((t-a)/(b-a));return v*v*(3-2*v)};
+    const smooth=(a,b,t)=>{const v=clamp((t-a)/(b-a));return v*v*v*(v*(v*6-15)+10)};
     const scene=new T.Scene();
     const skyDay=new T.Color('#c9dce3'),skyNight=new T.Color('#172435');
-    scene.background=skyDay.clone();scene.fog=new T.Fog(skyDay,35,100);
+    scene.background=null;
     const camera=new T.PerspectiveCamera(38,1200/548,.1,120);
-    const renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});
-    renderer.setPixelRatio(1);renderer.setSize(1000,457,false);
+    const renderer=new T.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
+    renderer.setPixelRatio(1);renderer.setSize(1000,457,false);renderer.setClearColor(0x000000,0);
     renderer.outputEncoding=T.sRGBEncoding;renderer.toneMapping=T.ACESFilmicToneMapping;
     renderer.toneMappingExposure=1.15;
     renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
@@ -23,7 +23,7 @@ window.MBArchitectureDemo = {
     const fill=new T.DirectionalLight('#b7d4f0',.25);fill.position.set(7,7,-9);scene.add(fill);
     const materials={};
     function mat(name,color,extra={}){return materials[name]=new T.MeshStandardMaterial({color,roughness:.76,...extra})}
-    const concrete=mat('concrete','#d4d0c4'),white=mat('white','#eee9db'),dark=mat('dark','#39413f');
+    const concrete=mat('concrete','#b9b5a9'),white=mat('white','#d6cfbd'),dark=mat('dark','#39413f');
     const timber=mat('timber','#836244'),woodLight=mat('woodLight','#ac8761');
     const soil=mat('soil','#b5b4a2'),grass=mat('grass','#6f7c60'),leaf=mat('leaf','#52654d');
     const bronze=mat('bronze','#373e3b',{metalness:.65,roughness:.32});
@@ -36,14 +36,14 @@ window.MBArchitectureDemo = {
       x.fillStyle=g;x.fillRect(0,0,64,64);x.fillStyle='#fff6df';x.fillRect(8+i*3,7,6,32);envFaces.push(c);
     }
     const env=new T.CubeTexture(envFaces);env.encoding=T.sRGBEncoding;env.needsUpdate=true;glass.envMap=env;glass.envMapIntensity=.7;
-    const ground=new T.Mesh(new T.PlaneGeometry(160,160),mat('ground','#cecfbf'));
+    const ground=new T.Mesh(new T.PlaneGeometry(160,160),new T.ShadowMaterial({opacity:.25,depthWrite:false}));
     ground.rotation.x=-Math.PI/2;ground.position.y=-.24;ground.receiveShadow=true;scene.add(ground);
     const boxGeo=new T.BoxGeometry(1,1,1);
     function block(parent,w,h,d,px,py,pz,material,shadow=true){
       const m=new T.Mesh(boxGeo,material);m.scale.set(w,h,d);m.position.set(px,py,pz);
       m.castShadow=shadow;m.receiveShadow=true;parent.add(m);return m;
     }
-    block(scene,14.3,.12,10.8,0,-.16,.4,soil);
+
     // Seeded textures and layered foliage keep the scene self-contained and repeatable.
     let seed=77;
     function random(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
@@ -52,48 +52,24 @@ window.MBArchitectureDemo = {
       x.fillStyle=base;x.fillRect(0,0,256,256);
       for(let i=0;i<9500;i++){x.fillStyle=`rgba(${grain},${.04+random()*.12})`;x.fillRect(random()*256,random()*256,1+random()*3,1+random()*2)}
       const map=new T.CanvasTexture(c);map.wrapS=map.wrapT=T.RepeatWrapping;map.repeat.set(repeat,repeat);map.encoding=T.sRGBEncoding;
-      material.map=map;material.bumpMap=map;material.bumpScale=.035;material.needsUpdate=true;
+      material.map=map;material.bumpMap=map;material.bumpScale=.008;material.needsUpdate=true;
     }
     surface(concrete,'#d4d0c4','70,65,55',2);
     surface(white,'#eee9db','135,128,110',2);
-    surface(materials.ground,'#839276','30,55,23',55);
+
     surface(timber,'#987552','45,25,10',3);
-    const foliageGeo=new T.SphereGeometry(1,8,6);
-    const leafCanvas=document.createElement('canvas');leafCanvas.width=leafCanvas.height=128;
-    const leafCtx=leafCanvas.getContext('2d');
-    for(let i=0;i<480;i++){
-      leafCtx.fillStyle=['#253e20','#3a542e','#506c37','#6b8245'][Math.floor(random()*4)];
-      leafCtx.beginPath();leafCtx.ellipse(random()*128,random()*128,2+random()*5,1+random()*3,random()*Math.PI,0,Math.PI*2);leafCtx.fill();
-    }
-    const leafMap=new T.CanvasTexture(leafCanvas);leafMap.encoding=T.sRGBEncoding;
-    const foliageMaterials=['#344c32','#46613b','#5d7546','#718352'].map(color=>new T.MeshStandardMaterial({color:'#d4dfbe',map:leafMap,alphaTest:.45,side:T.DoubleSide,roughness:1}));
-    function tree(parent,px,pz,h=3.2){
-      const g=new T.Group();g.position.set(px,-.12,pz);parent.add(g);
-      const trunk=new T.Mesh(new T.CylinderGeometry(.035*h,.055*h,h*.68,8),timber);
-      trunk.position.y=h*.34;g.add(trunk);trunk.castShadow=true;
-      for(let j=0;j<4;j++){
-        const branch=new T.Mesh(new T.CylinderGeometry(.014*h,.025*h,h*.36,6),timber);
-        const angle=j*2.4;branch.position.set(Math.sin(angle)*h*.09,h*(.46+j*.035),Math.cos(angle)*h*.09);
-        branch.rotation.set(Math.cos(angle)*.55,0,Math.sin(angle)*.55);g.add(branch);
-      }
-      // Many overlapping irregular crowns, instead of a single faceted solid.
-      const crowns=new T.InstancedMesh(foliageGeo,foliageMaterials[Math.floor(random()*4)],48);
-      const pose=new T.Object3D();
-      for(let j=0;j<48;j++){
-        const angle=j*2.399,r=Math.sqrt(random())*h*.27;
-        pose.position.set(Math.cos(angle)*r,h*(.6+random()*.35),Math.sin(angle)*r);
-        pose.scale.set(h*(.12+random()*.09),h*(.14+random()*.1),h*(.12+random()*.09));
-        pose.rotation.set(random(),random(),random());pose.updateMatrix();crowns.setMatrixAt(j,pose.matrix);
-      }
-      crowns.castShadow=true;crowns.receiveShadow=true;g.add(crowns);return g;
-    }
-    [[-8,-5,4.8],[8,-6,5.4],[10,1,4.2],[-9,6,3.6]].forEach(v=>tree(scene,...v));
-    // A wooded horizon and low rolling terrain give the architecture a real setting.
-    for(let i=0;i<32;i++){const a=2.2+i*.11;const r=20+random()*13;tree(scene,Math.cos(a)*r,Math.sin(a)*r-15,4+random()*4)}
-    for(let i=0;i<7;i++){
-      const hill=new T.Mesh(new T.SphereGeometry(1,24,12),grass);
-      hill.position.set(-50+i*17,-1.8,-43-random()*10);hill.scale.set(18,3+random()*4,12);hill.receiveShadow=true;scene.add(hill);
-    }
+    // Fine longitudinal grain for the facade and terrace, with subdued highlights.
+    const woodCanvas=document.createElement('canvas');woodCanvas.width=woodCanvas.height=256;
+    const wx=woodCanvas.getContext('2d');wx.fillStyle='#967755';wx.fillRect(0,0,256,256);
+    for(let i=0;i<220;i++){wx.strokeStyle=`rgba(40,25,12,${random()*.23})`;wx.lineWidth=.3+random();wx.beginPath();const x=random()*256;wx.moveTo(x,0);wx.bezierCurveTo(x+random()*8,85,x-random()*8,170,x,256);wx.stroke()}
+    const woodMap=new T.CanvasTexture(woodCanvas);woodMap.encoding=T.sRGBEncoding;
+    timber.map=woodMap;woodLight.map=woodMap;woodLight.color.set('#c0ab89');
+    // Broad soft contact shadow anchors the 3D house into the photographed clearing.
+    const contactCanvas=document.createElement('canvas');contactCanvas.width=contactCanvas.height=128;
+    const cx=contactCanvas.getContext('2d'),cg=cx.createRadialGradient(64,64,15,64,64,64);
+    cg.addColorStop(0,'rgba(0,0,0,.3)');cg.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=cg;cx.fillRect(0,0,128,128);
+    const contactMat=new T.MeshBasicMaterial({map:new T.CanvasTexture(contactCanvas),transparent:true,depthWrite:false,opacity:0});
+    const contact=new T.Mesh(new T.PlaneGeometry(14,11),contactMat);contact.rotation.x=-Math.PI/2;contact.position.y=-.22;scene.add(contact);
     const boundaryGeo=new T.BufferGeometry().setFromPoints([
       new T.Vector3(-4.45,-.08,-2.95),new T.Vector3(4.45,-.08,-2.95),new T.Vector3(4.45,-.08,2.95),
       new T.Vector3(-4.45,-.08,2.95),new T.Vector3(-4.45,-.08,-2.95)]);
@@ -157,15 +133,11 @@ window.MBArchitectureDemo = {
     block(terrace,2.25,.9,.04,-2.85,4.16,2.7,railMat,false);
     block(terrace,2.25,.035,.06,-2.85,4.62,2.7,bronze);
     const garden=stage('landscape',21,24);
-    for(const v of [[-5.4,-1.6,2.3],[5.7,-2.8,2.8],[5.5,2.0,1.8]])tree(garden,...v);
+
     block(garden,3.9,.15,1.7,-2.7,-.03,5.55,concrete);
     const waterMat=mat('pool','#5c9297',{metalness:.35,roughness:.17});
     block(garden,3.65,.025,1.45,-2.7,.055,5.55,waterMat,false);
     for(let i=0;i<5;i++)block(garden,.82,.07,.65,3.3,-.03,6.1+i*.86,white,false);
-    for(const pos of [[-5.5,1.6],[-5.5,3.1],[5.7,4.4]]){
-      block(garden,1.1,.35,1.1,pos[0],.05,pos[1],concrete);
-      const bush=new T.Mesh(new T.IcosahedronGeometry(.6,1),grass);bush.position.set(pos[0],.54,pos[1]);bush.scale.y=.7;garden.add(bush);bush.castShadow=true;
-    }
     // Animate each component separately, preserving its full-size silhouette.
     // Per-component materials allow opacity to reach zero before visibility changes.
     stages.forEach(s=>{
@@ -173,8 +145,8 @@ window.MBArchitectureDemo = {
         const fadeMaterials=[];
         object.traverse(mesh=>{if(!mesh.isMesh)return;
           // Emissive window panels are controlled by the day/night lighting below.
-          if(mesh.material===glowMat||mesh.material===stripMat)return;
-          mesh.material=mesh.material.clone();
+          if(mesh.material===glowMat||mesh.material===stripMat){mesh.userData.lightPanel=true;return;}
+          mesh.material=mesh.material.clone();mesh.material.transparent=true;mesh.material.depthWrite=false;
           fadeMaterials.push({material:mesh.material,opacity:mesh.material.opacity,transparent:mesh.material.transparent});
         });
         return {object,baseY:object.position.y,delay:i/Math.max(1,all.length-1)*.45,fadeMaterials};
@@ -194,39 +166,53 @@ window.MBArchitectureDemo = {
         s.parts.forEach(part=>{
           const length=s.end-s.start;
           const p=smooth(s.start+part.delay*length,s.start+(part.delay+.55)*length,buildTime);
-          part.object.visible=p>0;part.object.position.y=part.baseY-(1-p)*.45;
+          part.object.visible=p>0;part.object.position.y=part.baseY-(1-p)*.16;
           part.fadeMaterials.forEach(({material,opacity,transparent})=>{
-            const blending=transparent||p<1;
-            if(material.transparent!==blending){material.transparent=blending;material.needsUpdate=true}
-            material.opacity=opacity*p;material.depthWrite=!blending;
+            material.opacity=opacity*p;
+
           });
         });
       });
-      daylight=clamp(1-smooth(8,15,buildTime)+smooth(19,25,buildTime));
+      daylight=clamp(1-smooth(4,16,buildTime)+smooth(17,28,buildTime));
       const night=1-daylight;
-      scene.background.copy(skyNight).lerp(skyDay,daylight);scene.fog.color.copy(scene.background);
-      materials.ground.color.set('#7c878b').lerp(new T.Color('#ffffff'),daylight);
-      sun.intensity=.08+daylight*1.9;hemi.intensity=.16+daylight*.6;fill.intensity=.12+night*.08;
+
+      ground.material.opacity=(.13+daylight*.12)*smooth(.3,4,buildTime);
+      contactMat.opacity=smooth(.25,3,buildTime)*(.6+daylight*.4);
+      sun.intensity=.12+daylight*1.45;hemi.intensity=.3+daylight*.55;fill.intensity=.18+night*.12;
       sun.color.set('#b6c9ed').lerp(new T.Color('#fff0d5'),daylight);
       sun.position.set(-10+smooth(0,27,buildTime)*15,5+daylight*10,9);
-      glowMat.opacity=night*.67;stripMat.opacity=night*.94;
-      glass.envMapIntensity=.18+daylight*.45;glass.emissive.set('#ffad54');glass.emissiveIntensity=night*.9;
+      glazing.children.forEach(mesh=>{if(mesh.userData.lightPanel)mesh.visible=buildTime>14});
+      glowMat.opacity=night*.38*smooth(14,17,buildTime);stripMat.opacity=night*.8*smooth(14,17,buildTime);
+      glass.envMapIntensity=.18+daylight*.45;glass.emissive.set('#ffad54');glass.emissiveIntensity=night*.35;
       stages.forEach(s=>s.parts.forEach(part=>part.fadeMaterials.forEach(({material})=>{if(material.envMap===env){material.envMapIntensity=glass.envMapIntensity;material.emissive.copy(glass.emissive);material.emissiveIntensity=glass.emissiveIntensity}})));
       renderer.toneMappingExposure=1.0;
       boundary.material.opacity=.48*(1-smooth(1,5,buildTime));
       // Move only the camera INSIDE the website, never the portfolio camera.
       // A steady 45-degree arc keeps the glazed front visible throughout construction.
-      const approach=smooth(.4,9,buildTime),orbit=clamp(buildTime/28),angle=.35+.78*orbit;
-      const radius=24.5-approach*3.2;
-      camera.position.set(Math.sin(angle)*radius,12.6-approach*1.8+Math.sin(orbit*Math.PI)*.35,Math.cos(angle)*radius);
+      const approach=smooth(.4,9,buildTime),orbit=clamp(buildTime/28),angle=.48+.28*smooth(0,28,buildTime);
+      const radius=25-approach*2;
+      camera.position.set(Math.sin(angle)*radius,9.8-approach*.8+Math.sin(orbit*Math.PI)*.15,Math.cos(angle)*radius);
       camera.lookAt(-1.4,2.0,-.1);camera.updateMatrixWorld();
     }
     function site(t){
       const effective=t<29?t:0;
       const scroll=smooth(.6,4,effective),night=1-daylight;
-      const ink=night>.45?'#f0f1e9':'#283430',softInk=night>.45?'#aebbbd':'#6e786e';
+      const ink='#f1eee5',softInk='#d2d2c6';
       rect(0,0,W,H,'#edece4');
+      ctx.save();ctx.beginPath();ctx.rect(0,132,W,548);ctx.clip();
+      // Overscan and different movement rates create a restrained 2.5D dolly.
+      if(backdrop.complete&&backdrop.naturalWidth){
+        const drift=smooth(0,28,effective);
+        ctx.drawImage(backdrop,-24-drift*16,112,1264,604);
+      }else rect(0,132,W,548,'#777e73');
+      rect(0,132,W,548,`rgba(8,20,43,${night*.70})`);
+      const warmth=Math.sin(daylight*Math.PI)*.14;
+      rect(0,132,W,548,`rgba(158,90,43,${warmth})`);
       ctx.drawImage(renderer.domElement,0,132,W,548);
+      const shade=ctx.createLinearGradient(0,0,600,0);
+      shade.addColorStop(0,'rgba(13,23,24,.66)');shade.addColorStop(1,'rgba(13,23,24,0)');
+      ctx.fillStyle=shade;ctx.fillRect(0,132,600,548);
+      ctx.restore();
       // Browser strip and persistent website navigation.
       rect(0,0,W,34,'#dcded6');['#b2aaa0','#bdb9a7','#9aa99a'].forEach((v,i)=>rect(18+i*16,12,7,7,v,4));
       rect(360,7,480,20,'#eeeee7',5);text('forma — архитектурное бюро',600,21,11,'#7a8177',400,'center');
@@ -245,41 +231,40 @@ window.MBArchitectureDemo = {
       const cardReveal=smooth(3.1,5,effective);
       if(cardReveal>0){
         ctx.save();ctx.globalAlpha=cardReveal;ctx.translate(0,(1-cardReveal)*18);
-        rect(33,198,244,191,'rgba(245,244,234,0.94)',12);
-        text('HOUSE 01',52,230,13,'#6d7969',600);
-        text('Дом у леса',52,274,28,'#28362c',500);
-        text('280 м² / два этажа',52,308,15,'#647263');
-        rule(52,328,204,'#c5cbbf');text('Бетон. Стекло. Дерево.',52,357,14,'#647263');
+        rect(33,198,244,191,'rgba(18,29,29,.72)',6);
+        text('HOUSE 01',52,230,13,'#bebfae',600);
+        text('Дом у леса',52,274,28,'#f3efe3',500);
+        text('280 м² / два этажа',52,308,15,'#d1d0c2');
+        rule(52,328,204,'#66736b');text('Бетон. Стекло. Дерево.',52,357,14,'#d1d0c2');
         ctx.restore();
       }
-      const stageLabel=effective<.25?'УЧАСТОК':effective<1.6?'ФУНДАМЕНТ':effective<6?'ПЕРВЫЙ ЭТАЖ':effective<13?'ОБЪЁМ И КРОВЛЯ':effective<21?'СТЕКЛО И ОТДЕЛКА':'ГОТОВОЕ ПРОСТРАНСТВО';
-      rect(25,613,276,57,night>.45?'rgba(20,33,36,.82)':'rgba(245,244,234,.9)',8);
-      text(stageLabel,38,638,13,ink,600);
-      text(daylight>.7?'ДНЕВНОЙ СВЕТ':daylight<.2?'НОЧЬ / ТЁПЛЫЙ СВЕТ':effective<18?'ЗАКАТ':'РАССВЕТ',38,658,10,softInk,500);
-      // Slim scroll indicator and construction progress.
-      rect(1165,168,3,438,night>.45?'#46535d':'#c2c9bc',2);rect(1165,168+scroll*300,3,80,night>.45?'#dae5dc':'#42513d',2);
       rect(0,680,W,70,'#f1f0e9');rule(32,680,1136,'#c9cec1');
       text('FORMA / RESIDENTIAL',34,723,13,'#51604f',500);text('КОНЦЕПЦИЯ · 2026',370,723,11,'#7b8577');
       if(effective>=24){
         ctx.save();ctx.globalAlpha=smooth(24,25,effective);rect(940,693,228,43,'#283b2e',22);text('Смотреть проект  ↗',1054,720,15,'#f1f1e8',500,'center');ctx.restore();
-      }else{text('АРХИТЕКТУРА В ДВИЖЕНИИ',1167,723,11,'#7b8577',500,'right')}
+      }
       // Soft editorial page wipe masks reconstruction reset, keeping the loop seamless.
       const reset=t>=28&&t<29?smooth(28,29,t):t>=29?1-smooth(29,30,t):0;
-      if(reset>0){ctx.save();ctx.globalAlpha=reset;rect(0,132,W,548,'#e3e7e1');ctx.restore()}
+      if(reset>0){ctx.save();ctx.globalAlpha=reset;rect(0,132,W,548,'#202c2c');ctx.restore()}
     }
     function render(t){
       renderedTime=((t%30)+30)%30;configure(renderedTime);
       renderer.render(scene,camera);site(renderedTime);onFrame();
     }
+    const backdrop=new Image();
+    backdrop.src=window.MB_ARCHITECTURE_LANDSCAPE||'';
+    const ready=backdrop.decode().then(()=>render(time));
+    ready.catch(()=>{});
+    renderer.compile(scene,camera);
     render(0);
     document.addEventListener('visibilitychange',()=>{if(document.hidden){active=false;last=performance.now()}});
     return {
-      render,
+      render,ready,
       update(running,now=performance.now()){
         running=Boolean(running&&!document.hidden);
         if(running&&active)time=(time+Math.max(0,now-last)/1000)%30;
         last=now;active=running;
-        if(running&&now-lastPaint>=1000/24){render(time);lastPaint=now;}
+        if(running&&now-lastPaint>=1000/60-.5){render(time);lastPaint=now;}
       },
       get state(){return {time,active,duration:30,renderedTime,daylight,cameraPosition:camera.position.toArray(),stages:stages.filter(s=>s.group.visible).map(s=>s.name)};}
     };
