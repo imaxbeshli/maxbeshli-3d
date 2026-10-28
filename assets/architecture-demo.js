@@ -36,7 +36,7 @@ window.MBArchitectureDemo = {
       x.fillStyle=g;x.fillRect(0,0,64,64);x.fillStyle='#fff6df';x.fillRect(8+i*3,7,6,32);envFaces.push(c);
     }
     const env=new T.CubeTexture(envFaces);env.encoding=T.sRGBEncoding;env.needsUpdate=true;glass.envMap=env;glass.envMapIntensity=.7;
-    const ground=new T.Mesh(new T.PlaneGeometry(160,160),new T.ShadowMaterial({opacity:.25,depthWrite:false}));
+    const ground=new T.Mesh(new T.CircleGeometry(85,96),mat('ground','#85856b',{roughness:1}));
     ground.rotation.x=-Math.PI/2;ground.position.y=-.24;ground.receiveShadow=true;scene.add(ground);
     const boxGeo=new T.BoxGeometry(1,1,1);
     function block(parent,w,h,d,px,py,pz,material,shadow=true){
@@ -64,6 +64,23 @@ window.MBArchitectureDemo = {
     for(let i=0;i<220;i++){wx.strokeStyle=`rgba(40,25,12,${random()*.23})`;wx.lineWidth=.3+random();wx.beginPath();const x=random()*256;wx.moveTo(x,0);wx.bezierCurveTo(x+random()*8,85,x-random()*8,170,x,256);wx.stroke()}
     const woodMap=new T.CanvasTexture(woodCanvas);woodMap.encoding=T.sRGBEncoding;
     timber.map=woodMap;woodLight.map=woodMap;woodLight.color.set('#c0ab89');
+    surface(materials.ground,'#85856b','37,48,21',65);
+    // Terrain and planting share the house coordinate system and camera.
+    const hillGeo=new T.SphereGeometry(1,24,12);
+    for(let i=0;i<8;i++){
+      const hill=new T.Mesh(hillGeo,materials.ground);
+      hill.position.set(-65+i*18,-2.3,-48-Math.sin(i)*7);
+      hill.scale.set(20,2.5+random()*.5,17);hill.receiveShadow=true;scene.add(hill);
+    }
+    const grassGeo=new T.BufferGeometry();grassGeo.setAttribute('position',new T.Float32BufferAttribute([-.025,0,0,.025,0,0,.015,.48,.04],3));grassGeo.computeVertexNormals();
+    const reeds=new T.InstancedMesh(grassGeo,new T.MeshStandardMaterial({color:'#17230c',side:T.DoubleSide,roughness:1}),1600);
+    const pose=new T.Object3D();
+    for(let i=0;i<1600;i++){
+      const x=7+random()*15,z=-15+random()*23;
+      pose.position.set(x,-.23,z);pose.rotation.set(0,random()*Math.PI,random()*.15);
+      pose.scale.setScalar(.5+random());pose.updateMatrix();reeds.setMatrixAt(i,pose.matrix);
+    }
+    reeds.receiveShadow=true;scene.add(reeds);
     // Broad soft contact shadow anchors the 3D house into the photographed clearing.
     const contactCanvas=document.createElement('canvas');contactCanvas.width=contactCanvas.height=128;
     const cx=contactCanvas.getContext('2d'),cg=cx.createRadialGradient(64,64,15,64,64,64);
@@ -138,18 +155,37 @@ window.MBArchitectureDemo = {
     const waterMat=mat('pool','#5c9297',{metalness:.35,roughness:.17});
     block(garden,3.65,.025,1.45,-2.7,.055,5.55,waterMat,false);
     for(let i=0;i<5;i++)block(garden,.82,.07,.65,3.3,-.03,6.1+i*.86,white,false);
-    // Animate each component separately, preserving its full-size silhouette.
-    // Per-component materials allow opacity to reach zero before visibility changes.
+    // A single world-space reveal front rises through the entire structure.
+    // Apply it to shadow depth as well, so unbuilt geometry casts no shadow.
+    const revealHeight={value:-.5};
+    function revealMaterial(material,fade){
+      material.onBeforeCompile=shader=>{
+        shader.uniforms.buildHeight=revealHeight;shader.uniforms.buildFade=fade;
+        shader.vertexShader='varying float buildWorldY;\n'+shader.vertexShader;
+        shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',`#include <project_vertex>
+          vec4 buildPosition=vec4(transformed,1.0);
+          #ifdef USE_INSTANCING
+            buildPosition=instanceMatrix*buildPosition;
+          #endif
+          buildWorldY=(modelMatrix*buildPosition).y;`);
+        shader.fragmentShader='varying float buildWorldY; uniform float buildHeight; uniform float buildFade;\n'+shader.fragmentShader;
+        shader.fragmentShader=shader.fragmentShader.replace('#include <alphatest_fragment>',`
+          diffuseColor.a *= (1.0-smoothstep(buildHeight-.22,buildHeight,buildWorldY))*buildFade;
+          if(diffuseColor.a<.015) discard;
+          #include <alphatest_fragment>`);
+      };
+      material.customProgramCacheKey=()=> 'continuous-world-reveal-v1';
+    }
     stages.forEach(s=>{
-      s.parts=s.group.children.map((object,i,all)=>{
-        const fadeMaterials=[];
-        object.traverse(mesh=>{if(!mesh.isMesh)return;
-          // Emissive window panels are controlled by the day/night lighting below.
-          if(mesh.material===glowMat||mesh.material===stripMat){mesh.userData.lightPanel=true;return;}
-          mesh.material=mesh.material.clone();mesh.material.transparent=true;mesh.material.depthWrite=false;
-          fadeMaterials.push({material:mesh.material,opacity:mesh.material.opacity,transparent:mesh.material.transparent});
-        });
-        return {object,baseY:object.position.y,delay:i/Math.max(1,all.length-1)*.45,fadeMaterials};
+      s.fade={value:1};s.materials=[];
+      s.group.traverse(mesh=>{if(!mesh.isMesh)return;
+        if(mesh.material!==glowMat&&mesh.material!==stripMat)mesh.material=mesh.material.clone();
+        mesh.material.transparent=true;
+        // Opaque architectural surfaces still occlude interiors after reveal.
+        mesh.material.depthWrite=mesh.material.opacity===1;
+        revealMaterial(mesh.material,s.fade);s.materials.push(mesh.material);
+        mesh.customDepthMaterial=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking});
+        revealMaterial(mesh.customDepthMaterial,s.fade);
       });
     });
     let time=0,active=false,last=0,lastPaint=-Infinity,renderedTime=0,daylight=1;
@@ -161,37 +197,31 @@ window.MBArchitectureDemo = {
     function configure(t){
       // Return to the original plot only behind an opaque page transition.
       const buildTime=t<29?t:0;
+      revealHeight.value=-.14+7.1*(.65*clamp((buildTime-.25)/14.75)+.35*smooth(.25,15,buildTime));
       stages.forEach(s=>{
-        s.group.visible=buildTime>s.start;
-        s.parts.forEach(part=>{
-          const length=s.end-s.start;
-          const p=smooth(s.start+part.delay*length,s.start+(part.delay+.55)*length,buildTime);
-          part.object.visible=p>0;part.object.position.y=part.baseY-(1-p)*.16;
-          part.fadeMaterials.forEach(({material,opacity,transparent})=>{
-            material.opacity=opacity*p;
-
-          });
-        });
+        const isFinish=['glazing','timber-finish','terrace','landscape'].includes(s.name);
+        s.fade.value=isFinish?smooth(s.start,s.end,buildTime):1;
+        s.group.visible=buildTime>.25 && s.fade.value>0;
       });
       daylight=clamp(1-smooth(4,16,buildTime)+smooth(17,28,buildTime));
       const night=1-daylight;
 
-      ground.material.opacity=(.13+daylight*.12)*smooth(.3,4,buildTime);
+
       contactMat.opacity=smooth(.25,3,buildTime)*(.6+daylight*.4);
       sun.intensity=.12+daylight*1.45;hemi.intensity=.3+daylight*.55;fill.intensity=.18+night*.12;
       sun.color.set('#b6c9ed').lerp(new T.Color('#fff0d5'),daylight);
       sun.position.set(-10+smooth(0,27,buildTime)*15,5+daylight*10,9);
-      glazing.children.forEach(mesh=>{if(mesh.userData.lightPanel)mesh.visible=buildTime>14});
+
       glowMat.opacity=night*.38*smooth(14,17,buildTime);stripMat.opacity=night*.8*smooth(14,17,buildTime);
       glass.envMapIntensity=.18+daylight*.45;glass.emissive.set('#ffad54');glass.emissiveIntensity=night*.35;
-      stages.forEach(s=>s.parts.forEach(part=>part.fadeMaterials.forEach(({material})=>{if(material.envMap===env){material.envMapIntensity=glass.envMapIntensity;material.emissive.copy(glass.emissive);material.emissiveIntensity=glass.emissiveIntensity}})));
+      stages.forEach(s=>s.materials.forEach(material=>{if(material.envMap===env){material.envMapIntensity=glass.envMapIntensity;material.emissive.copy(glass.emissive);material.emissiveIntensity=glass.emissiveIntensity}}));
       renderer.toneMappingExposure=1.0;
       boundary.material.opacity=.48*(1-smooth(1,5,buildTime));
       // Move only the camera INSIDE the website, never the portfolio camera.
       // A steady 45-degree arc keeps the glazed front visible throughout construction.
       const approach=smooth(.4,9,buildTime),orbit=clamp(buildTime/28),angle=.48+.28*smooth(0,28,buildTime);
       const radius=25-approach*2;
-      camera.position.set(Math.sin(angle)*radius,9.8-approach*.8+Math.sin(orbit*Math.PI)*.15,Math.cos(angle)*radius);
+      camera.position.set(Math.sin(angle)*radius,7.8-approach*.5+Math.sin(orbit*Math.PI)*.12,Math.cos(angle)*radius);
       camera.lookAt(-1.4,2.0,-.1);camera.updateMatrixWorld();
     }
     function site(t){
@@ -203,7 +233,7 @@ window.MBArchitectureDemo = {
       // Overscan and different movement rates create a restrained 2.5D dolly.
       if(backdrop.complete&&backdrop.naturalWidth){
         const drift=smooth(0,28,effective);
-        ctx.drawImage(backdrop,-24-drift*16,112,1264,604);
+        ctx.drawImage(backdrop,0,backdrop.naturalHeight*.18,backdrop.naturalWidth,backdrop.naturalHeight*.42,-24-drift*16,112,1264,230);
       }else rect(0,132,W,548,'#777e73');
       rect(0,132,W,548,`rgba(8,20,43,${night*.70})`);
       const warmth=Math.sin(daylight*Math.PI)*.14;
@@ -253,7 +283,17 @@ window.MBArchitectureDemo = {
     }
     const backdrop=new Image();
     backdrop.src=window.MB_ARCHITECTURE_LANDSCAPE||'';
-    const ready=backdrop.decode().then(()=>render(time));
+    const ready=backdrop.decode().then(()=>{
+      // Project only the grass detail onto real geometry, never the photographed ground plane.
+      const patch=document.createElement('canvas');patch.width=patch.height=512;
+      const px=patch.getContext('2d');
+      px.drawImage(backdrop,backdrop.naturalWidth*.25,backdrop.naturalHeight*.76,backdrop.naturalWidth*.4,backdrop.naturalHeight*.22,0,0,512,512);
+      const groundMap=new T.CanvasTexture(patch);groundMap.encoding=T.sRGBEncoding;
+      groundMap.wrapS=groundMap.wrapT=T.MirroredRepeatWrapping;groundMap.repeat.set(80,80);groundMap.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+      materials.ground.map=groundMap;materials.ground.bumpMap=groundMap;materials.ground.bumpScale=.025;
+      materials.ground.color.set('#b7b3a0');materials.ground.needsUpdate=true;
+      render(time);
+    });
     ready.catch(()=>{});
     renderer.compile(scene,camera);
     render(0);
@@ -266,7 +306,7 @@ window.MBArchitectureDemo = {
         last=now;active=running;
         if(running&&now-lastPaint>=1000/60-.5){render(time);lastPaint=now;}
       },
-      get state(){return {time,active,duration:30,renderedTime,daylight,cameraPosition:camera.position.toArray(),stages:stages.filter(s=>s.group.visible).map(s=>s.name)};}
+      get state(){return {time,active,duration:30,renderedTime,daylight,revealHeight:revealHeight.value,cameraPosition:camera.position.toArray(),stages:stages.filter(s=>s.group.visible).map(s=>s.name)};}
     };
   }
 };
