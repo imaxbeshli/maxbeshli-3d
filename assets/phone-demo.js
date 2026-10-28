@@ -5,6 +5,7 @@ window.MBPhoneDemo={
   create(canvas,sources,onFrame){
     const x=canvas.getContext('2d'),W=600,H=1200;
     const red='#ff1734',white='#f5f5f3',muted='#a4a7ad',images={};
+    const car3d=window.MBPhoneCar3D.create();
     let time=0,active=false,last=0,lastPaint=-Infinity,renderedTime=0;
     const clamp=v=>Math.max(0,Math.min(1,v));
     const smooth=(a,b,t)=>{const p=clamp((t-a)/(b-a));return p*p*p*(p*(p*6-15)+10)};
@@ -46,9 +47,8 @@ window.MBPhoneDemo={
       for(let i=0;i<3;i++){const px=70+i*230+Math.sin(t*.35)*12;line([[px,300],[px-140,650]],'#ffffff0b',2)}
     }
     function vehicle(t,y=450,mode='shine',strength=1){
-      const im=images.car;if(!im?.naturalWidth)return;
-      const w=552,h=w*im.naturalHeight/im.naturalWidth,px=24;
-      c.clearRect(0,0,W,H);c.drawImage(im,px,y,w,h);
+      const im=car3d.render(t,true),w=600,h=420,px=0;
+      c.clearRect(0,0,W,H);c.drawImage(im,px,y-85,w,h);
       c.globalCompositeOperation='source-atop';
       if(mode==='film'){
         const edge=24+552*smooth(.2,3.5,t);
@@ -68,37 +68,24 @@ window.MBPhoneDemo={
       g.addColorStop(0,'#ffffff00');g.addColorStop(.5,mode==='polish'?'#ffffffb0':'#ffffff55');g.addColorStop(1,'#ffffff00');c.fillStyle=g;c.fillRect(0,y,W,h);
       c.globalCompositeOperation='source-over';
       x.save();x.globalAlpha*=strength;x.drawImage(carLayer,0,0);x.restore();
-      return {wheelX:px+w*(1455/1774),wheelY:y+h*(638/887),radius:w*(145/1774)};
-    }
-    function wheel(px,py,r,angle,alpha=1){
-      const im=images.car;if(!im?.naturalWidth)return;
-      x.save();x.globalAlpha*=alpha;x.translate(px,py);x.rotate(angle);x.beginPath();x.arc(0,0,r,0,Math.PI*2);x.clip();
-      const k=im.naturalWidth/1774;x.drawImage(im,(1455-145)*k,(638-145)*k,290*k,290*k,-r,-r,2*r,2*r);x.restore();
+
     }
     function home(t){
       studio(t);text('AVTO',28,224,35,white,800);text('LAB',132,224,35,red,800);text('77',204,224,35,white,800);
       text('ДЕТЕЙЛИНГ-СТУДИЯ',30,253,15,muted,500);
-      const roll=smooth(.15,2.1,t),dock=smooth(2.4,4.3,t),reveal=smooth(4.15,5.7,t);
-      const wx=477,wy=649,r=45.1;
-      x.save();x.globalAlpha*=reveal;vehicle(t-3.5,450);x.restore();
-      const wheelX=(-135+435*roll)*(1-dock)+wx*dock;
-      const wheelY=600*(1-dock)+wy*dock,wheelR=112*(1-dock)+r*dock;
-      wheel(wheelX,wheelY,wheelR,(1-dock)*(roll*5.3),1-smooth(5.3,5.7,t));
-      // Headlamp glow follows the wheel-to-car reveal.
-      const lamp=smooth(5.2,6,t)*(1-smooth(7,8,t));
-      x.save();x.globalAlpha*=lamp;const lg=x.createRadialGradient(550,584,0,550,584,55);lg.addColorStop(0,'#e6f5ff99');lg.addColorStop(1,'#e6f5ff00');x.fillStyle=lg;x.fillRect(495,529,105,110);x.restore();
-      const title=smooth(.6,1.4,t);x.save();x.globalAlpha*=title;x.translate(0,(1-title)*20);
+      x.drawImage(car3d.render(t),0,345,600,420);
+      const title=smooth(.25,.8,t);x.save();x.globalAlpha*=title;x.translate(0,(1-title)*20);
       text('Всё начинается',28,855,43,white,700);text('с деталей.',28,908,43,white,700);
       text('Защита. Блеск. Характер.',28,960,25,muted);x.restore();
-      box(28,1000,544,2,'#252b32',1);box(28,1000,544*smooth(0,8.7,t),2,red,1);
-      button('Преобразить автомобиль',t,8.25);
+      box(28,1000,544,2,'#252b32',1);box(28,1000,544*smooth(0,5.7,t),2,red,1);
+      button('Преобразить автомобиль',t,5.35);
     }
     const serviceInfo=[['Плёнка','Защита без компромиссов','Прозрачный слой защиты кузова','film'],['Полировка','Блеск в каждой линии','Глубина цвета и чистые отражения','polish'],['Керамика','Вода не задерживается','Гладкость и гидрофобный эффект','ceramic']];
     function services(t){
-      studio(t+9,680);heading('Ваш автомобиль.','Выберите, как он будет выглядеть.');
+      t*=13/7;studio(t+6,680);heading('Ваш автомобиль.','Выберите, как он будет выглядеть.');
       const selection=smooth(3.6,4.2,t)+smooth(7.6,8.2,t);
       serviceInfo.forEach((v,i)=>{
-        const weight=Math.max(0,1-Math.abs(selection-i));
+        const weight=Math.max(0,1-Math.abs(selection-i));if(weight<=0)return;
         x.save();x.globalAlpha*=weight;vehicle(Math.max(0,t-i*4),395,v[3]);x.restore();
       });
       const slideX=26+selection*186;box(26,730,548,68,'#151b22',20);
@@ -109,7 +96,37 @@ window.MBPhoneDemo={
       text('AVTOLAB77 / ИНДИВИДУАЛЬНЫЙ УХОД',28,985,15,'#717d8c',500);
       button('Выбрать время',t,12.3);
     }
+    function care(t){
+      base();heading('Комплексный уход','Снаружи и внутри — до деталей');
+      [['film','Кузов','Защита и восстановление блеска'],['polish','Салон','Бережный уход за материалами'],['ceramic','Оптика','Чистота и прозрачность']].forEach(([im,title,sub],i)=>{
+        const p=smooth(i*.18,.45+i*.18,t),y=310+i*228,selected=smooth(i*.8+.5,i*.8+.8,t)*(1-smooth(i*.8+1.3,i*.8+1.6,t));
+        x.save();x.globalAlpha*=p;x.translate((1-p)*70,0);box(26,y,548,202,'#151b22',20);if(i===0)photo(im,40,y+15,150,172,15);
+        else {box(40,y+15,150,172,'#202933',15);x.save();x.translate(68,y+51);
+          if(i===1){line([[12,3],[10,69],[72,69],[82,93]],'#d9e2ed',7);line([[25,12],[30,54],[65,54]],red,6);line([[0,90],[57,90]],'#d9e2ed',6)}
+          else {x.beginPath();x.ellipse(45,48,35,23,-.2,0,Math.PI*2);x.strokeStyle='#d9e2ed';x.lineWidth=4;x.stroke();for(let j=0;j<3;j++)line([[50,36+j*11],[97,30+j*15]],red,3)}
+          x.restore();}
+        text(title,212,y+65,31,white,650);text(sub.split(' ').slice(0,3).join(' '),212,y+109,19,muted);text(sub.split(' ').slice(3).join(' '),212,y+139,19,muted);
+        x.globalAlpha*=selected;box(26,y,548,202,'transparent',20,red);x.restore();tap(390,y+90,t,i*.8+.5);
+      });button('Выбрать комплекс',t,3.3);
+    }
+    function about(t){
+      base();heading('AVTOLAB77','Внимание к вашему автомобилю');
+      photo('polish',26,302,548,421,22,1+.08*smooth(0,3,t));gradient(26,530,548,193);
+      text('Работаем с деталями.',45,675,31,white,650);
+      [['Защита кузова','Подбор покрытия под задачу'],['Бережный подход','Уход за каждым материалом']].forEach(([a,b],i)=>{const p=smooth(.3+i*.35,.8+i*.35,t);x.save();x.globalAlpha*=p;x.translate(0,(1-p)*20);text(a,30,797+i*108,29,white,600);text(b,30,837+i*108,21,muted);x.restore()});button('Записаться',t,2.35);
+    }
+    function contacts(t){
+      base();heading('До встречи в студии','Москва · AVTOLAB77');
+      box(26,307,548,283,'#141b22',22);text('Ермакова роща,',49,365,31,white,600);text('7А, строение 2',49,410,31,white,600);
+      text('Ежедневно 10:00–19:00',49,478,24,muted);text('+7 (926) 300-32-56',49,534,29,white,500);
+      x.save();x.beginPath();x.roundRect(26,620,548,367,22);x.clip();box(26,620,548,367,'#111820',0);
+      for(let i=0;i<6;i++)line([[30+i*100,620],[90+i*100,987]],'#293541',14);
+      for(let i=0;i<4;i++)line([[26,660+i*95],[574,630+i*95]],'#293541',12);
+      const path=smooth(.1,1.2,t);line([[90,920],[90+200*Math.min(path*2,1),920],[290,920-135*Math.max(0,path*2-1)]],red,5);
+      circle(290,785,19+Math.sin(t*4)*3,'#ff173433');circle(290,785,10,red);x.restore();button('Построить маршрут',t,1.6);
+    }
     function booking(t){
+      t*=5/4;
       base();heading('Запись в студию');
       box(26,266,548,134,'#15181d',20,'#2a2e34');photo('ceramic',40,280,108,106,12);text('Керамика',170,320,27,white,600);text('Блеск и защита покрытия',170,358,18,muted);
       text('Выберите день',28,459,27,white,600);
@@ -126,11 +143,11 @@ window.MBPhoneDemo={
       x.beginPath();x.arc(300,272,57,-Math.PI/2,-Math.PI/2+Math.PI*2*p);x.strokeStyle=red;x.lineWidth=3;x.stroke();
       x.save();x.beginPath();x.rect(264,240,75*smooth(.6,1.15,t),65);x.clip();line([[272,271],[292,289],[330,252]],red,5);x.restore();
       text('Вы записаны',300,388,43,white,700,'center');text('Ждём вас в AVTOLAB77',300,435,24,muted,400,'center');
-      photo('hero',0,471,600,466,0,1.07+.06*smooth(0,4,t));gradient(0,799,600,138);
+      x.drawImage(car3d.render(5.5),0,480,600,420);
       box(26,894,548,126,'#12161beF',20,'#30353b');text('Керамика',48,943,28,white,600);text('14 ноября · 14:00',48,986,24,muted);
       box(26,1062,548,76,'#20252c',18);text('Моя запись',300,1110,27,white,600,'center');
     }
-    const sections=[{at:0,name:'home',draw:home},{at:9,name:'services',draw:services},{at:22,name:'booking',draw:booking},{at:27,name:'confirmation',draw:confirmation}];
+    const sections=[{at:0,name:'home',draw:home},{at:6,name:'services',draw:services},{at:13,name:'care',draw:care},{at:17,name:'about',draw:about},{at:20,name:'booking',draw:booking},{at:24,name:'confirmation',draw:confirmation},{at:27,name:'contacts',draw:contacts}];
     function render(t){
       t=((t%30)+30)%30;renderedTime=t;let i=sections.length-1;while(i>0&&t<sections[i].at)i--;const local=t-sections[i].at;
       x.clearRect(0,0,W,H);box(0,0,W,H,'#080a0c',0);
@@ -139,11 +156,12 @@ window.MBPhoneDemo={
       if(t>29.45){x.save();x.globalAlpha*=smooth(29.45,30,t);home(0);x.restore()}
       x.restore();chrome();onFrame();
     }
-    const ready=Promise.all(Object.entries({sheet:window.MB_PHONE_DETAILING_SHEET,car:window.MB_PHONE_CAR}).filter(([,src])=>src).map(([key,src])=>new Promise(resolve=>{const im=new Image();images[key]=im;im.onload=resolve;im.onerror=()=>{console.warn('Phone demo image unavailable:',key);resolve()};im.src=src}))).then(()=>render(time));
+    const imagesReady=Promise.all(Object.entries({sheet:window.MB_PHONE_DETAILING_SHEET}).filter(([,src])=>src).map(([key,src])=>new Promise(resolve=>{const im=new Image();images[key]=im;im.onload=resolve;im.onerror=()=>{console.warn('Phone demo image unavailable:',key);resolve()};im.src=src})));
+    const ready=Promise.all([imagesReady,car3d.ready]).then(()=>render(time));
     render(0);document.addEventListener('visibilitychange',()=>{if(document.hidden){active=false;last=performance.now()}});
     return {ready,render,update(running,now=performance.now()){
       running=Boolean(running&&!document.hidden);if(running&&active)time=(time+Math.max(0,now-last)/1000)%30;last=now;active=running;
       if(running&&now-lastPaint>=1000/60-.5){render(time);lastPaint=now}
-    },get state(){return {time,active,duration:30,renderedTime,section:[...sections].reverse().find(s=>renderedTime>=s.at).name}}};
+    },get state(){return {time,active,duration:30,renderedTime,car:car3d.state,section:[...sections].reverse().find(s=>renderedTime>=s.at).name}}};
   }
 };

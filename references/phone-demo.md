@@ -1,17 +1,15 @@
-# AVTOLAB77 animated Mini App concept
+# AVTOLAB77 Mini App — accelerated 3D presentation
 
-30-second offline canvas presentation; no real bookings, bot messages or API calls.
+30 seconds: 0–6 wheel / body / continuous front turn / headlights; 6–13 services;
+13–17 care packages; 17–20 about; 20–24 booking; 24–27 confirmation; 27–30 contacts.
 
-- 0–9 s: rolling wheel, scale/position match into the vehicle, body reveal and headlamp glow.
-- 9–22 s: animated service selector with protective film sweep, polishing reflection and ceramic water droplets.
-- 22–27 s: illustrative ceramic booking, date/time selection and sample form values.
-- 27–30 s: confirmation and seamless return to the opening scene.
+The 3D Ferrari model replaces the side-profile SUV cutout. A real wheel clone docks
+into its original position, then the car rotates 90 degrees, then headlights light up.
+See `assets/car3d/ATTRIBUTION.md` for model/runtime authorship and source links.
 
-No portfolio or individual project screens. The car is a 2D cutout, not a 3D model.
-Both assets were generated for this project and embedded into index.html:
-- `assets/phone-car.png`: side-profile black SUV with transparent background. The wheel is sampled from this same image at runtime.
-- `assets/phone-detailing-sheet.png`: 2×2 photo sheet (hero / film / polish / ceramic), used for booking and confirmation.
+Generated service photographs in `assets/phone-detailing-sheet.png` remain embedded.
+Care icons are drawn on canvas. Contacts follow the user-provided AVTOLAB77 screenshots;
+the route diagram is illustrative, not live navigation. Appointments are fictional.
 
-Edit `assets/phone-demo.js`, then run `python3 tools/embed-phone-demo.py`.
-Playback advances only while the tile is active and the document is visible.
-The outer phone geometry, glass, portfolio camera and other tiles are unchanged.
+No external assets or APIs are needed. Edit `assets/phone-demo.js` and
+`assets/phone-car3d.js`, then run `python3 tools/embed-phone-demo.py`.
