@@ -7,8 +7,8 @@ window.MBArchitectureDemo = {
     const clamp=v=>Math.max(0,Math.min(1,v));
     const smooth=(a,b,t)=>{const v=clamp((t-a)/(b-a));return v*v*v*(v*(v*6-15)+10)};
     const scene=new T.Scene();
-    const skyDay=new T.Color('#c9dce3'),skyNight=new T.Color('#172435');
-    scene.background=null;
+    const skyDay=new T.Color('#e6e4dd'),skyNight=new T.Color('#242b30');
+    scene.background=skyDay.clone();scene.fog=new T.Fog(skyDay.clone(),30,95);
     const camera=new T.PerspectiveCamera(38,1200/548,.1,120);
     const renderer=new T.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
     renderer.setPixelRatio(1);renderer.setSize(1000,457,false);renderer.setClearColor(0x000000,0);
@@ -25,7 +25,6 @@ window.MBArchitectureDemo = {
     function mat(name,color,extra={}){return materials[name]=new T.MeshStandardMaterial({color,roughness:.76,...extra})}
     const concrete=mat('concrete','#b9b5a9'),white=mat('white','#d6cfbd'),dark=mat('dark','#39413f');
     const timber=mat('timber','#836244'),woodLight=mat('woodLight','#ac8761');
-    const soil=mat('soil','#b5b4a2'),grass=mat('grass','#6f7c60'),leaf=mat('leaf','#52654d');
     const bronze=mat('bronze','#373e3b',{metalness:.65,roughness:.32});
     const glass=mat('glass','#8da8ac',{transparent:true,opacity:.46,roughness:.12,metalness:.45,side:T.DoubleSide,depthWrite:false});
     // Small procedural reflection environment: no images or network dependencies.
@@ -36,7 +35,7 @@ window.MBArchitectureDemo = {
       x.fillStyle=g;x.fillRect(0,0,64,64);x.fillStyle='#fff6df';x.fillRect(8+i*3,7,6,32);envFaces.push(c);
     }
     const env=new T.CubeTexture(envFaces);env.encoding=T.sRGBEncoding;env.needsUpdate=true;glass.envMap=env;glass.envMapIntensity=.7;
-    const ground=new T.Mesh(new T.CircleGeometry(85,96),mat('ground','#85856b',{roughness:1}));
+    const ground=new T.Mesh(new T.PlaneGeometry(500,500),mat('ground','#dfdcd3',{roughness:1}));
     ground.rotation.x=-Math.PI/2;ground.position.y=-.24;ground.receiveShadow=true;scene.add(ground);
     const boxGeo=new T.BoxGeometry(1,1,1);
     function block(parent,w,h,d,px,py,pz,material,shadow=true){
@@ -44,7 +43,7 @@ window.MBArchitectureDemo = {
       m.castShadow=shadow;m.receiveShadow=true;parent.add(m);return m;
     }
 
-    // Seeded textures and layered foliage keep the scene self-contained and repeatable.
+    // Subtle material detail; the presentation remains self-contained.
     let seed=77;
     function random(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
     function surface(material,base,grain,repeat){
@@ -64,34 +63,20 @@ window.MBArchitectureDemo = {
     for(let i=0;i<220;i++){wx.strokeStyle=`rgba(40,25,12,${random()*.23})`;wx.lineWidth=.3+random();wx.beginPath();const x=random()*256;wx.moveTo(x,0);wx.bezierCurveTo(x+random()*8,85,x-random()*8,170,x,256);wx.stroke()}
     const woodMap=new T.CanvasTexture(woodCanvas);woodMap.encoding=T.sRGBEncoding;
     timber.map=woodMap;woodLight.map=woodMap;woodLight.color.set('#c0ab89');
-    surface(materials.ground,'#85856b','37,48,21',65);
-    // Terrain and planting share the house coordinate system and camera.
-    const hillGeo=new T.SphereGeometry(1,24,12);
-    for(let i=0;i<8;i++){
-      const hill=new T.Mesh(hillGeo,materials.ground);
-      hill.position.set(-65+i*18,-2.3,-48-Math.sin(i)*7);
-      hill.scale.set(20,2.5+random()*.5,17);hill.receiveShadow=true;scene.add(hill);
-    }
-    const grassGeo=new T.BufferGeometry();grassGeo.setAttribute('position',new T.Float32BufferAttribute([-.025,0,0,.025,0,0,.015,.48,.04],3));grassGeo.computeVertexNormals();
-    const reeds=new T.InstancedMesh(grassGeo,new T.MeshStandardMaterial({color:'#17230c',side:T.DoubleSide,roughness:1}),1600);
-    const pose=new T.Object3D();
-    for(let i=0;i<1600;i++){
-      const x=7+random()*15,z=-15+random()*23;
-      pose.position.set(x,-.23,z);pose.rotation.set(0,random()*Math.PI,random()*.15);
-      pose.scale.setScalar(.5+random());pose.updateMatrix();reeds.setMatrixAt(i,pose.matrix);
-    }
-    reeds.receiveShadow=true;scene.add(reeds);
-    // Broad soft contact shadow anchors the 3D house into the photographed clearing.
+    // Soft contact shadow on the continuous matte studio floor.
     const contactCanvas=document.createElement('canvas');contactCanvas.width=contactCanvas.height=128;
     const cx=contactCanvas.getContext('2d'),cg=cx.createRadialGradient(64,64,15,64,64,64);
     cg.addColorStop(0,'rgba(0,0,0,.3)');cg.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=cg;cx.fillRect(0,0,128,128);
     const contactMat=new T.MeshBasicMaterial({map:new T.CanvasTexture(contactCanvas),transparent:true,depthWrite:false,opacity:0});
     const contact=new T.Mesh(new T.PlaneGeometry(14,11),contactMat);contact.rotation.x=-Math.PI/2;contact.position.y=-.22;scene.add(contact);
-    const boundaryGeo=new T.BufferGeometry().setFromPoints([
-      new T.Vector3(-4.45,-.08,-2.95),new T.Vector3(4.45,-.08,-2.95),new T.Vector3(4.45,-.08,2.95),
-      new T.Vector3(-4.45,-.08,2.95),new T.Vector3(-4.45,-.08,-2.95)]);
-    const boundary=new T.Line(boundaryGeo,new T.LineDashedMaterial({color:'#787e70',dashSize:.25,gapSize:.16,transparent:true,opacity:.6}));
-    boundary.computeLineDistances();scene.add(boundary);
+    // A short architectural plan introduces the model without delaying construction.
+    const planSegments=[[-4.45,-2.95,4.45,-2.95],[4.45,-2.95,4.45,2.95],[4.45,2.95,-4.45,2.95],[-4.45,2.95,-4.45,-2.95],
+      [-1.4,-2.95,-1.4,2.95],[1.4,-2.95,1.4,2.95],[-4.45,0,4.45,0],
+      [-4.9,-3.5,4.9,-3.5],[-4.9,-3.7,-4.9,-3.3],[4.9,-3.7,4.9,-3.3]];
+    const planVertices=[];
+    planSegments.forEach(([x,z,u,v])=>planVertices.push(x,-.115,z,u,-.115,v));
+    const planGeo=new T.BufferGeometry();planGeo.setAttribute('position',new T.Float32BufferAttribute(planVertices,3));
+    const plan=new T.LineSegments(planGeo,new T.LineBasicMaterial({color:'#6e7a75',transparent:true,opacity:0}));scene.add(plan);
     const stages=[];
     function stage(name,start,end){const g=new T.Group();g.name=name;scene.add(g);stages.push({name,start,end,group:g});return g}
     const foundation=stage('foundation',.25,2.3);
@@ -205,7 +190,8 @@ window.MBArchitectureDemo = {
       });
       daylight=clamp(1-smooth(4,16,buildTime)+smooth(17,28,buildTime));
       const night=1-daylight;
-
+      scene.background.copy(skyNight).lerp(skyDay,daylight);scene.fog.color.copy(scene.background);
+      materials.ground.color.set('#343c42').lerp(new T.Color('#dfdcd3'),daylight);
 
       contactMat.opacity=smooth(.25,3,buildTime)*(.6+daylight*.4);
       sun.intensity=.12+daylight*1.45;hemi.intensity=.3+daylight*.55;fill.intensity=.18+night*.12;
@@ -216,9 +202,10 @@ window.MBArchitectureDemo = {
       glass.envMapIntensity=.18+daylight*.45;glass.emissive.set('#ffad54');glass.emissiveIntensity=night*.35;
       stages.forEach(s=>s.materials.forEach(material=>{if(material.envMap===env){material.envMapIntensity=glass.envMapIntensity;material.emissive.copy(glass.emissive);material.emissiveIntensity=glass.emissiveIntensity}}));
       renderer.toneMappingExposure=1.0;
-      boundary.material.opacity=.48*(1-smooth(1,5,buildTime));
+      plan.material.opacity=.65*smooth(0,.3,buildTime)*(1-smooth(1.8,4,buildTime));
+      planGeo.setDrawRange(0,Math.floor(smooth(0,.8,buildTime)*planVertices.length/6)*2);
       // Move only the camera INSIDE the website, never the portfolio camera.
-      // A steady 45-degree arc keeps the glazed front visible throughout construction.
+      // A short eased arc keeps the glazed front visible throughout construction.
       const approach=smooth(.4,9,buildTime),orbit=clamp(buildTime/28),angle=.48+.28*smooth(0,28,buildTime);
       const radius=25-approach*2;
       camera.position.set(Math.sin(angle)*radius,7.8-approach*.5+Math.sin(orbit*Math.PI)*.12,Math.cos(angle)*radius);
@@ -227,21 +214,11 @@ window.MBArchitectureDemo = {
     function site(t){
       const effective=t<29?t:0;
       const scroll=smooth(.6,4,effective),night=1-daylight;
-      const ink='#f1eee5',softInk='#d2d2c6';
+      const tone=(a,b)=>'#'+new T.Color(a).lerp(new T.Color(b),daylight).getHexString();
+      const ink=tone('#f1eee5','#29342f'),softInk=tone('#b9c3c4','#748075');
       rect(0,0,W,H,'#edece4');
       ctx.save();ctx.beginPath();ctx.rect(0,132,W,548);ctx.clip();
-      // Overscan and different movement rates create a restrained 2.5D dolly.
-      if(backdrop.complete&&backdrop.naturalWidth){
-        const drift=smooth(0,28,effective);
-        ctx.drawImage(backdrop,0,backdrop.naturalHeight*.18,backdrop.naturalWidth,backdrop.naturalHeight*.42,-24-drift*16,112,1264,230);
-      }else rect(0,132,W,548,'#777e73');
-      rect(0,132,W,548,`rgba(8,20,43,${night*.70})`);
-      const warmth=Math.sin(daylight*Math.PI)*.14;
-      rect(0,132,W,548,`rgba(158,90,43,${warmth})`);
       ctx.drawImage(renderer.domElement,0,132,W,548);
-      const shade=ctx.createLinearGradient(0,0,600,0);
-      shade.addColorStop(0,'rgba(13,23,24,.66)');shade.addColorStop(1,'rgba(13,23,24,0)');
-      ctx.fillStyle=shade;ctx.fillRect(0,132,600,548);
       ctx.restore();
       // Browser strip and persistent website navigation.
       rect(0,0,W,34,'#dcded6');['#b2aaa0','#bdb9a7','#9aa99a'].forEach((v,i)=>rect(18+i*16,12,7,7,v,4));
@@ -261,11 +238,11 @@ window.MBArchitectureDemo = {
       const cardReveal=smooth(3.1,5,effective);
       if(cardReveal>0){
         ctx.save();ctx.globalAlpha=cardReveal;ctx.translate(0,(1-cardReveal)*18);
-        rect(33,198,244,191,'rgba(18,29,29,.72)',6);
-        text('HOUSE 01',52,230,13,'#bebfae',600);
-        text('Дом у леса',52,274,28,'#f3efe3',500);
-        text('280 м² / два этажа',52,308,15,'#d1d0c2');
-        rule(52,328,204,'#66736b');text('Бетон. Стекло. Дерево.',52,357,14,'#d1d0c2');
+
+        text('HOUSE 01',38,230,12,softInk,600);
+        text('Частный дом',34,276,30,ink,500);
+        text('280 м² / два этажа',38,310,15,softInk);
+        rule(38,333,190,tone('#58635f','#c2c7bc'));text('Бетон. Стекло. Дерево.',38,363,14,softInk);
         ctx.restore();
       }
       rect(0,680,W,70,'#f1f0e9');rule(32,680,1136,'#c9cec1');
@@ -275,26 +252,13 @@ window.MBArchitectureDemo = {
       }
       // Soft editorial page wipe masks reconstruction reset, keeping the loop seamless.
       const reset=t>=28&&t<29?smooth(28,29,t):t>=29?1-smooth(29,30,t):0;
-      if(reset>0){ctx.save();ctx.globalAlpha=reset;rect(0,132,W,548,'#202c2c');ctx.restore()}
+      if(reset>0){ctx.save();ctx.globalAlpha=reset;rect(0,132,W,548,'#e6e4dd');ctx.restore()}
     }
     function render(t){
       renderedTime=((t%30)+30)%30;configure(renderedTime);
       renderer.render(scene,camera);site(renderedTime);onFrame();
     }
-    const backdrop=new Image();
-    backdrop.src=window.MB_ARCHITECTURE_LANDSCAPE||'';
-    const ready=backdrop.decode().then(()=>{
-      // Project only the grass detail onto real geometry, never the photographed ground plane.
-      const patch=document.createElement('canvas');patch.width=patch.height=512;
-      const px=patch.getContext('2d');
-      px.drawImage(backdrop,backdrop.naturalWidth*.25,backdrop.naturalHeight*.76,backdrop.naturalWidth*.4,backdrop.naturalHeight*.22,0,0,512,512);
-      const groundMap=new T.CanvasTexture(patch);groundMap.encoding=T.sRGBEncoding;
-      groundMap.wrapS=groundMap.wrapT=T.MirroredRepeatWrapping;groundMap.repeat.set(80,80);groundMap.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
-      materials.ground.map=groundMap;materials.ground.bumpMap=groundMap;materials.ground.bumpScale=.025;
-      materials.ground.color.set('#b7b3a0');materials.ground.needsUpdate=true;
-      render(time);
-    });
-    ready.catch(()=>{});
+    const ready=Promise.resolve();
     renderer.compile(scene,camera);
     render(0);
     document.addEventListener('visibilitychange',()=>{if(document.hidden){active=false;last=performance.now()}});
