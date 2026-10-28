@@ -1,201 +1,114 @@
-/* AVTOLAB77 demo: 15 seconds of bot automation + 15 seconds of Mini App.
-   Embedded in index.html for offline playback; no Telegram messages are sent. */
-window.MBPhoneDemo = {
-  duration: 30,
-  create(canvas, sources, onFrame) {
-    const x = canvas.getContext('2d'), W = 600, H = 1200;
-    const red = '#ff002b', white = '#f6f7fa', muted = '#93a0b1';
-    const images = {};
-    let time = 0, active = false, last = 0, lastPaint = -Infinity;
-    const clamp = v => Math.max(0, Math.min(1, v));
-    const ease = v => { v = clamp(v); return v * v * (3 - 2 * v); };
-    function box(px, py, w, h, color, radius = 20, stroke) {
-      x.beginPath(); x.roundRect(px, py, w, h, radius);
-      x.fillStyle = color; x.fill();
-      if (stroke) { x.strokeStyle = stroke; x.lineWidth = 1.5; x.stroke(); }
+/* AVTOLAB77: animated 30-second Mini App concept, entirely offline.
+   Booking interactions are a presentation only; no requests are submitted. */
+window.MBPhoneDemo={
+  duration:30,
+  create(canvas,sources,onFrame){
+    const x=canvas.getContext('2d'),W=600,H=1200;
+    const red='#ff1734',white='#f5f5f3',muted='#a4a7ad',images={};
+    let time=0,active=false,last=0,lastPaint=-Infinity,renderedTime=0;
+    const clamp=v=>Math.max(0,Math.min(1,v));
+    const smooth=(a,b,t)=>{const p=clamp((t-a)/(b-a));return p*p*p*(p*(p*6-15)+10)};
+    function box(px,py,w,h,color,r=20,stroke){x.beginPath();x.roundRect(px,py,w,h,r);x.fillStyle=color;x.fill();if(stroke){x.strokeStyle=stroke;x.lineWidth=2;x.stroke()}}
+    function text(value,px,py,size=26,color=white,weight=400,align='left'){x.font=`${weight} ${size}px Inter,Arial,sans-serif`;x.fillStyle=color;x.textAlign=align;x.textBaseline='alphabetic';x.fillText(value,px,py)}
+    function line(points,color=white,width=3){x.beginPath();points.forEach(([a,b],i)=>i?x.lineTo(a,b):x.moveTo(a,b));x.strokeStyle=color;x.lineWidth=width;x.lineCap='round';x.lineJoin='round';x.stroke()}
+    function circle(px,py,r,color){x.beginPath();x.arc(px,py,r,0,Math.PI*2);x.fillStyle=color;x.fill()}
+    const crops={hero:[0,0],film:[1,0],polish:[0,1],ceramic:[1,1]};
+    function photo(name,px,py,w,h,r=20,zoom=1){
+      box(px,py,w,h,'#141619',r);
+      const im=images[crops[name]?'sheet':name];if(!im?.naturalWidth)return;
+      let sx=0,sy=0,sw=im.naturalWidth,sh=im.naturalHeight;
+      if(crops[name]){sw/=2;sh/=2;sx=crops[name][0]*sw;sy=crops[name][1]*sh}
+      const k=Math.max(w/sw,h/sh)*zoom;
+      x.save();x.beginPath();x.roundRect(px,py,w,h,r);x.clip();
+      x.drawImage(im,sx,sy,sw,sh,px+(w-sw*k)/2,py+(h-sh*k)/2,sw*k,sh*k);x.restore();
     }
-    function text(value, px, py, size = 28, color = white, weight = 400, align = 'left') {
-      x.fillStyle = color; x.font = `${weight} ${size}px Inter, Arial, sans-serif`;
-      x.textAlign = align; x.textBaseline = 'alphabetic'; x.fillText(value, px, py);
+    function gradient(px,py,w,h){const g=x.createLinearGradient(0,py,0,py+h);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.93)');x.fillStyle=g;x.fillRect(px,py,w,h)}
+    function tap(px,py,t,at){const p=(t-at)/.55;if(p<0||p>1)return;x.save();x.globalAlpha*=1-p;circle(px,py,12+30*p,'#ffffff35');x.beginPath();x.arc(px,py,12+30*p,0,Math.PI*2);x.strokeStyle='#ffffffaa';x.lineWidth=2;x.stroke();x.restore()}
+    function button(label,t,at,py=1062){const press=smooth(at,at+.13,t)*(1-smooth(at+.13,at+.4,t));x.save();x.translate(300,py+38);x.scale(1-.025*press,1-.025*press);box(-274,-38,548,76,red,18);text(label,0,10,27,white,600,'center');x.restore();tap(300,py+38,t,at)}
+    function heading(title,subtitle){text(title,28,227,38,white,700);if(subtitle)text(subtitle,28,268,22,muted)}
+    function chrome(){
+      box(0,0,W,164,'#0b0d10',0);text('9:41',32,43,23,white,600);
+      for(let i=0;i<4;i++)box(476+i*8,36-i*4,4,6+i*4,white,1);
+      box(526,25,34,16,'#0b0d10',4,white);box(530,29,24,8,white,1);
+      line([[30,94],[48,112]]);line([[48,94],[30,112]]);
+      text('AVTOLAB77',300,105,27,white,650,'center');text('мини-приложение',300,137,18,muted,400,'center');
+      for(let i=0;i<3;i++)circle(544+i*8,103,2,white);
+      box(0,1160,W,40,'#090b0d',0);box(220,1181,160,5,'#dfdfdf',3);
     }
-    function line(points, color, width = 3) {
-      x.beginPath(); points.forEach(([px, py], i) => i ? x.lineTo(px, py) : x.moveTo(px, py));
-      x.strokeStyle = color; x.lineWidth = width; x.lineCap = 'round'; x.lineJoin = 'round'; x.stroke();
+    function base(){box(0,164,W,996,'#080a0c',0)}
+    function home(t){
+      base();photo('hero',0,164,600,705,0,1+.07*smooth(0,5,t));gradient(0,620,600,260);
+      text('AVTO',30,224,35,white,800);text('LAB',134,224,35,red,800);text('77',206,224,35,white,800);
+      text('ДЕТЕЙЛИНГ-СТУДИЯ',32,250,15,'#b5b8bd',500);
+      text('Уход, который',28,896,43,white,700);text('видно.',28,946,43,white,700);
+      text('Детейлинг и защита автомобиля',28,994,23,muted);
+      button('Подобрать уход',t,4.3);
     }
-    function dot(px, py, r, color) {
-      x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fillStyle = color; x.fill();
-    }
-    function photo(name, px, py, w, h, radius = 18) {
-      const im = images[name];
-      box(px, py, w, h, '#121416', radius);
-      if (!im?.naturalWidth) return;
-      x.save(); x.beginPath(); x.roundRect(px, py, w, h, radius); x.clip();
-      const k = Math.max(w / im.naturalWidth, h / im.naturalHeight);
-      x.drawImage(im, px + (w - im.naturalWidth * k) / 2, py + (h - im.naturalHeight * k) / 2, im.naturalWidth * k, im.naturalHeight * k);
-      x.restore();
-    }
-    function logo(y, w = 360) {
-      const im = images.logo;
-      if (im?.naturalWidth) x.drawImage(im, (W - w) / 2, y, w, w * im.naturalHeight / im.naturalWidth);
-      else { text('AVTO', 118, y + 40, 40, white, 800); text('LAB77', 230, y + 40, 40, red, 800); }
-    }
-    function chrome(mini = false, typing = false) {
-      box(0, 0, W, 172, '#17212d', 0);
-      text('9:41', 38, 48, 24, white, 600);
-      for (let i = 0; i < 4; i++) box(474 + i * 8, 42 - i * 5, 5, 8 + i * 5, white, 1);
-      box(528, 27, 33, 17, 'transparent', 4, white); box(532, 31, 24, 9, white, 1);
-      line([[38, 100], [24, 114], [38, 128]], '#71bcf5', 3);
-      if (mini) {
-        text('AVTOLAB77', 300, 108, 28, white, 600, 'center');
-        text('мини-приложение', 300, 143, 20, muted, 400, 'center');
-      } else {
-        dot(94, 116, 30, '#080b0f'); text('A', 94, 127, 30, red, 800, 'center');
-        text('AVTOLAB77', 140, 108, 29, white, 600);
-        text(typing ? 'печатает…' : 'бот · отвечает автоматически', 140, 143, 18, typing ? '#71bcf5' : muted);
-      }
-      for (let i = 0; i < 3; i++) dot(562, 105 + i * 10, 2, white);
-      box(220, 1177, 160, 6, '#e4e8ec', 3);
-    }
-    function tap(px, py, t, at) {
-      const p = (t - at) / .65;
-      if (p < 0 || p > 1) return;
-      x.save(); x.globalAlpha *= 1 - p;
-      dot(px, py, 14 + p * 34, '#ffffff55');
-      x.beginPath(); x.arc(px, py, 14 + p * 34, 0, Math.PI * 2); x.strokeStyle = '#fff'; x.lineWidth = 2; x.stroke();
-      x.restore();
-    }
-    function bubble(lines, y, start, t, outgoing = false, width = 468) {
-      const p = ease((t - start) / .38); if (!p) return;
-      const h = lines.length * 36 + 42, px = outgoing ? W - 24 - width : 24;
-      x.save(); x.globalAlpha *= p; x.translate(0, (1 - p) * 18);
-      box(px, y, width, h, outgoing ? '#2b5278' : '#202e3e', 22);
-      lines.forEach((v, i) => text(v, px + 20, y + 35 + i * 36, 27));
-      text(outgoing ? '12:41  ✓✓' : '12:41', px + width - 16, y + h - 12, 16, '#9badc1', 400, 'right');
-      x.restore();
-    }
-    function chat(t) {
-      box(0, 0, W, H, '#0d1825', 0);
-      // A subtle Telegram-like chat pattern, kept below the text.
-      for (let i = 0; i < 14; i++) line([[20 + (i % 3) * 210, 215 + i * 68], [38 + (i % 3) * 210, 204 + i * 68]], '#172536', 2);
-      const typing = (t > 1.3 && t < 2.3) || (t > 5.1 && t < 6.3);
-      x.save(); x.beginPath(); x.rect(0, 172, W, 943); x.clip();
-      const scroll = ease((t - 8.0) / .65) * 210;
-      x.translate(0, -scroll);
-      box(218, 195, 164, 32, '#203044', 16); text('Сегодня', 300, 218, 18, '#adbdce', 400, 'center');
-      bubble(['Здравствуйте! Хочу', 'защитить кузов плёнкой.'], 248, .35, t, true, 448);
-      bubble(['Здравствуйте! Подскажите,', 'какой у вас автомобиль?'], 391, 2.3, t);
-      bubble(['BMW X5'], 534, 4.2, t, true, 230);
-      bubble(['Отлично! Посмотрите работы', 'или оставьте заявку —', 'подберём вариант защиты.'], 641, 6.3, t);
-      if (t >= 6.8) {
-        x.save(); x.globalAlpha *= ease((t - 6.8) / .3);
-        box(24, 801, 228, 60, '#233c53', 12); text('Наши работы', 138, 840, 24, '#7ec4ff', 500, 'center');
-        box(264, 801, 228, 60, t > 8.1 ? '#306691' : '#233c53', 12); text('Оставить заявку', 378, 840, 23, '#8bceff', 500, 'center');
-        tap(385, 833, t, 8.1); x.restore();
-      }
-      bubble(['Заявка на защиту · BMW X5'], 891, 8.8, t, true, 480);
-      bubble(['Спасибо! Менеджер свяжется', 'с вами здесь, в Telegram.'], 998, 10.0, t);
-      x.restore();
-      if (t >= 11.5) {
-        const p = ease((t - 11.5) / .45);
-        x.save(); x.globalAlpha *= p; x.translate(0, (1 - p) * 30);
-        box(20, 794, 560, 278, '#101b29', 24, '#38516b');
-        dot(54, 833, 6, '#65d3b0'); text('ВЛАДЕЛЬЦУ · CRM', 74, 840, 20, '#a4bacd', 600);
-        text('Новая заявка', 42, 892, 34, white, 600);
-        text('BMW X5 · защита кузова', 42, 936, 26);
-        text('Ответить клиенту в Telegram', 42, 976, 23, muted);
-        box(42, 1000, 232, 46, '#173b35', 12);
-        text(t > 13.2 ? '✓ Заявка сохранена' : 'Сохраняем заявку…', 58, 1031, 21, '#7de0b7', 500);
-        x.restore();
-      }
-      box(0, 1115, W, 85, '#17212d', 0); box(22, 1130, 490, 42, '#233344', 21);
-      text('Сообщение', 45, 1158, 22, muted); dot(552, 1151, 23, '#4d9fda');
-      line([[542, 1150], [561, 1141], [555, 1161], [551, 1152], [542, 1150]], '#fff', 2);
-      chrome(false, typing);
-      if (typing) {
-        const yy = t < 2.3 ? 405 : 650;
-        box(24, yy, 104, 42, '#202e3e', 20);
-        for (let i = 0; i < 3; i++) dot(50 + i * 23, yy + 21, 4, `rgba(140,180,214,${.35 + .5 * (1 + Math.sin(t * 9 - i)) / 2})`);
-      }
-    }
-    function appHeader(title) {
-      logo(197, 350);
-      if (title) {
-        line([[39, 234], [27, 246], [39, 258]], '#fff', 3);
-        text(title, 300, 337, 34, white, 700, 'center');
-      }
-    }
-    function home(t) {
-      box(0, 0, W, H, '#000', 0); appHeader();
-      photo('bentley', 0, 292, 600, 440, 0);
-      text('ПРЕМИАЛЬНОЕ РЕШЕНИЕ', 300, 785, 30, white, 700, 'center');
-      text('ДЛЯ ВАШЕГО АВТОМОБИЛЯ', 300, 826, 29, white, 700, 'center');
-      box(20, 860, 560, 72, red, 16); text('КАК ДОБРАТЬСЯ', 300, 905, 26, white, 700, 'center');
-      [['bmw','НАШИ РАБОТЫ'],['lexus','КОНТАКТЫ'],['bentley','О СТУДИИ']].forEach(([im,label],i)=>{
-        const px=20+i*192;photo(im,px,957,176,123,14);box(px,1064,176,55,'#101010',10,'#303030');text(label,px+88,1099,18,white,600,'center');
+    function services(t){
+      base();heading('Выберите услугу','Защита, блеск и внимание к деталям');
+      [['film','Защитная плёнка','Защита кузова от сколов'],['polish','Полировка','Глубина цвета и зеркальный блеск'],['ceramic','Керамика','Блеск и гидрофобный эффект']].forEach(([im,title,sub],i)=>{
+        const p=smooth(i*.12,.55+i*.12,t),py=301+i*236;
+        x.save();x.globalAlpha*=p;x.translate(0,(1-p)*24);
+        photo(im,26,py,548,216,20,1+.025*smooth(0,5,t));gradient(26,py+85,548,131);
+        text(title,46,py+157,30,white,650);text(sub,46,py+191,19,'#d1d2d5');
+        if(i===0){x.globalAlpha*=smooth(1.1,1.5,t);box(26,py,548,216,'transparent',20,red)}x.restore();
       });
-      tap(108, 1020, t, 3.45); chrome(true);
+      tap(310,410,t,1.1);button('Посмотреть работы',t,4.3);
     }
-    function works(t) {
-      box(0, 0, W, H, '#000', 0);
-      x.save();x.beginPath();x.rect(0,370,W,790);x.clip();
-      const scroll= ease((t-.8)/4.8)*660;
-      [['bmw','BMW E31'],['bentley','Bentley Continental GT'],['lexus','Lexus LX500']].forEach(([im,label],i)=>{
-        const py=380+i*440-scroll;
-        box(22,py,556,414,'#111',22,'#303030');photo(im,23,py+1,554,330,21);
-        text(label,44,py+382,29,white,600);
-      });
-      x.restore();box(0,172,W,194,'#000',0);appHeader('НАШИ РАБОТЫ');chrome(true);
+    function works(t){
+      base();heading('Наши работы','Детали, которые говорят за нас');
+      x.save();x.beginPath();x.rect(0,291,W,749);x.clip();const scroll=smooth(.8,3.9,t)*240;
+      [['bentley','Bentley Continental GT','ДЕТЕЙЛИНГ'],['bmw','BMW E31','УХОД ЗА КУЗОВОМ'],['lexus','Lexus LX500','ЗАЩИТА И УХОД']].forEach(([im,title,sub],i)=>{
+        const y=301+i*418-scroll;photo(im,26,y,548,318,20,1+.025*smooth(0,5,t));box(26,y+297,548,100,'#13161a',14);text(title,46,y+340,28,white,600);text(sub,46,y+375,16,muted,500);
+      });x.restore();
+      box(0,1040,W,120,'#080a0c',0);text('Откройте проект',300,1108,23,muted,400,'center');tap(300,420,t,4.25);
     }
-    function contacts(t) {
-      box(0,0,W,H,'#000',0);appHeader('КОНТАКТЫ');
-      box(24,385,552,151,'#101010',20,'#303030');
-      text('ТЕЛЕФОН',300,432,19,muted,400,'center');text('+7 (926) 300-32-56',300,487,33,white,500,'center');
-      ['TG','ЧАТ','VK'].forEach((v,i)=>{box(135+i*115,574,94,86,'#101010',18,'#303030');dot(182+i*115,616,27,red);text(v,182+i*115,624,19,white,700,'center')});
-      box(24,700,552,151,'#101010',20,'#303030');text('РЕЖИМ РАБОТЫ',300,746,20,muted,400,'center');text('10:00–19:00',300,801,34,white,500,'center');
-      box(24,893,552,76,red,16);text('КАК ДОБРАТЬСЯ',300,941,26,white,700,'center');
-      text('Москва · Ермакова роща',300,1022,24,muted,400,'center');tap(300,935,t,2.0);chrome(true);
+    function project(t){
+      base();text('НАШИ РАБОТЫ / 01',28,211,17,muted,500);text('Bentley Continental GT',28,262,32,white,650);
+      photo('bentley',26,300,548,487,20,1+.1*smooth(0,5,t));
+      // Detail crop of the same real project; no unrelated car masquerades as another angle.
+      const detail=smooth(1.5,2.1,t)*(1-smooth(3.2,3.8,t));x.save();x.globalAlpha*=detail;photo('bentley',26,300,548,487,20,1.55);x.restore();
+      for(let i=0;i<2;i++)box(260+i*48,762,36,4,i===(detail>.5?1:0)?red:'#ffffff55',2);
+      text('Внимание к каждой детали',28,844,28,white,600);
+      text('Кузов · оптика · финишный блеск',28,890,22,muted);
+      box(28,930,178,46,'#171b20',12);text('AVTOLAB77',117,960,19,white,600,'center');
+      button('Хочу такой уход',t,4.3);
     }
-    function route(t) {
-      box(0,0,W,H,'#000',0);appHeader('КАК ДОБРАТЬСЯ');
-      text('Ермакова роща, 7А, строение 2',300,389,25,white,400,'center');
-      x.save();x.beginPath();x.roundRect(24,425,552,620,20);x.clip();box(24,425,552,620,'#20262c',0);
-      x.save();x.translate(300,730);x.rotate(-.25);
-      for(let r=-2;r<3;r++)for(let c=-2;c<3;c++)box(c*130+20,r*140+12,92,92,'#2b333a',5,'#39434b');
-      for(let i=-1;i<3;i++)line([[-440,i*160],[440,i*160]],'#58616a',18);
-      line([[-70,-420],[-70,430]],'#59646b',28);line([[-70,-420],[-70,430]],'#6c8d79',4);
-      line([[-70,250],[-70,10],[25,10]],'#ff3757',6);x.restore();
-      text('Ермакова роща',110,958,20,'#aab2bb');
-      const pulse=(Math.sin(t*4)+1)/2;dot(310,732,38+pulse*13,'#ff002b22');dot(310,732,26,red);
-      box(338,694,186,71,'#fff',12);text('Автолаб',355,723,24,'#161b20',600);text('До 19:00',355,748,18,'#606970');
-      x.restore();box(24,1070,552,74,red,16);text('ОТКРЫТЬ В ЯНДЕКС КАРТАХ',300,1115,22,white,700,'center');chrome(true);
+    function booking(t){
+      base();heading('Запись в студию');
+      box(26,266,548,134,'#15181d',20,'#2a2e34');photo('film',40,280,108,106,12);text('Защитная плёнка',170,320,27,white,600);text('Комплексная защита кузова',170,358,18,muted);
+      text('Выберите день',28,459,27,white,600);
+      for(let i=0;i<5;i++){const chosen=i===2?smooth(.5,.8,t):0;box(26+i*112,482,100,94,'#171b20',16,'#292e34');x.save();x.globalAlpha*=chosen;box(26+i*112,482,100,94,red,16);x.restore();text(String(12+i),76+i*112,525,28,white,600,'center');text('НОЯ',76+i*112,556,16,muted,500,'center')}
+      tap(300,527,t,.5);
+      text('Удобное время',28,638,27,white,600);
+      ['10:00','12:00','14:00','16:00'].forEach((v,i)=>{box(26+i*140,663,128,63,'#171b20',15,'#292e34');x.save();x.globalAlpha*=i===2?smooth(1.3,1.6,t):0;box(26+i*140,663,128,63,red,15);x.restore();text(v,90+i*140,704,24,white,500,'center')});tap(370,694,t,1.3);
+      text('Ваше имя',28,787,21,muted);box(26,803,548,66,'#14171b',14,'#292e34');text('Александр'.slice(0,Math.floor(smooth(2,2.8,t)*9)),46,846,25);
+      text('Телефон',28,917,21,muted);box(26,933,548,66,'#14171b',14,'#292e34');text('+7 (900) 000-00-00'.slice(0,Math.floor(smooth(2.8,3.7,t)*18)),46,976,25);
+      button('Записаться',t,5.25);
     }
-    const sections=[{at:0,draw:chat},{at:15,draw:home},{at:19,draw:works},{at:25,draw:contacts},{at:27.5,draw:route}];
-    function render(t) {
-      t=((t%30)+30)%30;
-      let i=sections.length-1;while(i>0&&t<sections[i].at)i--;
-      const local=t-sections[i].at;
-      x.save();x.clearRect(0,0,W,H);
-      if(local<.4&&i>0){
-        const prev=sections[(i+sections.length-1)%sections.length];
-        const end=i?sections[i].at:30;prev.draw(end-prev.at-.001);
-        x.globalAlpha=ease(local/.4);
-      }
-      sections[i].draw(local);if(t>29.6){x.globalAlpha=ease((t-29.6)/.4);chat(0)}x.restore();onFrame();
+    function confirmation(t){
+      base();const p=smooth(.15,1.05,t);
+      x.beginPath();x.arc(300,272,57,-Math.PI/2,-Math.PI/2+Math.PI*2*p);x.strokeStyle=red;x.lineWidth=3;x.stroke();
+      x.save();x.beginPath();x.rect(264,240,75*smooth(.6,1.15,t),65);x.clip();line([[272,271],[292,289],[330,252]],red,5);x.restore();
+      text('Вы записаны',300,388,43,white,700,'center');text('Ждём вас в AVTOLAB77',300,435,24,muted,400,'center');
+      photo('hero',0,471,600,466,0,1.07+.06*smooth(0,4,t));gradient(0,799,600,138);
+      box(26,894,548,126,'#12161beF',20,'#30353b');text('Защитная плёнка',48,943,28,white,600);text('14 ноября · 14:00',48,986,24,muted);
+      box(26,1062,548,76,'#20252c',18);text('Моя запись',300,1110,27,white,600,'center');
     }
-    const ready=Promise.all(Object.entries(sources).map(([key,src])=>new Promise(resolve=>{
-      const im=new Image();images[key]=im;im.onload=resolve;im.onerror=()=>{console.warn('Phone demo image unavailable:',key);resolve()};im.src=src;
-    }))).then(()=>render(time));
-    render(0);
-    document.addEventListener('visibilitychange',()=>{if(document.hidden){active=false;last=performance.now()}});
-    return {
-      ready, render,
-      update(running, now=performance.now()) {
-        running=Boolean(running&&!document.hidden);
-        if(running&&active)time=(time+Math.max(0,now-last)/1000)%30;
-        last=now;active=running;
-        if(running&&now-lastPaint>=1000/30){render(time);lastPaint=now;}
-      },
-      get state(){return {time,active,duration:30};}
-    };
+    const sections=[{at:0,name:'home',draw:home},{at:5,name:'services',draw:services},{at:10,name:'works',draw:works},{at:15,name:'project',draw:project},{at:20,name:'booking',draw:booking},{at:26,name:'confirmation',draw:confirmation}];
+    function render(t){
+      t=((t%30)+30)%30;renderedTime=t;let i=sections.length-1;while(i>0&&t<sections[i].at)i--;const local=t-sections[i].at;
+      x.clearRect(0,0,W,H);box(0,0,W,H,'#080a0c',0);
+      x.save();x.beginPath();x.rect(0,164,W,996);x.clip();
+      if(i>0&&local<.55){sections[i-1].draw(sections[i].at-sections[i-1].at);const p=smooth(0,.55,local);x.save();x.globalAlpha*=p;x.translate((1-p)*34,0);sections[i].draw(local);x.restore()}else sections[i].draw(local);
+      if(t>29.45){x.save();x.globalAlpha*=smooth(29.45,30,t);home(0);x.restore()}
+      x.restore();chrome();onFrame();
+    }
+    const ready=Promise.all(Object.entries({...sources,sheet:window.MB_PHONE_DETAILING_SHEET}).filter(([,src])=>src).map(([key,src])=>new Promise(resolve=>{const im=new Image();images[key]=im;im.onload=resolve;im.onerror=()=>{console.warn('Phone demo image unavailable:',key);resolve()};im.src=src}))).then(()=>render(time));
+    render(0);document.addEventListener('visibilitychange',()=>{if(document.hidden){active=false;last=performance.now()}});
+    return {ready,render,update(running,now=performance.now()){
+      running=Boolean(running&&!document.hidden);if(running&&active)time=(time+Math.max(0,now-last)/1000)%30;last=now;active=running;
+      if(running&&now-lastPaint>=1000/60-.5){render(time);lastPaint=now}
+    },get state(){return {time,active,duration:30,renderedTime,section:[...sections].reverse().find(s=>renderedTime>=s.at).name}}};
   }
 };
