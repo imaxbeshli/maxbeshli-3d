@@ -1013,7 +1013,7 @@ window.MBArchitectureDemo = {
     // A single world-space reveal front rises through the entire structure.
     // Apply it to shadow depth as well, so unbuilt geometry casts no shadow.
     const revealHeight={value:-.5};
-    function revealMaterial(material,fade){
+    function revealMaterial(material,fade,shadow=false,solid=false){
       material.onBeforeCompile=shader=>{
         shader.uniforms.buildHeight=revealHeight;shader.uniforms.buildFade=fade;
         shader.vertexShader='varying float buildWorldY;\n'+shader.vertexShader;
@@ -1025,22 +1025,23 @@ window.MBArchitectureDemo = {
           buildWorldY=(modelMatrix*buildPosition).y;`);
         shader.fragmentShader='varying float buildWorldY; uniform float buildHeight; uniform float buildFade;\n'+shader.fragmentShader;
         shader.fragmentShader=shader.fragmentShader.replace('#include <alphatest_fragment>',`
-          diffuseColor.a *= (1.0-smoothstep(buildHeight-.22,buildHeight,buildWorldY))*buildFade;
-          if(diffuseColor.a<.015) discard;
+          diffuseColor.a *= (1.0-smoothstep(buildHeight-.65,buildHeight,buildWorldY))*buildFade;
+          ${shadow||solid ? 'float coverage=fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453); if(diffuseColor.a<coverage) discard; diffuseColor.a=1.0;' : 'if(diffuseColor.a<.001) discard;'}
           #include <alphatest_fragment>`);
       };
-      material.customProgramCacheKey=()=> 'continuous-world-reveal-v1';
+      material.customProgramCacheKey=()=> shadow||solid?'continuous-solid-coverage-v3':'continuous-world-reveal-v3';
     }
     stages.forEach(s=>{
       s.fade={value:1};s.materials=[];
       s.group.traverse(mesh=>{if(!mesh.isMesh)return;
         if(mesh.material!==glowMat&&mesh.material!==stripMat)mesh.material=mesh.material.clone();
         mesh.material.transparent=true;
-        // Opaque architectural surfaces still occlude interiors after reveal.
-        mesh.material.depthWrite=mesh.material.opacity===1;
-        revealMaterial(mesh.material,s.fade);s.materials.push(mesh.material);
+        // Coverage grows smoothly; opaque surfaces retain correct depth and layering.
+        const solid=mesh.material.opacity===1;
+        mesh.material.depthWrite=solid;
+        revealMaterial(mesh.material,s.fade,false,solid);s.materials.push(mesh.material);
         mesh.customDepthMaterial=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking});
-        revealMaterial(mesh.customDepthMaterial,s.fade);
+        revealMaterial(mesh.customDepthMaterial,s.fade,true);
       });
     });
     let time=0,active=false,last=0,lastPaint=-Infinity,renderedTime=0,daylight=1;
@@ -1052,7 +1053,7 @@ window.MBArchitectureDemo = {
     function configure(t){
       // Return to the original plot only behind an opaque page transition.
       const buildTime=t<29?t:0;
-      revealHeight.value=-.14+7.1*(.65*clamp((buildTime-.25)/14.75)+.35*smooth(.25,15,buildTime));
+      revealHeight.value=-.14+7.5*(.65*clamp((buildTime-.25)/14.75)+.35*smooth(.25,15,buildTime));
       stages.forEach(s=>{
         const isFinish=['glazing','timber-finish','terrace','landscape'].includes(s.name);
         s.fade.value=isFinish?smooth(s.start,s.end,buildTime):1;
@@ -1073,7 +1074,13 @@ window.MBArchitectureDemo = {
       stages.forEach(s=>s.materials.forEach(material=>{if(material.envMap===env){material.envMapIntensity=glass.envMapIntensity;material.emissive.copy(glass.emissive);material.emissiveIntensity=glass.emissiveIntensity}}));
       renderer.toneMappingExposure=1.0;
       plan.material.opacity=.65*smooth(0,.3,buildTime)*(1-smooth(1.8,4,buildTime));
-      planGeo.setDrawRange(0,Math.floor(smooth(0,.8,buildTime)*planVertices.length/6)*2);
+      // Extend each line continuously instead of adding whole segments in one frame.
+      const planPosition=planGeo.attributes.position;
+      planSegments.forEach(([x,z,u,v],i)=>{
+        const p=smooth(i*.045,i*.045+.4,buildTime);
+        planPosition.setXYZ(i*2+1,x+(u-x)*p,-.115,z+(v-z)*p);
+      });
+      planPosition.needsUpdate=true;
       // Move only the camera INSIDE the website, never the portfolio camera.
       // A short eased arc keeps the glazed front visible throughout construction.
       // Ease towards the growing house, then pull back to show the finished project.
