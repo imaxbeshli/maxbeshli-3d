@@ -206,8 +206,10 @@ window.MBArchitectureDemo = {
       planGeo.setDrawRange(0,Math.floor(smooth(0,.8,buildTime)*planVertices.length/6)*2);
       // Move only the camera INSIDE the website, never the portfolio camera.
       // A short eased arc keeps the glazed front visible throughout construction.
-      const approach=smooth(.4,9,buildTime),orbit=clamp(buildTime/28),angle=.48+.28*smooth(0,28,buildTime);
-      const radius=25-approach*2;
+      // Ease towards the growing house, then pull back to show the finished project.
+      const approach=smooth(.4,18,buildTime)*(1-smooth(20,28,buildTime));
+      const orbit=clamp(buildTime/28),angle=.48+.28*smooth(0,28,buildTime);
+      const radius=25-approach*4;
       camera.position.set(Math.sin(angle)*radius,7.8-approach*.5+Math.sin(orbit*Math.PI)*.12,Math.cos(angle)*radius);
       camera.lookAt(-1.4,2.0,-.1);camera.updateMatrixWorld();
     }
@@ -248,7 +250,7 @@ window.MBArchitectureDemo = {
       rect(0,680,W,70,'#f1f0e9');rule(32,680,1136,'#c9cec1');
       text('FORMA / RESIDENTIAL',34,723,13,'#51604f',500);text('КОНЦЕПЦИЯ · 2026',370,723,11,'#7b8577');
       if(effective>=24){
-        ctx.save();ctx.globalAlpha=smooth(24,25,effective);rect(940,693,228,43,'#283b2e',22);text('Смотреть проект  ↗',1054,720,15,'#f1f1e8',500,'center');ctx.restore();
+        ctx.save();ctx.globalAlpha=smooth(24,25,effective);rect(940,693,228,43,'#283b2e',22);text('Смотреть проект',1054,720,15,'#f1f1e8',500,'center');ctx.restore();
       }
       // Soft editorial page wipe masks reconstruction reset, keeping the loop seamless.
       const reset=t>=28&&t<29?smooth(28,29,t):t>=29?1-smooth(29,30,t):0;
