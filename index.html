@@ -704,9 +704,22 @@ BESHLI</h1>
 @keyframes aboutOrbitIn{from{opacity:0;transform:rotate(-65deg) scale(.55)}to{opacity:1;transform:rotate(-24deg) scaleX(.85)}}
 @keyframes aboutLineIn{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @media(max-width:760px){.about-shell{padding:18px 22px 24px}.about-top{gap:12px}.about-brand{font-size:11px}#aboutClose{font-size:10px;gap:9px}.about-layout{grid-template-columns:1fr;gap:30px;padding-top:20px}.about-visual{position:relative;top:0;min-height:0;height:420px;max-height:62vh;width:100%;max-width:430px;margin:auto}.about-outline{font-size:200px;left:5%}.about-photo-note{font-size:8px;left:0}.about-copy{padding:0 2px}#aboutTitle{font-size:72px;margin-bottom:18px}.about-eyebrow{margin-top:0}.about-lead{font-size:25px}.about-bio{font-size:13px}.about-footer{flex-direction:column;line-height:1.7}.about-direction>button{font-size:14px}.about-actions{gap:14px}.about-detail p{padding-right:8px}}
-@media(prefers-reduced-motion:reduce){#aboutDialog *,#aboutDialog *:before,#aboutDialog *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.about-portrait-motion{transform:none!important}}
-
-@media(prefers-reduced-motion:reduce){#aboutDialog[open],#aboutDialog::backdrop{animation:none!important}.about-reveal,.about-title-reveal>span{opacity:1;transform:none}.about-direction:after{transform:none}}
+/* Keep the authored entrance sequence visible with reduced motion too.
+   Use a soft fade instead of large travel, rotation or a screen wipe. */
+@keyframes aboutSoftIn{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){
+  #aboutDialog[open],#aboutDialog::backdrop,.about-scene-light{animation-name:aboutSoftIn}
+  #aboutDialog.is-entering #aboutPortrait,
+  #aboutDialog.is-entering .about-orbit,
+  #aboutDialog.is-entering .about-outline,
+  .about-reveal.is-visible,
+  .about-title-reveal.is-visible>span{animation-name:aboutSoftIn}
+  .about-reveal,.about-title-reveal>span{transform:none}
+  .about-portrait-motion{transform:none!important;transition:none}
+  .about-direction.is-visible:after{animation-name:aboutSoftIn;transform:none}
+  .about-direction>button:hover{padding-left:0}
+  #aboutContact:hover{transform:none}
+}
 
 </style>
 <dialog id="aboutDialog" aria-labelledby="aboutTitle">
@@ -773,7 +786,7 @@ BESHLI</h1>
     expand(buttons[0]);resetParallax();const token=++opening;
     void dialog.offsetWidth;
     dialog.classList.add('is-entering');
-    revealTimer=setTimeout(()=>observeEntrance(token),reduced.matches?0:650);close.focus({preventScroll:true});
+    revealTimer=setTimeout(()=>observeEntrance(token),650);close.focus({preventScroll:true});
   },close(){if(dialog.open)dialog.close()}};
   close.addEventListener('click',()=>dialog.close());
   dialog.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();dialog.close()});

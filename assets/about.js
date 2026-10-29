@@ -31,7 +31,7 @@
     expand(buttons[0]);resetParallax();const token=++opening;
     void dialog.offsetWidth;
     dialog.classList.add('is-entering');
-    revealTimer=setTimeout(()=>observeEntrance(token),reduced.matches?0:650);close.focus({preventScroll:true});
+    revealTimer=setTimeout(()=>observeEntrance(token),650);close.focus({preventScroll:true});
   },close(){if(dialog.open)dialog.close()}};
   close.addEventListener('click',()=>dialog.close());
   dialog.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();dialog.close()});
