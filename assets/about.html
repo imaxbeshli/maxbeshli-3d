@@ -1,34 +1,23 @@
-<dialog id="aboutDialog" aria-labelledby="aboutTitle" data-chapter="0">
-  <div class="about-atmosphere" aria-hidden="true"><div class="about-light about-light-warm"></div><div class="about-light about-light-cool"></div><div class="about-fog"></div></div>
-  <div class="about-shell">
-    <div class="about-top"><span class="about-brand">MAX BESHLI<span aria-hidden="true">.</span></span><button id="aboutClose" type="button">Назад в пространство</button></div>
-    <div class="about-layout">
-      <div class="about-visual" aria-label="Портрет Макса">
-        <div class="about-halo" aria-hidden="true"></div>
-        <div class="about-portrait-motion"><img id="aboutPortrait" src="__PORTRAIT__" alt="Макс в чёрной шапке и очках, со скрещёнными руками" width="1065" height="1477"></div>
-        <div class="about-photo-note"><span></span>ВИЗУАЛ. ТЕХНОЛОГИИ. ХАРАКТЕР.</div>
-      </div>
-      <div class="about-copy">
-        <section class="about-chapter" aria-labelledby="aboutTitle">
-          <p class="about-eyebrow about-reveal">ЗА КАДРОМ / ОБО МНЕ</p>
-          <h2 id="aboutTitle" class="about-title-reveal" aria-label="Я MAX"><span aria-hidden="true">Я</span> <span aria-hidden="true">M</span><span aria-hidden="true">A</span><span aria-hidden="true">X</span><span class="about-red" aria-hidden="true">.</span></h2>
-          <p class="about-bio about-reveal" style="--delay:250ms">Занимаюсь видеосъёмкой и монтажом: превращаю идеи в визуальные истории, работаю с кадром, светом, ритмом и атмосферой. Для меня важно не просто сделать красивую картинку, а передать характер человека, продукта или проекта.</p>
-          <div class="about-scroll-note about-reveal" aria-hidden="true"><span></span>ЛИСТАЙТЕ ДАЛЬШЕ</div>
-        </section>
-        <section class="about-chapter" aria-labelledby="aboutDigital">
-          <div class="about-rule about-reveal" aria-hidden="true"></div>
-          <h3 id="aboutDigital" class="about-lead about-reveal">От кадра —<br>к целому цифровому миру.</h3>
-          <p class="about-bio about-reveal" style="--delay:120ms">Сегодня моя работа выходит за пределы видео. Я использую AI и создаю сайты, в которых история оживает через объём, движение и взаимодействие. Это не просто страницы с информацией, а визуальные пространства, которые хочется исследовать.</p>
-          <p class="about-bio about-reveal" style="--delay:220ms">Разрабатываю Telegram-ботов и мини-приложения, соединяя выразительный дизайн с удобными инструментами для бизнеса.</p>
-        </section>
-        <section class="about-chapter" aria-labelledby="aboutApproach">
-          <div class="about-rule about-reveal" aria-hidden="true"></div>
-          <p class="about-bio about-reveal">Современные технологии позволяют одному человеку вести проекты, для которых раньше требовалась целая команда. Именно так я и работаю: объединяю опыт в съёмке и монтаже с AI и разработкой.</p>
-          <h3 id="aboutApproach" class="about-lead about-reveal">Сам веду процесс<br>и отвечаю за результат.</h3>
-          <p class="about-bio about-reveal" style="--delay:150ms">Инструментов становится больше, но главное остаётся прежним — продуманный подход и ответственность за свою работу.</p>
-          <div class="about-actions about-reveal" style="--delay:250ms"><button type="button" id="aboutContact"><span class="about-cta-dot" aria-hidden="true"></span>Обсудить проект</button></div>
-        </section>
-      </div>
+<dialog id="aboutDialog" aria-labelledby="aboutTitle">
+  <div class="about-world-clip" aria-hidden="true"><div class="about-world"></div></div>
+  <div class="about-spotlight" aria-hidden="true"></div>
+  <div class="about-top"><span class="about-brand">MAX BESHLI<span aria-hidden="true">.</span></span><button id="aboutClose" type="button">Назад в пространство</button></div>
+  <div class="about-stage">
+    <div class="about-visual">
+      <div class="about-halo" aria-hidden="true"></div>
+      <div class="about-portrait-motion"><img id="aboutPortrait" src="__PORTRAIT__" alt="Макс в чёрной шапке и очках, со скрещёнными руками" width="1065" height="1477"></div>
+      <div class="about-photo-note"><span></span>ВИЗУАЛ. ТЕХНОЛОГИИ. ХАРАКТЕР.</div>
     </div>
+    <div class="about-panel-position"><section class="about-panel" aria-label="Обо мне">
+      <h2 id="aboutTitle" aria-label="Я MAX"><span aria-hidden="true">Я</span> <span aria-hidden="true">M</span><span aria-hidden="true">A</span><span aria-hidden="true">X</span></h2>
+      <div class="about-story">
+        <p class="about-block" id="aboutText0">Снимаю и монтирую видео. Работаю с кадром, светом, ритмом и атмосферой, чтобы передать характер человека, продукта или проекта.</p>
+        <p class="about-block" id="aboutText1">Создаю сайты, в которых история оживает через объём, движение и взаимодействие. Использую AI, разрабатываю Telegram-ботов и мини-приложения.</p>
+        <p class="about-block" id="aboutText2">Современные технологии позволяют одному человеку вести проекты, для которых раньше требовалась команда. Сам веду процесс и отвечаю за результат. Главное — продуманный подход и ответственность за свою работу.</p>
+      </div>
+      <nav class="about-pages" aria-label="Части рассказа"><button type="button" aria-controls="aboutText0" aria-label="Съёмка и монтаж" aria-current="true">01</button><button type="button" aria-controls="aboutText1" aria-label="Цифровые проекты">02</button><button type="button" aria-controls="aboutText2" aria-label="Подход к работе">03</button></nav>
+      <button type="button" id="aboutContact">Обсудить проект <span class="about-cta-dot" aria-hidden="true"></span></button>
+    </section></div>
   </div>
+  <div class="about-fog-clip" aria-hidden="true"><div class="about-fog"></div></div>
 </dialog>
