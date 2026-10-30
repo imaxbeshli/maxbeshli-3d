@@ -3,6 +3,16 @@
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),hover=matchMedia('(hover: hover) and (pointer: fine)'),compact=matchMedia('(max-width:760px),(max-height:550px)');
   const blocks=[...dialog.querySelectorAll('.about-block')],pages=[...dialog.querySelectorAll('.about-pages button')];
   let opener=null,current=0;
+  // Preserve natural spacing, selection and line wrapping while styling each word.
+  blocks.forEach(block=>{
+    const fragment=document.createDocumentFragment();
+    block.textContent.split(/(\s+)/).forEach(part=>{
+      if(!part)return;
+      if(/^\s+$/.test(part)){fragment.append(document.createTextNode(part));return}
+      const word=document.createElement('span');word.className='about-word';word.textContent=part;fragment.append(word);
+    });
+    block.replaceChildren(fragment);
+  });
   dialog.querySelectorAll('#aboutTitle>span').forEach((el,i)=>el.style.setProperty('--letter',i));
   blocks.forEach((el,i)=>el.style.setProperty('--delay',`${1+i*.18}s`));
   function selectPage(index,animate=false){

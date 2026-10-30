@@ -25,9 +25,9 @@
 
 .about-pages{display:none}/* Textured foreground banks drift independently; no uniform static haze. */
 .about-fog{position:absolute;left:-12%;bottom:-1%;width:124%;height:39%;pointer-events:none;z-index:2;transform:translate(calc(var(--px)*1.2),calc(var(--py)*.5));transition:transform 1.2s ease;mask-image:linear-gradient(transparent,#000 18%,#000)}
-.about-fog-layer{position:absolute;inset:-8% -12%;background:url('__ABOUT_FOG__') center bottom/100% 100% no-repeat;opacity:.86;filter:brightness(.8);animation:aboutFogDrift 9s ease-in-out -2s infinite alternate;will-change:transform}
-.about-fog-layer:nth-child(2){inset:14% -18% -12%;opacity:.8;filter:brightness(.65) blur(2px);animation:aboutFogCounter 12s ease-in-out -5s infinite alternate}
-.about-fog-layer:nth-child(3){inset:45% -10% -18%;opacity:.9;filter:brightness(.85);animation:aboutFogDrift 7s ease-in-out -4s infinite alternate}
+.about-fog-layer{position:absolute;inset:-8% -12%;background:url('__ABOUT_FOG__') center bottom/100% 100% no-repeat;opacity:.26;filter:brightness(.85) blur(25px);animation:aboutFogDrift 17s ease-in-out -2s infinite alternate;will-change:transform}
+.about-fog-layer:nth-child(2){inset:14% -18% -12%;opacity:.2;filter:brightness(.75) blur(34px);animation:aboutFogCounter 23s ease-in-out -5s infinite alternate}
+.about-fog-layer:nth-child(3){inset:45% -10% -18%;opacity:.15;filter:brightness(.85) blur(28px);animation:aboutFogDrift 19s ease-in-out -4s infinite alternate}
 @keyframes aboutFogDrift{from{transform:translate3d(-9%,3%,0) scale(1.02)}to{transform:translate3d(9%,-5%,0) scale(1.12)}}
 @keyframes aboutFogCounter{from{transform:translate3d(10%,-3%,0) scale(1.08)}to{transform:translate3d(-10%,4%,0) scale(1)}}
 @keyframes aboutFogReverse{from{transform:translateX(10%) scale(1.1)}to{transform:translateX(-10%) scale(.96)}}
@@ -37,7 +37,7 @@
 @media(max-height:760px) and (min-width:761px){.about-stage{inset:14% 6% 8%;gap:4%}.about-panel{padding:20px 28px}#aboutTitle{font-size:54px;margin-bottom:16px}.about-block{font-size:14px;line-height:1.55}.about-block+.about-block:before{margin:14px 0}}
 @media(max-width:760px),(max-height:550px){
  .about-top{top:14px;left:20px;right:20px}.about-brand{font-size:10px}#aboutClose{font-size:10px;padding:12px}.about-stage{inset:75px 20px 24px;grid-template-columns:1fr;grid-template-rows:minmax(100px,.75fr) minmax(300px,1fr);gap:12px}.about-visual{width:100%;height:100%;overflow:clip}.about-photo-note{font-size:7px;bottom:0;left:0}.about-photo-note>span{height:22px}.about-panel-position{height:100%}.about-panel{height:100%;padding:20px 24px;border-radius:20px;display:flex;flex-direction:column;--float-distance:-7px}#aboutTitle{font-size:44px;margin-bottom:14px}.about-story{flex:1;min-height:0}.about-block{font-size:14px;line-height:1.6}.about-block+.about-block:before{display:none}.about-block[hidden]{display:none}.about-pages{display:flex;gap:9px;margin-top:12px}.about-pages button{border:1px solid #ffffff26;border-radius:6px;background:#ffffff05;padding:6px 12px;font-size:11px;color:#949ca9}.about-pages button[aria-current=true]{border-color:#ff304b;color:#fff;background:#ff304b12}.about-fog{height:15%;bottom:-5%;opacity:.9}
- .about-visual:after{clip-path:inset(0 8%);content:'';position:absolute;left:0;right:0;bottom:-5%;height:30%;pointer-events:none;background:url('__ABOUT_FOG__') center/cover;filter:brightness(.8);animation:aboutFog 7s ease-in-out infinite alternate}
+ .about-visual:after{clip-path:inset(0 8%);content:'';position:absolute;left:0;right:0;bottom:-5%;height:30%;pointer-events:none;background:url('__ABOUT_FOG__') center/cover;filter:brightness(.8) blur(12px);opacity:.3;animation:aboutFog 16s ease-in-out infinite alternate}
  .about-photo-note{z-index:2}
  .about-panel:after{inset:3px -4px -5px 3px;border-right-width:3px;border-bottom-width:4px}
 }
@@ -48,11 +48,18 @@
 @media(prefers-reduced-motion:reduce){
  #aboutDialog{--float-distance:-12px}
  #aboutDialog.is-entering #aboutPortrait,#aboutDialog.is-entering .about-panel-position,#aboutDialog.is-entering #aboutTitle>span,#aboutDialog.is-entering .about-block{animation-name:aboutFade}
- .about-fog-layer{animation-duration:12s}
- .about-fog-layer:nth-child(2){animation-duration:16s}
- .about-fog-layer:nth-child(3){animation-duration:13s}
+ .about-fog-layer{animation-duration:22s}
+ .about-fog-layer:nth-child(2){animation-duration:28s}
+ .about-fog-layer:nth-child(3){animation-duration:24s}
 }
 .about-glint{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;z-index:0}
 .about-glint:after{content:'';position:absolute;inset:-40% -90%;background:linear-gradient(115deg,transparent 43%,#f8e6be04 47%,#fff4d512 50%,#f8e6be04 53%,transparent 57%);animation:aboutGlint 7s ease-in-out infinite}
 @keyframes aboutGlint{0%,10%{transform:translateX(-35%);opacity:0}35%,65%{opacity:1}90%,100%{transform:translateX(35%);opacity:0}}
 @media(max-width:760px),(max-height:550px){#aboutDialog{--float-distance:-7px}}
+
+/* Color only: hovering never changes text geometry or triggers a glitch. */
+#aboutTitle>span,.about-word{transition:color .95s ease;cursor:default}
+@media(hover:hover){
+ #aboutTitle>span:hover{color:#ff304b;transition-duration:.45s}
+ .about-word:hover{color:#ff4057;transition-duration:.35s}
+}
