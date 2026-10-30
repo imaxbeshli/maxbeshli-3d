@@ -11,10 +11,11 @@ with sync_playwright() as p:
  page=b.new_page(viewport={'width':1440,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.route('http://about.test/',lambda r:r.fulfill(body=html,content_type='text/html; charset=utf-8'))
  page.goto('http://about.test/');page.click('#launch');page.wait_for_timeout(2800)
+ assert page.locator('.about-fog-layer').first.evaluate('(el)=>getComputedStyle(el).backgroundImage').startswith('url(')
  sample="""()=>{const p=new DOMMatrix(getComputedStyle(document.querySelector('.about-panel')).transform);return {x:p.b,y:p.c,lift:p.f,fog:getComputedStyle(document.querySelector('.about-fog-layer')).transform,portrait:getComputedStyle(document.querySelector('.about-portrait-motion')).transform}}"""
  for mode in ['normal','hover','focus','reduced','mobile']:
   if mode=='hover':page.mouse.move(1000,400)
-  if mode=='focus':page.locator('#aboutContact').focus()
+  if mode=='focus':page.locator('#aboutClose').focus()
   if mode=='reduced':page.emulate_media(reduced_motion='reduce')
   if mode=='mobile':page.set_viewport_size({'width':390,'height':844})
   before=page.evaluate(sample);page.wait_for_timeout(1900);after=page.evaluate(sample)

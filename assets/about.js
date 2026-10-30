@@ -35,5 +35,4 @@
     const strength=(reduced.matches?.65:1)*(compact.matches?.5:1);
     const r=dialog.getBoundingClientRect();dialog.style.setProperty('--px',`${((e.clientX-r.left)/r.width-.5)*40*strength}px`);dialog.style.setProperty('--py',`${((e.clientY-r.top)/r.height-.5)*24*strength}px`);
   });dialog.addEventListener('pointerleave',resetParallax);
-  document.getElementById('aboutContact').addEventListener('click',()=>{dialog.close();document.querySelector('#mainHeader a[href="#contact"]').click()});
 })();
