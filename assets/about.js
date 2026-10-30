@@ -32,7 +32,7 @@
   dialog.addEventListener('close',()=>{dialog.classList.remove('is-entering');dialog.querySelectorAll('.about-block').forEach(el=>el.getAnimations().forEach(a=>a.cancel()));resetParallax();opener?.focus({preventScroll:true})});
   dialog.addEventListener('pointermove',e=>{
     if(reduced.matches||!hover.matches||compact.matches)return;
-    const r=dialog.getBoundingClientRect();dialog.style.setProperty('--px',`${((e.clientX-r.left)/r.width-.5)*12}px`);dialog.style.setProperty('--py',`${((e.clientY-r.top)/r.height-.5)*8}px`);
+    const r=dialog.getBoundingClientRect();dialog.style.setProperty('--px',`${((e.clientX-r.left)/r.width-.5)*20}px`);dialog.style.setProperty('--py',`${((e.clientY-r.top)/r.height-.5)*12}px`);
   });dialog.addEventListener('pointerleave',resetParallax);
   document.getElementById('aboutContact').addEventListener('click',()=>{dialog.close();document.querySelector('#mainHeader a[href="#contact"]').click()});
 })();
