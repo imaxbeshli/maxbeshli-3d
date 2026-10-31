@@ -73,13 +73,12 @@
     if(['PageUp','ArrowUp'].includes(e.key)){e.preventDefault();e.stopImmediatePropagation();routeScroll(e.key==='ArrowUp'?-120:-innerHeight*.75)}
     if(e.key==='Escape'&&depth>.001){e.preventDefault();e.stopImmediatePropagation();setTarget(0)}
   },true);
-  root.addEventListener('pointermove',e=>{if(reduced.matches||e.pointerType==='touch')return;root.style.setProperty('--gx',`${(e.clientX/innerWidth-.5)*24}px`);root.style.setProperty('--gy',`${(e.clientY/innerHeight-.5)*14}px`)});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stopVideos()});
   const saved={x:0,y:0,z:0,qx:0,qy:0,qz:0,qw:1};
   window.MBDescent={get depth(){return depth},get target(){return target},get arrived(){return arrived},setTarget,add,isRestingBelow:()=>depth>=.56,
     beforeRender(camera){
       const p=smooth(0,.8,depth);saved.x=camera.position.x;saved.y=camera.position.y;saved.z=camera.position.z;Object.assign(saved,{qx:camera.quaternion.x,qy:camera.quaternion.y,qz:camera.quaternion.z,qw:camera.quaternion.w});
-      camera.position.y-=p*3.8;camera.position.z-=p*1.2;camera.rotateX(-p*.13);camera.updateMatrixWorld();
+      camera.position.y-=p*3.4;camera.position.z-=p*.7;camera.rotateX(-p*.075);camera.updateMatrixWorld();
     },afterRender(camera){camera.position.set(saved.x,saved.y,saved.z);camera.quaternion.set(saved.qx,saved.qy,saved.qz,saved.qw);camera.updateMatrixWorld()}
   };
   function tick(now){
@@ -105,10 +104,12 @@
     if(ready&&!arrived){document.getElementById('worksTitle').focus({preventScroll:true});lastTop=false}
     arrived=ready;
     if(!active&&!lastTop&&window.__MB?.state.studioEntered){canvas.focus({preventScroll:true});lastTop=true;content.scrollTop=0}
-    const crossing=smooth(.12,.48,depth)*(1-smooth(.60,.94,depth));
+    const crossing=smooth(.12,.26,depth)*(1-smooth(.60,.88,depth));
     veil.classList.toggle('is-crossing',active&&depth<.94);veil.style.visibility=active?'visible':'hidden';veil.style.opacity=crossing;veil.style.setProperty('--waterline',`${110-smooth(.12,.54,depth)*150}%`);veil.style.setProperty('--tint',smooth(.20,.46,depth));veil.style.setProperty('--mist',Math.sin(smooth(.22,.8,depth)*Math.PI)*.78);
     document.getElementById('descentDisplacement').setAttribute('scale',String(crossing*(reduced.matches?5:22)));
     canvas.style.filter=crossing>.02?'url(#descentRefraction)':'none';
+    // Overscan the refracted frame so displacement never exposes black viewport edges.
+    canvas.style.transform=crossing>0?`scale(${1+crossing*28/Math.min(innerWidth,innerHeight)})`:'none';
 
   }
   requestAnimationFrame(tick);

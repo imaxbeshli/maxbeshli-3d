@@ -9,7 +9,7 @@ works=json.loads((root/'assets/selected-works.json').read_text())
 for work in works:
  work['poster']=data(work['poster'])
 css=(root/'assets/gallery.css').read_text().replace('__GALLERY_CAVE__',data('assets/gallery-cave.png'))
-block='<!-- GALLERY_START -->\n<style>'+css+'</style>\n'+(root/'assets/gallery.html').read_text()+'\n<script>window.MBSelectedWorks='+json.dumps(works,ensure_ascii=False).replace('</','<\\/')+';\n'+(root/'assets/gallery.js').read_text()+'\n'+(root/'assets/gallery-scene.js').read_text()+'\n</script>\n<!-- GALLERY_END -->'
+block='<!-- GALLERY_START -->\n<style>'+css+'</style>\n'+(root/'assets/gallery.html').read_text()+'\n<script>window.MBSelectedWorks='+json.dumps(works,ensure_ascii=False).replace('</','<\\/')+';\n'+(root/'assets/gallery.js').read_text()+'\n'+(root/'assets/gallery-scene.js').read_text()+'\n'+(root/'assets/gallery-water.js').read_text()+'\n</script>\n<!-- GALLERY_END -->'
 p=root/'index.html';s=p.read_text()
 if '<!-- GALLERY_START -->' in s:
  a=s.index('<!-- GALLERY_START -->');b=s.index('<!-- GALLERY_END -->')+len('<!-- GALLERY_END -->');s=s[:a]+block+s[b:]

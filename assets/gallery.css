@@ -68,3 +68,8 @@ body.is-descending .ui-layer{opacity:var(--upper-opacity,1)!important;transform:
 #selectedWorks.has-webgl .work-frame img,#selectedWorks.has-webgl .work-frame video{opacity:0}
 #selectedWorks.has-webgl .work-frame:after{display:none}
 .gallery-rays{display:none}
+
+.gallery-live-rays{filter:blur(6px)}
+.gallery-world,.gallery-water{transition:none}
+#descentVeil .descent-surface,#descentVeil .descent-mist,#descentVeil .descent-bubbles,#descentVeil .descent-light{display:none}
+.descent-water-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}

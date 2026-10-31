@@ -713,6 +713,11 @@ body.is-descending .ui-layer{opacity:var(--upper-opacity,1)!important;transform:
 #selectedWorks.has-webgl .work-frame img,#selectedWorks.has-webgl .work-frame video{opacity:0}
 #selectedWorks.has-webgl .work-frame:after{display:none}
 .gallery-rays{display:none}
+
+.gallery-live-rays{filter:blur(6px)}
+.gallery-world,.gallery-water{transition:none}
+#descentVeil .descent-surface,#descentVeil .descent-mist,#descentVeil .descent-bubbles,#descentVeil .descent-light{display:none}
+.descent-water-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 </style>
 <section id="selectedWorks" aria-labelledby="worksTitle" inert aria-hidden="true">
   <div class="gallery-world" aria-hidden="true"></div><div class="gallery-water" aria-hidden="true"></div><div class="gallery-caustics" aria-hidden="true"></div><div class="gallery-rays" aria-hidden="true"></div><div class="gallery-motes" aria-hidden="true"></div>
@@ -802,13 +807,12 @@ body.is-descending .ui-layer{opacity:var(--upper-opacity,1)!important;transform:
     if(['PageUp','ArrowUp'].includes(e.key)){e.preventDefault();e.stopImmediatePropagation();routeScroll(e.key==='ArrowUp'?-120:-innerHeight*.75)}
     if(e.key==='Escape'&&depth>.001){e.preventDefault();e.stopImmediatePropagation();setTarget(0)}
   },true);
-  root.addEventListener('pointermove',e=>{if(reduced.matches||e.pointerType==='touch')return;root.style.setProperty('--gx',`${(e.clientX/innerWidth-.5)*24}px`);root.style.setProperty('--gy',`${(e.clientY/innerHeight-.5)*14}px`)});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stopVideos()});
   const saved={x:0,y:0,z:0,qx:0,qy:0,qz:0,qw:1};
   window.MBDescent={get depth(){return depth},get target(){return target},get arrived(){return arrived},setTarget,add,isRestingBelow:()=>depth>=.56,
     beforeRender(camera){
       const p=smooth(0,.8,depth);saved.x=camera.position.x;saved.y=camera.position.y;saved.z=camera.position.z;Object.assign(saved,{qx:camera.quaternion.x,qy:camera.quaternion.y,qz:camera.quaternion.z,qw:camera.quaternion.w});
-      camera.position.y-=p*3.8;camera.position.z-=p*1.2;camera.rotateX(-p*.13);camera.updateMatrixWorld();
+      camera.position.y-=p*3.4;camera.position.z-=p*.7;camera.rotateX(-p*.075);camera.updateMatrixWorld();
     },afterRender(camera){camera.position.set(saved.x,saved.y,saved.z);camera.quaternion.set(saved.qx,saved.qy,saved.qz,saved.qw);camera.updateMatrixWorld()}
   };
   function tick(now){
@@ -834,10 +838,12 @@ body.is-descending .ui-layer{opacity:var(--upper-opacity,1)!important;transform:
     if(ready&&!arrived){document.getElementById('worksTitle').focus({preventScroll:true});lastTop=false}
     arrived=ready;
     if(!active&&!lastTop&&window.__MB?.state.studioEntered){canvas.focus({preventScroll:true});lastTop=true;content.scrollTop=0}
-    const crossing=smooth(.12,.48,depth)*(1-smooth(.60,.94,depth));
+    const crossing=smooth(.12,.26,depth)*(1-smooth(.60,.88,depth));
     veil.classList.toggle('is-crossing',active&&depth<.94);veil.style.visibility=active?'visible':'hidden';veil.style.opacity=crossing;veil.style.setProperty('--waterline',`${110-smooth(.12,.54,depth)*150}%`);veil.style.setProperty('--tint',smooth(.20,.46,depth));veil.style.setProperty('--mist',Math.sin(smooth(.22,.8,depth)*Math.PI)*.78);
     document.getElementById('descentDisplacement').setAttribute('scale',String(crossing*(reduced.matches?5:22)));
     canvas.style.filter=crossing>.02?'url(#descentRefraction)':'none';
+    // Overscan the refracted frame so displacement never exposes black viewport edges.
+    canvas.style.transform=crossing>0?`scale(${1+crossing*28/Math.min(innerWidth,innerHeight)})`:'none';
 
   }
   requestAnimationFrame(tick);
@@ -847,16 +853,18 @@ body.is-descending .ui-layer{opacity:var(--upper-opacity,1)!important;transform:
 (()=>{
  const root=document.getElementById('selectedWorks'),cards=[...root.querySelectorAll('.work-card')];
  const rays=document.createElement('canvas');rays.className='gallery-live-rays';rays.setAttribute('aria-hidden','true');root.prepend(rays);
- const ctx=rays.getContext('2d');let renderer,scene,camera,tiles=[],key,fill,lastW=0,lastH=0,time=0,last=performance.now(),failed=false;
+ const ctx=rays.getContext('2d');let renderer,scene,camera,tiles=[],key,fill,lastW=0,lastH=0,time=0,last=performance.now(),failed=false,px=0,py=0,tx=0,ty=0;
  const reduced=matchMedia('(prefers-reduced-motion:reduce)');
- const metrics=window.MBGalleryScene={frames:0,lightFrames:0,ready:false,offsets:[],lightPhase:0};
+ const metrics=window.MBGalleryScene={frames:0,lightFrames:0,ready:false,offsets:[],lightPhase:0,parallax:[0,0]};
+ root.addEventListener('pointermove',e=>{if(e.pointerType==='touch')return;tx=(e.clientX/innerWidth-.5)*2;ty=(e.clientY/innerHeight-.5)*2});
+ root.addEventListener('pointerleave',()=>{tx=ty=0});
  function init(){
   if(renderer||failed||!window.__MB?.createGalleryTile)return;
   try{
    const T=window.THREE;renderer=new T.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});
    renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputEncoding=T.sRGBEncoding;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;renderer.setClearColor(0,0);
    renderer.domElement.className='gallery-glass-canvas';renderer.domElement.setAttribute('aria-hidden','true');root.prepend(renderer.domElement);
-   scene=new T.Scene();camera=new T.OrthographicCamera(-1,1,1,-1,.1,4000);camera.position.z=1800;
+   scene=new T.Scene();camera=new T.PerspectiveCamera(32,innerWidth/innerHeight,1,4000);camera.position.z=innerHeight/(2*Math.tan(16*Math.PI/180));
    scene.add(new T.AmbientLight(0xd0e8eb,1.1));
    key=new T.DirectionalLight(0xe1f3ed,2.2);key.position.set(-150,600,800);scene.add(key);
    fill=new T.DirectionalLight(0xffd8ad,.65);fill.position.set(650,-250,350);scene.add(fill);
@@ -872,9 +880,15 @@ body.is-descending .ui-layer{opacity:var(--upper-opacity,1)!important;transform:
  }
  function light(w,h){
   ctx.clearRect(0,0,w,h);ctx.globalCompositeOperation='lighter';
+  const glowX=w*(.5+Math.sin(time*.24)*.09)+px*12;
+  const halo=ctx.createRadialGradient(glowX,-h*.06,5,glowX,h*.02,w*.43);
+  halo.addColorStop(0,'rgba(218,251,235,.42)');halo.addColorStop(.35,'rgba(164,227,214,.19)');halo.addColorStop(1,'rgba(90,169,167,0)');ctx.fillStyle=halo;ctx.fillRect(0,0,w,h*.65);
+  // Reflections concentrate at the ceiling and drift with the water.
+  for(let j=0;j<8;j++){const x=w*(.12+j*.11)+Math.sin(time*.45+j)*w*.025,y=h*(.035+.018*Math.sin(time*.6+j));ctx.strokeStyle=`rgba(222,255,239,${.13+.07*Math.sin(time*.7+j)})`;ctx.lineWidth=2+j%3;ctx.beginPath();ctx.ellipse(x,y,w*.07,h*.012,Math.sin(time*.3+j)*.08,0,Math.PI*2);ctx.stroke()}
+
   for(let i=0;i<5;i++){
    const origin=w*(.24+i*.13),sway=Math.sin(time*.36+i*1.5)*w*.045,end=origin+w*(.1-i*.045)+sway;
-   const spread=w*(.035+i*.004),strength=.075+.055*(.5+.5*Math.sin(time*.62+i));
+   const spread=w*(.035+i*.004),strength=.15+.10*(.5+.5*Math.sin(time*.62+i));
    const g=ctx.createLinearGradient(origin,0,end,h*.85);g.addColorStop(0,`rgba(207,239,229,${strength})`);g.addColorStop(.38,`rgba(183,224,214,${strength*.65})`);g.addColorStop(1,'rgba(130,195,190,0)');
    ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(origin-12,-10);ctx.lineTo(origin+12,-10);ctx.lineTo(end+spread,h*.88);ctx.lineTo(end-spread,h*.88);ctx.closePath();ctx.fill();
   }
@@ -884,16 +898,48 @@ body.is-descending .ui-layer{opacity:var(--upper-opacity,1)!important;transform:
   requestAnimationFrame(tick);const dt=Math.min((now-last)/1000,.25);last=now;
   if(document.hidden||!root.classList.contains('is-visible'))return;
   time+=dt*(reduced.matches?.45:1);init();
+  const follow=1-Math.exp(-dt*4);px+=(tx-px)*follow;py+=(ty-py)*follow;metrics.parallax=[px,py];
+  root.style.setProperty('--gx',`${px*32}px`);root.style.setProperty('--gy',`${py*20}px`);
   const w=innerWidth,h=innerHeight;
-  if(w!==lastW||h!==lastH){lastW=w;lastH=h;rays.width=Math.round(w*.6);rays.height=Math.round(h*.6);ctx.setTransform(.6,0,0,.6,0,0);if(renderer){renderer.setSize(w,h,false);camera.left=-w/2;camera.right=w/2;camera.top=h/2;camera.bottom=-h/2;camera.updateProjectionMatrix()}}
-  cards.forEach((card,i)=>{const y=Math.sin(time*(.95+i*.13)+i*2.1)*(reduced.matches?4:13);card.style.transform=`translate3d(0,${y}px,0)`;metrics.offsets[i]=y});
+  if(w!==lastW||h!==lastH){lastW=w;lastH=h;rays.width=Math.round(w*.6);rays.height=Math.round(h*.6);ctx.setTransform(.6,0,0,.6,0,0);if(renderer){renderer.setSize(w,h,false);camera.aspect=w/h;camera.position.z=h/(2*Math.tan(16*Math.PI/180));camera.updateProjectionMatrix()}}
+  cards.forEach((card,i)=>{const y=Math.sin(time*(.95+i*.13)+i*2.1)*(reduced.matches?4:13);card.style.transform=`translate3d(${px*(7+i*3)}px,${y+py*(5+i*2)}px,0)`;metrics.offsets[i]=y});
   light(w,h);
   if(!renderer)return;
-  tiles.forEach((tile,i)=>{const r=cards[i].querySelector('.work-frame').getBoundingClientRect();tile.group.position.set(r.x+r.width/2-w/2,h/2-r.y-r.height/2,0);tile.group.scale.setScalar(r.width/tile.width)});
+  tiles.forEach((tile,i)=>{const r=cards[i].querySelector('.work-frame').getBoundingClientRect();tile.group.position.set(r.x+r.width/2-w/2,h/2-r.y-r.height/2,0);tile.group.scale.setScalar(r.width/tile.width*.98);tile.group.rotation.set(-.055+py*.018,[-.16,.14,.12][i]+px*.025,0);tile.inset.position.set(px*.035,-py*.025,0)});
   key.position.x=Math.sin(time*.36)*w*.45;key.intensity=2.1+Math.sin(time*.62)*.45;fill.intensity=.65+Math.sin(time*.44+1)*.14;
   renderer.render(scene,camera);metrics.frames++;metrics.ready=true;root.classList.add('has-webgl');
  }
  requestAnimationFrame(tick);
+})();
+
+// Close water surface masks the change of cave; no simultaneous scene crossfade.
+(()=>{
+ const veil=document.getElementById('descentVeil'),canvas=document.createElement('canvas');canvas.className='descent-water-canvas';veil.append(canvas);
+ const ctx=canvas.getContext('2d'),water=new Image();water.src=getComputedStyle(document.querySelector('.gallery-world')).backgroundImage.slice(5,-2);
+ let w=0,h=0,clock=0,last=performance.now();
+ const clamp=v=>Math.max(0,Math.min(1,v));
+ function frame(now){
+  requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.1);last=now;
+  const p=window.MBDescent?.depth||0;if(document.hidden||p<.01||p>.94)return;clock+=dt;
+  if(w!==innerWidth||h!==innerHeight){w=innerWidth;h=innerHeight;canvas.width=Math.round(w*.7);canvas.height=Math.round(h*.7);ctx.setTransform(.7,0,0,.7,0,0)}
+  ctx.globalAlpha=1;ctx.fillStyle='#14313a';ctx.fillRect(0,0,w,h);
+  if(water.complete&&water.naturalWidth){
+   const cropH=water.naturalHeight*.25,cropX=water.naturalWidth*.16,cropW=water.naturalWidth*.68;
+   ctx.globalAlpha=1;
+   for(let y=0;y<h;y+=12){const wave=Math.sin(y/h*11+clock*.9+p*4)*10+Math.sin(y/h*23-clock*.6)*3;ctx.drawImage(water,cropX,cropH*(y/h),cropW,cropH*14/h,-18+wave,y,w+36,14)}
+  }
+  ctx.globalAlpha=1;
+  const shade=ctx.createLinearGradient(0,0,0,h);shade.addColorStop(0,`rgba(7,30,40,${.08+p*.3})`);shade.addColorStop(1,`rgba(4,21,31,${.35+p*.4})`);ctx.fillStyle=shade;ctx.fillRect(0,0,w,h);
+  // A broad, curved meniscus passes the lens; it does not travel as a straight band.
+  const line=h*(1.25-clamp((p-.12)/.42)*1.5);
+  const edge=[];for(let i=0;i<=30;i++){const x=w*i/30,y=line+Math.sin(x/w*6.28+clock*.7)*h*.014+Math.sin(x/w*13-clock)*3;edge.push(`${i/30*100}% ${y/h*100}%`)}
+  veil.style.clipPath=line<-h*.02?'none':`polygon(${edge.join(',')},100% 100%,0% 100%)`;
+  ctx.beginPath();for(let x=-20;x<=w+20;x+=20){const y=line+Math.sin(x/w*6.28+clock*.7)*h*.014+Math.sin(x/w*13-clock)*3;if(x===-20)ctx.moveTo(x,y);else ctx.lineTo(x,y)}
+  ctx.strokeStyle='rgba(205,246,232,.28)';ctx.lineWidth=7;ctx.shadowBlur=20;ctx.shadowColor='#c2ede6';ctx.stroke();ctx.shadowBlur=0;
+  const bubbleOpacity=Math.sin(clamp((p-.25)/.6)*Math.PI)*.28;
+  for(let i=0;i<4;i++){const x=w*(.14+i*.24)+Math.sin(clock+i)*8,y=h*(1.2-p*1.7+i*.09);ctx.beginPath();ctx.ellipse(x,y,3+i,5+i,Math.sin(clock+i)*.2,0,Math.PI*2);ctx.strokeStyle=`rgba(220,244,235,${bubbleOpacity})`;ctx.lineWidth=1;ctx.stroke()}
+ }
+ requestAnimationFrame(frame);
 })();
 
 </script>
@@ -7159,7 +7205,7 @@ window.MBEnvironment={
       const back=new THREE.Mesh(new THREE.PlaneGeometry(w*.90,h*.86),new THREE.MeshBasicMaterial({color:0x08090c,transparent:true,opacity:.92}));back.position.z=-depth*.4;group.add(back);
       const screen=new THREE.MeshBasicMaterial({map:texture,transparent:true,opacity:.98});
       const inset=window.MBTileArt.content(THREE,w,h,'video_ai',screen,glassEnvironment);inset.group.rotation.set(0,0,0);group.add(inset.group);group.add(inset.light);
-      return {group,width:w,height:h,depth,front,side};
+      return {group,width:w,height:h,depth,front,side,inset:inset.group};
     }
     window.__MB={createGalleryTile,playWaterSound(down){playWhooshSound(1.3,down?'water-in':'water-out')},cancelOrbitDrag(){isDragging=false;coastVelocity=releaseVelocity=velocity=0;targetProgress=currentProgress;dragDelta=100},scene,camera,slateObjects,water,backdrop:backdropMesh,rocks:[rightPedestalRock,foregroundRockBottomLeft],focusTile,startDive,returnToOrbit,closeEcosystemModal,get state(){return {phase,selectedIndex,activeIndex,currentProgress,targetProgress,velocity,coastVelocity,zoomFactor,hoverIndex,studioEntered,isMuted,glitchActive:glitchStart!==null,audioState:audioCtx?.state,cameraSpeed:CAMERA_SPEED,travelDistance:travel?.from.distanceTo(travel.to),travelDuration:travel?.duration}}};
     animate();
