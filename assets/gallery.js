@@ -61,6 +61,8 @@
     const dx=e.clientX-touch.x,dy=e.clientY-touch.y;
     if(!touch.axis&&Math.max(Math.abs(dx),Math.abs(dy))>8)touch.axis=Math.abs(dy)>Math.abs(dx)?'y':'x';
     if(touch.axis!=='y')return;
+    // Keep the gesture alive when the departing scene becomes inert.
+    if(!document.documentElement.hasPointerCapture(e.pointerId))document.documentElement.setPointerCapture(e.pointerId);
     e.preventDefault();e.stopImmediatePropagation();window.__MB.cancelOrbitDrag?.();routeScroll((touch.last-e.clientY)*2.4);touch.last=e.clientY;
   },{capture:true,passive:false});
   window.addEventListener('pointerup',e=>{if(touch?.id===e.pointerId){if(touch.axis==='y'){suppressClickUntil=performance.now()+400;e.preventDefault();e.stopImmediatePropagation();window.__MB.cancelOrbitDrag?.()}touch=null}},true);
