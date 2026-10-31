@@ -34,6 +34,12 @@ with sync_playwright() as p:
  page.screenshot(path='/tmp/descent-mid.png')
  page.mouse.wheel(0,1800);page.wait_for_function('MBDescent.arrived');page.wait_for_timeout(1200)
  assert page.evaluate('testVideos[0].paused')
+ page.wait_for_function('MBGalleryScene.ready && MBGalleryScene.frames>5')
+ before=page.evaluate('({offset:MBGalleryScene.offsets[0],frame:MBGalleryScene.frames,light:MBGalleryScene.lightPhase})')
+ page.wait_for_timeout(1800)
+ after=page.evaluate('({offset:MBGalleryScene.offsets[0],frame:MBGalleryScene.frames,light:MBGalleryScene.lightPhase})')
+ assert after['frame']>before['frame'] and after['light']>before['light']
+ assert abs(after['offset']-before['offset'])>1,(before,after)
  page.screenshot(path='/tmp/gallery-integrated.png')
  box=page.locator('.work-card').first.bounding_box();page.mouse.click(box['x']+box['width']/2,box['y']+box['height']/2)
  assert page.evaluate('workViewer.open');page.keyboard.press('Escape');assert not page.evaluate('workViewer.open')

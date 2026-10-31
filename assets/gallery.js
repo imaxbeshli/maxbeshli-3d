@@ -76,7 +76,7 @@
   root.addEventListener('pointermove',e=>{if(reduced.matches||e.pointerType==='touch')return;root.style.setProperty('--gx',`${(e.clientX/innerWidth-.5)*24}px`);root.style.setProperty('--gy',`${(e.clientY/innerHeight-.5)*14}px`)});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stopVideos()});
   const saved={x:0,y:0,z:0,qx:0,qy:0,qz:0,qw:1};
-  window.MBDescent={get depth(){return depth},get target(){return target},get arrived(){return arrived},setTarget,add,isRestingBelow:()=>depth===1&&target===1,
+  window.MBDescent={get depth(){return depth},get target(){return target},get arrived(){return arrived},setTarget,add,isRestingBelow:()=>depth>=.56,
     beforeRender(camera){
       const p=smooth(0,.8,depth);saved.x=camera.position.x;saved.y=camera.position.y;saved.z=camera.position.z;Object.assign(saved,{qx:camera.quaternion.x,qy:camera.quaternion.y,qz:camera.quaternion.z,qw:camera.quaternion.w});
       camera.position.y-=p*3.8;camera.position.z-=p*1.2;camera.rotateX(-p*.13);camera.updateMatrixWorld();
