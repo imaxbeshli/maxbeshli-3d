@@ -1,6 +1,7 @@
 (()=>{
   const root=document.getElementById('selectedWorks'),content=document.getElementById('galleryContent'),grid=document.getElementById('galleryGrid'),hint=document.getElementById('descendHint'),veil=document.getElementById('descentVeil'),viewer=document.getElementById('workViewer'),viewerMedia=document.getElementById('workViewerMedia');
   const upper=document.querySelector('.ui-layer'),canvas=document.getElementById('webgl-canvas'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  root.querySelector('.gallery-water').style.backgroundImage=getComputedStyle(root.querySelector('.gallery-world')).backgroundImage;
   const works=window.MBSelectedWorks||[],videos=[];
   let depth=0,target=0,last=performance.now(),arrived=false,opener=null,touch=null,lastTop=false,suppressClickUntil=0,wasActive=false,paintedDepth=-1;
   const clamp=v=>Math.max(0,Math.min(1,v));
@@ -29,8 +30,7 @@
     const meta=document.createElement('span');meta.className='work-meta';meta.textContent=`${work.format} / ${work.video?'ВИДЕО':'ПРЕВЬЮ'}`;
     card.append(frame,caption,meta);grid.append(card);
     card.addEventListener('pointerenter',()=>{if(media.tagName==='VIDEO'&&arrived)media.play().catch(()=>{})});
-    card.addEventListener('pointermove',e=>{if(reduced.matches||e.pointerType==='touch')return;const r=card.getBoundingClientRect();card.style.setProperty('--rx',`${-(e.clientY-r.top-r.height/2)/r.height*3}deg`);card.style.setProperty('--ry',`${(e.clientX-r.left-r.width/2)/r.width*4}deg`);card.style.setProperty('--lift','-5px')});
-    card.addEventListener('pointerleave',()=>{card.style.setProperty('--rx','0deg');card.style.setProperty('--ry','0deg');card.style.setProperty('--lift','0px');if(media.tagName==='VIDEO')media.pause()});
+    card.addEventListener('pointerleave',()=>{if(media.tagName==='VIDEO')media.pause()});
     card.addEventListener('click',()=>{
       stopVideos();opener=card;document.getElementById('workViewerTitle').textContent=work.title;
       document.getElementById('workViewerNote').textContent=work.video?'': 'Демонстрационное превью. Здесь будет видео проекта.';
@@ -94,15 +94,16 @@
     document.body.classList.toggle('is-descending',active);
     if(active!==wasActive){canvas.inert=active;wasActive=active;}
     if(upper){upper.inert=active;upper.style.setProperty('--upper-opacity',1-smooth(0,.32,depth));upper.style.setProperty('--upper-y',`${-depth*110}px`)}
-    root.style.visibility=active?'visible':'hidden';root.style.opacity=smooth(.4,.78,depth);root.style.pointerEvents=active?'auto':'none';
-    root.style.transform=`translateY(${(1-depth)*innerHeight*.14}px) scale(${1+(1-depth)*.08})`;
+    // Swap opaque scenes only while the water veil fully covers the viewport.
+    root.style.visibility=depth>=.56?'visible':'hidden';root.style.opacity=depth>=.56?1:0;root.style.pointerEvents=active?'auto':'none';
+    root.style.transform='none';
     grid.style.opacity=smooth(.68,.97,depth);grid.style.transform=`translateY(${(1-smooth(.65,1,depth))*55}px)`;
     root.inert=!ready;root.setAttribute('aria-hidden',String(!ready));root.classList.toggle('is-arrived',ready);
     if(ready&&!arrived){document.getElementById('galleryUp').focus({preventScroll:true});lastTop=false}
     arrived=ready;
     if(!active&&!lastTop&&window.__MB?.state.studioEntered){canvas.focus({preventScroll:true});lastTop=true;content.scrollTop=0}
-    const crossing=smooth(.16,.43,depth)*(1-smooth(.62,.91,depth));
-    veil.style.visibility=active?'visible':'hidden';veil.style.opacity=crossing;veil.style.setProperty('--waterline',`${110-smooth(.12,.68,depth)*150}%`);veil.style.setProperty('--tint',smooth(.26,.55,depth));veil.style.setProperty('--mist',Math.sin(smooth(.22,.8,depth)*Math.PI)*.78);
+    const crossing=smooth(.08,.42,depth)*(1-smooth(.72,1,depth));
+    veil.style.visibility=active?'visible':'hidden';veil.style.opacity=crossing;veil.style.setProperty('--waterline',`${110-smooth(.12,.68,depth)*150}%`);veil.style.setProperty('--tint',smooth(.18,.40,depth));veil.style.setProperty('--mist',Math.sin(smooth(.22,.8,depth)*Math.PI)*.78);
     document.getElementById('descentDisplacement').setAttribute('scale',String(crossing*(reduced.matches?5:22)));
     canvas.style.filter=crossing>.02?'url(#descentRefraction)':'none';
 

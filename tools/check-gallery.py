@@ -11,6 +11,27 @@ with sync_playwright() as p:
  page.locator('#descendHint').click();page.wait_for_function('MBDescent.arrived');page.wait_for_timeout(1000)
  assert page.locator('.work-card').count()==3
  assert page.locator('.work-card img').evaluate_all('(els)=>els.every(e=>e.complete&&e.naturalWidth>0)')
+ # Opaque cover hides the scene swap in both scroll directions.
+ for d in [.42,.55,.56,.65,.56,.55,.42]:
+  page.evaluate('(d)=>MBDescent.setTarget(d)',d)
+  page.wait_for_function('(d)=>MBDescent.depth===d',arg=d)
+  assert page.evaluate("getComputedStyle(descentVeil).opacity==='1' && getComputedStyle(document.querySelector('.descent-tint')).opacity==='1'")
+  assert page.evaluate("['0','1'].includes(getComputedStyle(selectedWorks).opacity)")
+ page.evaluate('MBDescent.setTarget(1)');page.wait_for_function('MBDescent.depth===1')
+ assert page.locator('.gallery-world').evaluate("e=>getComputedStyle(e).backgroundImage.startsWith('url(')")
+ assert page.locator('.gallery-water').evaluate("e=>getComputedStyle(e).backgroundImage.startsWith('url(')")
+ # Test the whole levitation envelope, including captions, on several screens.
+ for width,height in [(1440,1000),(1000,750),(390,844)]:
+  page.set_viewport_size({'width':width,'height':height})
+  for moment in [0,2500,5000,7500]:
+   page.locator('.work-card').evaluate_all('(els,t)=>els.forEach(e=>e.getAnimations().forEach(a=>{a.pause();a.currentTime=t}))',moment)
+   boxes=page.locator('.work-card').evaluate_all('(els)=>els.map(e=>{const r=e.getBoundingClientRect();return {l:r.left,r:r.right,t:r.top,b:r.bottom}})')
+   for i,a in enumerate(boxes):
+    for b2 in boxes[i+1:]:assert a['r']<=b2['l'] or b2['r']<=a['l'] or a['b']<=b2['t'] or b2['b']<=a['t'],boxes
+ page.locator('.work-card').evaluate_all('(els)=>els.forEach(e=>e.getAnimations().forEach(a=>a.play()))')
+ page.set_viewport_size({'width':1440,'height':1000})
+ box=page.locator('.work-frame').first.bounding_box();page.mouse.move(box['x']+20,box['y']+20)
+ assert page.locator('.work-frame').first.evaluate("e=>getComputedStyle(e).transform==='none'")
  page.screenshot(path='/tmp/gallery-desktop.png')
  for i in range(3):
   box=page.locator('.work-card').nth(i).bounding_box();page.mouse.click(box['x']+box['width']/2,box['y']+box['height']/2)
