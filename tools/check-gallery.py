@@ -12,7 +12,7 @@ with sync_playwright() as p:
  assert page.locator('.work-card').count()==3
  assert page.locator('.work-card img').evaluate_all('(els)=>els.every(e=>e.complete&&e.naturalWidth>0)')
  # Opaque cover hides the scene swap in both scroll directions.
- for d in [.42,.55,.56,.65,.56,.55,.42]:
+ for d in [.48,.55,.56,.60,.56,.55,.48]:
   page.evaluate('(d)=>MBDescent.setTarget(d)',d)
   page.wait_for_function('(d)=>MBDescent.depth===d',arg=d)
   assert page.evaluate("getComputedStyle(descentVeil).opacity==='1' && getComputedStyle(document.querySelector('.descent-tint')).opacity==='1'")
@@ -20,6 +20,15 @@ with sync_playwright() as p:
  page.evaluate('MBDescent.setTarget(1)');page.wait_for_function('MBDescent.depth===1')
  assert page.locator('.gallery-world').evaluate("e=>getComputedStyle(e).backgroundImage.startsWith('url(')")
  assert page.locator('.gallery-water').evaluate("e=>getComputedStyle(e).backgroundImage.startsWith('url(')")
+ # A partially completed scroll must not freeze the floating panels.
+ page.evaluate('MBDescent.setTarget(.92)');page.wait_for_function('MBDescent.depth===.92')
+ y1=page.locator('.work-card').first.evaluate('e=>e.getBoundingClientRect().y')
+ page.wait_for_timeout(1500)
+ y2=page.locator('.work-card').first.evaluate('e=>e.getBoundingClientRect().y')
+ assert abs(y2-y1)>1,(y1,y2)
+ assert page.locator('#selectedWorks button').count()==3
+ assert page.locator('#selectedWorks').inner_text().splitlines()==['Избранные работы','Имиджевый фильм','Вертикальная история','История в деталях']
+ page.evaluate('MBDescent.setTarget(1)');page.wait_for_function('MBDescent.depth===1')
  # Test the whole levitation envelope, including captions, on several screens.
  for width,height in [(1440,1000),(1000,750),(390,844)]:
   page.set_viewport_size({'width':width,'height':height})
@@ -35,16 +44,16 @@ with sync_playwright() as p:
  page.screenshot(path='/tmp/gallery-desktop.png')
  for i in range(3):
   box=page.locator('.work-card').nth(i).bounding_box();page.mouse.click(box['x']+box['width']/2,box['y']+box['height']/2)
-  assert page.evaluate('workViewer.open');assert 'Демонстрационное' in page.locator('#workViewerNote').inner_text()
+  assert page.evaluate('workViewer.open');assert page.locator('#workViewerNote').inner_text()==''
   page.keyboard.press('Escape');assert not page.evaluate('workViewer.open')
  page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(600)
  assert page.evaluate('galleryContent.scrollWidth<=galleryContent.clientWidth')
  page.evaluate('selectedWorks.scrollLeft=160')
  assert page.evaluate('selectedWorks.scrollLeft===0 && worksTitle.getBoundingClientRect().left>=0')
  page.screenshot(path='/tmp/gallery-mobile.png')
- page.locator('#galleryUp').click();page.wait_for_function('MBDescent.depth===0')
+ page.keyboard.press('Escape');page.wait_for_function('MBDescent.depth===0')
  assert page.locator('#selectedWorks').get_attribute('aria-hidden')=='true'
- page.mouse.wheel(0,700);page.wait_for_timeout(500);mid=page.evaluate('MBDescent.depth');assert 0<mid<1
+ page.mouse.move(200,400);page.mouse.wheel(0,700);page.wait_for_timeout(500);mid=page.evaluate('MBDescent.depth');assert 0<mid<1
  page.mouse.wheel(0,-3000);page.wait_for_function('MBDescent.depth===0')
  # Real touch events must survive the scene becoming inert during return.
  page.locator('#descendHint').click();page.wait_for_function('MBDescent.arrived')

@@ -3,7 +3,7 @@
   const upper=document.querySelector('.ui-layer'),canvas=document.getElementById('webgl-canvas'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
   root.querySelector('.gallery-water').style.backgroundImage=getComputedStyle(root.querySelector('.gallery-world')).backgroundImage;
   const works=window.MBSelectedWorks||[],videos=[];
-  let depth=0,target=0,last=performance.now(),arrived=false,opener=null,touch=null,lastTop=false,suppressClickUntil=0,wasActive=false,paintedDepth=-1;
+  let depth=0,target=0,last=performance.now(),arrived=false,opener=null,touch=null,lastTop=false,suppressClickUntil=0,wasActive=false,paintedDepth=-1,soundSide=false,lastWaterSound=-2000;
   const clamp=v=>Math.max(0,Math.min(1,v));
   const smooth=(a,b,v)=>{const x=clamp((v-a)/(b-a));return x*x*(3-2*x)};
   const blocked=()=>!!document.querySelector('dialog[open]')||!window.__MB?.state.studioEntered||['entering','diving','returning','section'].includes(window.__MB?.state.phase);
@@ -25,22 +25,20 @@
     const card=document.createElement('button');card.type='button';card.className='work-card';card.dataset.work=work.id;card.setAttribute('aria-label',`${work.title} — ${work.video?'смотреть видео':'открыть демонстрационное превью'}`);
     const frame=document.createElement('span');frame.className='work-frame';frame.style.setProperty('--aspect',work.format.replace(':',' / '));
     const media=mediaFor(work,true);frame.append(media);
-    const play=document.createElement('span');play.className='work-play';play.innerHTML=work.video?'<svg viewBox="0 0 24 24"><path d="M8 5L19 12L8 19Z" fill="currentColor"/></svg>':'<svg viewBox="0 0 24 24"><path d="M8 3H3V8M16 3H21V8M21 16V21H16M8 21H3V16"/></svg>';play.setAttribute('aria-hidden','true');frame.append(play);
     const caption=document.createElement('span');caption.className='work-caption';caption.textContent=work.title;
-    const meta=document.createElement('span');meta.className='work-meta';meta.textContent=`${work.format} / ${work.video?'ВИДЕО':'ПРЕВЬЮ'}`;
-    card.append(frame,caption,meta);grid.append(card);
+    card.append(frame,caption);grid.append(card);
     card.addEventListener('pointerenter',()=>{if(media.tagName==='VIDEO'&&arrived)media.play().catch(()=>{})});
     card.addEventListener('pointerleave',()=>{if(media.tagName==='VIDEO')media.pause()});
     card.addEventListener('click',()=>{
       stopVideos();opener=card;document.getElementById('workViewerTitle').textContent=work.title;
-      document.getElementById('workViewerNote').textContent=work.video?'': 'Демонстрационное превью. Здесь будет видео проекта.';
+      document.getElementById('workViewerNote').textContent='';
       const large=mediaFor(work,false);viewerMedia.replaceChildren(large);viewer.showModal();document.getElementById('workViewerClose').focus({preventScroll:true});if(large.tagName==='VIDEO')large.play().catch(()=>{});
     });
   });
   document.getElementById('workViewerClose').addEventListener('click',closeViewer);
   viewer.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();closeViewer()});viewer.addEventListener('close',()=>opener?.focus({preventScroll:true}));
   viewer.addEventListener('keydown',e=>{if(e.key==='Escape')e.stopPropagation();if(e.key==='Tab'){const controls=[...viewer.querySelectorAll('button,video[controls]')];if(controls.length===1){e.preventDefault();controls[0].focus()}}});
-  document.getElementById('galleryUp').addEventListener('click',()=>setTarget(0));hint.addEventListener('click',()=>setTarget(1));
+  hint.addEventListener('click',()=>setTarget(1));
   function routeScroll(delta){
     if(arrived&&content.scrollHeight>content.clientHeight+2){
       if(delta>0||content.scrollTop>1){content.scrollTop+=delta;return}
@@ -88,6 +86,11 @@
     requestAnimationFrame(tick);const dt=Math.min((now-last)/1000,.08);last=now;
     if(document.hidden)return;
     depth+=(target-depth)*(1-Math.exp(-8*dt));if(Math.abs(target-depth)<.0006)depth=target;
+    const underSurface=depth>=.36;
+    if(underSurface!==soundSide){
+      if(now-lastWaterSound>1200){window.__MB?.playWaterSound?.(underSurface);lastWaterSound=now}
+      soundSide=underSurface;
+    }
     const active=depth>.001,ready=depth>.965&&target===1;
     hint.style.display=!blocked()&&!active&&window.__MB?.state.phase==='orbit'?'flex':'none';
     if(depth===paintedDepth)return;paintedDepth=depth;
@@ -98,12 +101,12 @@
     root.style.visibility=depth>=.56?'visible':'hidden';root.style.opacity=depth>=.56?1:0;root.style.pointerEvents=active?'auto':'none';
     root.style.transform='none';
     grid.style.opacity=smooth(.68,.97,depth);grid.style.transform=`translateY(${(1-smooth(.65,1,depth))*55}px)`;
-    root.inert=!ready;root.setAttribute('aria-hidden',String(!ready));root.classList.toggle('is-arrived',ready);
-    if(ready&&!arrived){document.getElementById('galleryUp').focus({preventScroll:true});lastTop=false}
+    root.inert=!ready;root.setAttribute('aria-hidden',String(!ready));root.classList.toggle('is-arrived',ready);root.classList.toggle('is-visible',depth>=.56);
+    if(ready&&!arrived){document.getElementById('worksTitle').focus({preventScroll:true});lastTop=false}
     arrived=ready;
     if(!active&&!lastTop&&window.__MB?.state.studioEntered){canvas.focus({preventScroll:true});lastTop=true;content.scrollTop=0}
-    const crossing=smooth(.08,.42,depth)*(1-smooth(.72,1,depth));
-    veil.style.visibility=active?'visible':'hidden';veil.style.opacity=crossing;veil.style.setProperty('--waterline',`${110-smooth(.12,.68,depth)*150}%`);veil.style.setProperty('--tint',smooth(.18,.40,depth));veil.style.setProperty('--mist',Math.sin(smooth(.22,.8,depth)*Math.PI)*.78);
+    const crossing=smooth(.12,.48,depth)*(1-smooth(.60,.94,depth));
+    veil.classList.toggle('is-crossing',active&&depth<.94);veil.style.visibility=active?'visible':'hidden';veil.style.opacity=crossing;veil.style.setProperty('--waterline',`${110-smooth(.12,.54,depth)*150}%`);veil.style.setProperty('--tint',smooth(.20,.46,depth));veil.style.setProperty('--mist',Math.sin(smooth(.22,.8,depth)*Math.PI)*.78);
     document.getElementById('descentDisplacement').setAttribute('scale',String(crossing*(reduced.matches?5:22)));
     canvas.style.filter=crossing>.02?'url(#descentRefraction)':'none';
 

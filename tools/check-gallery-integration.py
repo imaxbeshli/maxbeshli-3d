@@ -37,7 +37,7 @@ with sync_playwright() as p:
  page.screenshot(path='/tmp/gallery-integrated.png')
  box=page.locator('.work-card').first.bounding_box();page.mouse.click(box['x']+box['width']/2,box['y']+box['height']/2)
  assert page.evaluate('workViewer.open');page.keyboard.press('Escape');assert not page.evaluate('workViewer.open')
- page.locator('#galleryUp').click();page.wait_for_function('MBDescent.depth===0');page.wait_for_timeout(500)
+ page.keyboard.press('Escape');page.wait_for_function('MBDescent.depth===0');page.wait_for_timeout(500)
  assert page.evaluate('__MB.state.phase')=='orbit'
  page.locator('header a[href="#about"]').click();page.wait_for_timeout(1000);assert page.evaluate('aboutDialog.open');page.keyboard.press('Escape')
  # Mouse/keyboard still operate upper tiles after returning.
@@ -49,7 +49,7 @@ with sync_playwright() as p:
  # Main Works navigation and touch gestures use the same transition.
  page.locator('header a[href="#works"]').click();page.wait_for_function('MBDescent.arrived')
  assert page.evaluate('document.getElementById("webgl-canvas").inert')
- page.locator('#galleryUp').click();page.wait_for_function('MBDescent.depth===0')
+ page.keyboard.press('Escape');page.wait_for_function('MBDescent.depth===0')
  assert not page.evaluate('document.getElementById("webgl-canvas").inert')
  page.set_viewport_size({'width':390,'height':844})
  cdp=page.context.new_cdp_session(page)
