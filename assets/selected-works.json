@@ -1,0 +1,5 @@
+[
+  {"id":"film","title":"Имиджевый фильм","format":"16:9","poster":"assets/gallery-film.png","video":null},
+  {"id":"vertical","title":"Вертикальная история","format":"9:16","poster":"assets/gallery-vertical.png","video":null},
+  {"id":"detail","title":"История в деталях","format":"4:3","poster":"assets/gallery-detail.png","video":null}
+]

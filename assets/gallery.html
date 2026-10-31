@@ -1,0 +1,14 @@
+<section id="selectedWorks" aria-labelledby="worksTitle" inert aria-hidden="true">
+  <div class="gallery-world" aria-hidden="true"></div><div class="gallery-caustics" aria-hidden="true"></div><div class="gallery-rays" aria-hidden="true"></div><div class="gallery-motes" aria-hidden="true"></div>
+  <header class="gallery-top"><span class="gallery-brand">MAX BESHLI<span>.</span></span><button id="galleryUp" type="button">Наверх <span aria-hidden="true">↑</span></button></header>
+  <div class="gallery-content" id="galleryContent">
+    <div class="gallery-heading"><p>ПОРТФОЛИО / НИЖНИЙ УРОВЕНЬ</p><h2 id="worksTitle" tabindex="-1">Избранные работы</h2><span>Разные форматы. Один взгляд на визуал.</span></div>
+    <div class="gallery-grid" id="galleryGrid"></div>
+    <p class="gallery-note">Демонстрационные превью — здесь появятся мои видео.</p>
+  </div>
+  <div class="gallery-level" aria-hidden="true"><span>01</span><i></i><span>02</span></div>
+</section>
+<div id="descentVeil" aria-hidden="true"><div class="descent-tint"></div><div class="descent-surface"></div><div class="descent-mist"></div></div>
+<button id="descendHint" type="button"><span class="descent-wheel" aria-hidden="true"></span><span>Избранные работы <small>Прокрутите вниз</small></span><span aria-hidden="true">↓</span></button>
+<dialog id="workViewer" aria-labelledby="workViewerTitle"><button id="workViewerClose" type="button" aria-label="Закрыть просмотр">Закрыть ×</button><div class="work-viewer-layout"><div id="workViewerMedia"></div><div class="work-viewer-caption"><h2 id="workViewerTitle"></h2><p id="workViewerNote"></p></div></div></dialog>
+<svg class="descent-filter-defs" aria-hidden="true"><defs><filter id="descentRefraction" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".008 .045" numOctaves="1" seed="8" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" id="descentDisplacement"/></filter></defs></svg>
