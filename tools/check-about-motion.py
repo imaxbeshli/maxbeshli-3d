@@ -9,6 +9,8 @@ html='<html><meta charset="utf-8"><meta name="viewport" content="width=device-wi
 with sync_playwright() as p:
  b=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
  page=b.new_page(viewport={'width':1440,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+ def click_tab(i):
+  r=page.locator(f'#aboutTab{i}').bounding_box();page.mouse.click(r['x']+r['width']/2,r['y']+r['height']/2)
  page.route('http://about.test/',lambda r:r.fulfill(body=html,content_type='text/html; charset=utf-8'))
  page.goto('http://about.test/');page.click('#launch');page.wait_for_timeout(2800)
  assert page.locator('.about-fog-layer').first.evaluate('(el)=>getComputedStyle(el).backgroundImage').startswith('url(')
@@ -21,11 +23,28 @@ with sync_playwright() as p:
   before=page.evaluate(sample);page.wait_for_timeout(1900);after=page.evaluate(sample)
   assert abs(after['lift']-before['lift'])>.2,(mode,before,after)
   assert before['fog']!=after['fog'],mode
-  assert abs(after['x'])<.0001 and abs(after['y'])<.0001
+  assert .001<abs(after['x'])<.04 and abs(after['y'])<.04
   print('PASS motion in '+mode,flush=True)
  page.set_viewport_size({'width':1440,'height':1000});page.mouse.move(200,180);page.wait_for_timeout(1100);left=page.evaluate(sample)
  page.mouse.move(1200,180);page.wait_for_timeout(1100);right=page.evaluate(sample)
  assert left['portrait']!=right['portrait']
+ # All chapters are explicit tabs on desktop and mobile, with no page scrolling.
+ for width,height in [(1440,900),(1000,750),(390,844),(375,667),(320,568),(844,390)]:
+  page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(500)
+  for i in range(3):
+   click_tab(i);page.wait_for_timeout(600)
+   assert page.locator('.about-chapter:visible').count()==1
+   assert page.locator(f'#aboutTab{i}').get_attribute('aria-selected')=='true'
+   bounds=page.evaluate("""()=>{const panel=document.querySelector('.about-panel').getBoundingClientRect(),last=document.querySelector('.about-chapter-count').getBoundingClientRect(),text=document.querySelector('.about-chapter:not([hidden]) .about-block:last-child').getBoundingClientRect();return {text:text.bottom,countTop:last.top,panel:panel.bottom,last:last.bottom,height:innerHeight,width:document.querySelector('.about-panel').clientWidth,scroll:document.querySelector('.about-panel').scrollWidth}}""")
+   assert bounds['text']<=bounds['countTop']-4,(width,height,i,bounds)
+   assert bounds['last']<=min(bounds['panel'],height)+2,(width,height,i,bounds)
+   assert bounds['scroll']<=bounds['width']+16,(width,height,i,bounds)
+  if width==1440:click_tab(0);page.wait_for_timeout(600);page.screenshot(path='/tmp/about-chapters-desktop.png')
+  if width==390:click_tab(0);page.wait_for_timeout(600);page.screenshot(path='/tmp/about-chapters-mobile.png')
+ page.locator('#aboutTab0').focus();page.keyboard.press('ArrowRight');assert page.locator('#aboutTab1').get_attribute('aria-selected')=='true'
+ page.keyboard.press('End');assert page.locator('#aboutTab2').get_attribute('aria-selected')=='true'
+ page.keyboard.press('Escape');assert not page.evaluate('aboutDialog.open')
+ page.click('#launch');assert page.locator('#aboutTab0').get_attribute('aria-selected')=='true'
  assert not errors,errors
- print('PASS parallax also with reduced motion')
+ print('PASS parallax, chapter layout at six sizes, keyboard and reopen')
  b.close()

@@ -1,22 +1,36 @@
 <dialog id="aboutDialog" aria-labelledby="aboutTitle">
   <div class="about-world-clip" aria-hidden="true"><div class="about-world"></div></div>
   <div class="about-spotlight" aria-hidden="true"></div>
-  <div class="about-top"><span class="about-brand">MAX BESHLI<span aria-hidden="true">.</span></span><button id="aboutClose" type="button">Назад в пространство</button></div>
+  <div class="about-top"><span class="about-brand">MB<span aria-hidden="true"></span></span><button id="aboutClose" type="button">Назад в пространство</button></div>
   <div class="about-stage">
     <div class="about-visual">
       <div class="about-halo" aria-hidden="true"></div>
       <div class="about-portrait-motion"><img id="aboutPortrait" src="__PORTRAIT__" alt="Макс в чёрной шапке и очках, со скрещёнными руками" width="1065" height="1477"></div>
-      <div class="about-photo-note"><span></span>ВИЗУАЛ. ТЕХНОЛОГИИ. ХАРАКТЕР.</div>
     </div>
     <div class="about-panel-position"><section class="about-panel" aria-label="Обо мне">
       <div class="about-glint" aria-hidden="true"></div>
+      <nav class="about-tabs" role="tablist" aria-label="Обо мне — главы">
+        <button id="aboutTab0" type="button" role="tab" aria-selected="true" aria-controls="aboutChapter0" tabindex="0">Кто я</button>
+        <button id="aboutTab1" type="button" role="tab" aria-selected="false" aria-controls="aboutChapter1" tabindex="-1">Что создаю</button>
+        <button id="aboutTab2" type="button" role="tab" aria-selected="false" aria-controls="aboutChapter2" tabindex="-1">Как работаю</button>
+      </nav>
       <h2 id="aboutTitle" aria-label="Я MAX"><span aria-hidden="true">Я</span> <span aria-hidden="true">M</span><span aria-hidden="true">A</span><span aria-hidden="true">X</span></h2>
+      <p class="about-tagline">Визуал. Технологии. Характер.</p>
       <div class="about-story">
-        <p class="about-block" id="aboutText0">Снимаю и монтирую видео. Работаю с кадром, светом, ритмом и атмосферой, чтобы передать характер человека, продукта или проекта.</p>
-        <p class="about-block" id="aboutText1">Создаю сайты, в которых история оживает через объём, движение и взаимодействие. Использую AI, разрабатываю Telegram-ботов и мини-приложения.</p>
-        <p class="about-block" id="aboutText2">Современные технологии позволяют одному человеку вести проекты, для которых раньше требовалась команда. Сам веду процесс и отвечаю за результат. Главное — продуманный подход и ответственность за свою работу.</p>
+        <section id="aboutChapter0" class="about-chapter" role="tabpanel" aria-labelledby="aboutTab0">
+          <p class="about-block">Снимаю и монтирую видео. Работаю с кадром, светом и ритмом, чтобы передать характер человека, продукта или проекта.</p>
+          <p class="about-block">Создаю сайты, в которых история оживает через объём, движение и взаимодействие. Использую AI, разрабатываю Telegram-ботов и мини-приложения.</p>
+        </section>
+        <section id="aboutChapter1" class="about-chapter" role="tabpanel" aria-labelledby="aboutTab1" hidden>
+          <p class="about-block">В видео соединяю съёмку, монтаж и AI. Могу снять материал, собрать историю из готовых кадров или дополнить её тем, что сложно получить на съёмочной площадке.</p>
+          <p class="about-block">В цифровых проектах работаю с объёмом, анимацией и взаимодействием. Создаю сайты нового уровня, Telegram-ботов и мини-приложения — от визуальной идеи до работающего результата.</p>
+        </section>
+        <section id="aboutChapter2" class="about-chapter" role="tabpanel" aria-labelledby="aboutTab2" hidden>
+          <p class="about-block">Современные технологии позволяют одному человеку вести проекты, для которых раньше требовалась команда. Сам веду процесс и отвечаю за результат.</p>
+          <p class="about-block">Начинаю с задачи: что нужно показать, кому и зачем. Затем выбираю инструменты и собираю решение. Главное — продуманный подход и ответственность за свою работу.</p>
+        </section>
       </div>
-      <nav class="about-pages" aria-label="Части рассказа"><button type="button" aria-controls="aboutText0" aria-label="Съёмка и монтаж" aria-current="true">01</button><button type="button" aria-controls="aboutText1" aria-label="Цифровые проекты">02</button><button type="button" aria-controls="aboutText2" aria-label="Подход к работе">03</button></nav>
+      <div class="about-chapter-count" aria-hidden="true">01 / 03</div>
     </section></div>
   </div>
   <div class="about-fog-clip" aria-hidden="true"><div class="about-fog"><div class="about-fog-layer"></div><div class="about-fog-layer"></div><div class="about-fog-layer"></div></div></div>

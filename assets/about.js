@@ -1,7 +1,7 @@
 (()=>{
   const dialog=document.getElementById('aboutDialog'),close=document.getElementById('aboutClose');
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),hover=matchMedia('(hover: hover) and (pointer: fine)'),compact=matchMedia('(max-width:760px),(max-height:550px)');
-  const blocks=[...dialog.querySelectorAll('.about-block')],pages=[...dialog.querySelectorAll('.about-pages button')];
+  const blocks=[...dialog.querySelectorAll('.about-block')],pages=[...dialog.querySelectorAll('.about-tabs button')],chapters=[...dialog.querySelectorAll('.about-chapter')];
   let opener=null,current=0;
   // Preserve natural spacing, selection and line wrapping while styling each word.
   blocks.forEach(block=>{
@@ -14,16 +14,24 @@
     block.replaceChildren(fragment);
   });
   dialog.querySelectorAll('#aboutTitle>span').forEach((el,i)=>el.style.setProperty('--letter',i));
-  blocks.forEach((el,i)=>el.style.setProperty('--delay',`${1+i*.18}s`));
+  blocks.forEach((el,i)=>el.style.setProperty('--delay',`${.95+(i%2)*.17}s`));
   function selectPage(index,animate=false){
     current=index;
-    if(dialog.open)blocks.forEach(el=>{el.getAnimations().forEach(a=>a.cancel());el.style.animation='none'});
-    blocks.forEach((el,i)=>{el.hidden=compact.matches&&i!==index});
-    pages.forEach((el,i)=>{if(i===index)el.setAttribute('aria-current','true');else el.removeAttribute('aria-current')});
-    if(animate&&compact.matches)blocks[index].animate([{opacity:0,transform:reduced.matches?'none':'translateY(8px)'},{opacity:1,transform:'none'}],{duration:450,easing:'ease-out'});
+    chapters.forEach((el,i)=>{el.getAnimations().forEach(a=>a.cancel());el.hidden=i!==index});
+    pages.forEach((el,i)=>{el.setAttribute('aria-selected',String(i===index));el.tabIndex=i===index?0:-1});
+    dialog.querySelector('.about-chapter-count').textContent=`0${index+1} / 03`;
+    dialog.style.setProperty('--chapter-light',`${index*6}px`);
+    if(animate){
+      blocks.forEach(el=>{el.getAnimations().forEach(a=>a.cancel());el.style.animation='none'});
+      chapters[index].animate([{opacity:0,transform:reduced.matches?'none':'translateY(12px)'},{opacity:1,transform:'none'}],{duration:550,easing:'cubic-bezier(.2,.7,.2,1)'});
+    }
   }
   pages.forEach((button,i)=>button.addEventListener('click',()=>selectPage(i,true)));
-  compact.addEventListener('change',()=>selectPage(current));
+  dialog.querySelector('.about-tabs').addEventListener('keydown',e=>{
+    const i=pages.indexOf(document.activeElement);if(i<0)return;
+    let next;if(e.key==='ArrowRight')next=(i+1)%3;else if(e.key==='ArrowLeft')next=(i+2)%3;else if(e.key==='Home')next=0;else if(e.key==='End')next=2;else return;
+    e.preventDefault();e.stopPropagation();selectPage(next,true);pages[next].focus({preventScroll:true});
+  });
   function resetParallax(){dialog.style.setProperty('--px','0px');dialog.style.setProperty('--py','0px')}
   window.MBAbout={open(){
     if(dialog.open)return;opener=document.activeElement;dialog.classList.remove('is-entering');blocks.forEach(el=>el.style.animation='');selectPage(0);resetParallax();dialog.showModal();dialog.scrollTop=0;
@@ -34,7 +42,7 @@
   dialog.addEventListener('keydown',e=>{
     if(e.key==='Escape'){e.stopPropagation();return}
     if(e.key!=='Tab')return;
-    const focusable=[...dialog.querySelectorAll('button:not([disabled]),a[href],[tabindex="0"]')].filter(el=>el.getClientRects().length&&!el.closest('[hidden]'));
+    const focusable=[...dialog.querySelectorAll('button:not([disabled]):not([tabindex="-1"]),a[href],[tabindex="0"]')].filter(el=>el.getClientRects().length&&!el.closest('[hidden]'));
     const first=focusable[0],last=focusable[focusable.length-1];
     if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
     else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
