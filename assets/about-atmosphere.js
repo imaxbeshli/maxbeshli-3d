@@ -10,26 +10,33 @@ function createAboutAtmosphere(dialog){
   float hash(vec3 p){p=fract(p*.3183099+vec3(.1,.2,.3));p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
   float noise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
     return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z);}
-  float field(vec3 p){return .55*noise(p)+.26*noise(p*2.07+4.3)+.13*noise(p*4.13+8.1)+.06*noise(p*8.2+1.3);}
+  float field(vec3 p){return .57*noise(p)+.28*noise(p*2.03+4.3)+.15*noise(p*4.11+8.1);}
+  float cloud(vec3 p){
+    vec3 flow=vec3(noise(p*.7+vec3(time*.035,0.,4.)),noise(p*.7+vec3(8.,time*.027,0.)),noise(p*.7+vec3(0.,3.,time*.023)))-.5;
+    return field(p+flow*1.8+vec3(0.,-time*.018,time*.024));
+  }
   void main(){
     vec2 uv=vec2(gl_FragCoord.x/resolution.x,1.-gl_FragCoord.y/resolution.y);
     vec2 local=(uv-center)/spread;
-    float envelope=exp(-local.x*local.x*1.5-local.y*local.y*2.);
-    envelope*=1.-mobile*smoothstep(center.y-.01,center.y+.05,uv.y);
-    float floorMist=(1.-mobile)*smoothstep(.79,1.12,uv.y)*.30;
-    if(envelope+floorMist<.012){gl_FragColor=vec4(0);return;}
+    float envelope=exp(-local.x*local.x*1.6-local.y*local.y*2.4);
+    envelope*=1.-mobile*smoothstep(center.y-.015,center.y+.055,uv.y);
+    float floorMist=(1.-mobile)*smoothstep(.84,1.14,uv.y)*.12;
+    if(envelope+floorMist<.008){gl_FragColor=vec4(0);return;}
     float trans=1.;vec3 color=vec3(0.);
-    for(int i=0;i<14;i++){
-      float z=float(i)/13.;
-      vec3 p=vec3(local.x*6.,local.y*5.,z*3.);
-      // Different velocities at every depth, with evolving curls rather than image translation.
-      p+=vec3(.14*sin(time*.19+z*3.),time*.035,.17*cos(time*.15));
-      float warp=field(p*.73+vec3(0.,0.,time*.10));
-      float n=field(p+vec3(warp*1.8,warp*.9,time*.075));
-      float density=smoothstep(.33,.76,n)*(envelope+floorMist)*.24;
-      float light=.45+.4*smoothstep(.36,.72,n+z*.12);
-      vec3 lit=mix(vec3(.23,.25,.26),vec3(.59,.57,.52),light);
-      color+=trans*density*lit;trans*=1.-density;
+    for(int i=0;i<16;i++){
+      float z=float(i)/15.;
+      vec3 p=vec3(local.x*3.4,local.y*2.9,z*2.4);
+      // Density is continuous: no clipped cloud islands or uniformly translated texture.
+      float n=cloud(p);
+      float detail=noise(p*7.2+vec3(0.,time*.035,0.));
+      float vapor=.06+pow(smoothstep(.15,.85,n),2.5)*.94;
+      float density=vapor*(envelope+floorMist)*(.7+.3*sin(z*3.14159));
+      float extinction=1.-exp(-density*.44);
+      // Approximate attenuation towards the overhead light, varying through the volume.
+      float occlusion=field(p+vec3(-.2,-.8,.25));
+      float light=exp(-occlusion*.8)*(.83+detail*.17);
+      vec3 lit=mix(vec3(.22,.24,.25),vec3(.68,.65,.58),light);
+      color+=trans*extinction*lit;trans*=1.-extinction;
     }
     gl_FragColor=vec4(color,1.-trans);
   }`;
@@ -39,12 +46,12 @@ function createAboutAtmosphere(dialog){
   gl.useProgram(program);const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
   const p=gl.getAttribLocation(program,'p');gl.enableVertexAttribArray(p);gl.vertexAttribPointer(p,2,gl.FLOAT,false,0,0);
   const uniforms=Object.fromEntries(['resolution','center','spread','time','mobile'].map(k=>[k,gl.getUniformLocation(program,k)]));
-  let frame=0,running=false,last=0,elapsed=15,layout=null;
+  let frame=0,running=false,last=0,elapsed=42,layout=null;
   function resize(){
     const w=dialog.clientWidth,h=dialog.clientHeight;const scale=Math.min(.55,640/w,420/h);
     canvas.width=Math.round(w*scale);canvas.height=Math.round(h*scale);gl.viewport(0,0,canvas.width,canvas.height);
     const r=dialog.querySelector('.about-visual').getBoundingClientRect();const stacked=w<=760&&h>550;
-    layout={x:(r.left+r.width*.5)/w,y:(r.top+r.height*(stacked?.96:1.04))/h,sx:stacked?.72:.38,sy:stacked?Math.min(.12,r.height/h*.42):.20,mobile:stacked?1:0};
+    layout={x:(r.left+r.width*.5)/w,y:(r.top+r.height*(stacked?.96:1.01))/h,sx:stacked?.72:.38,sy:stacked?Math.min(.12,r.height/h*.42):.22,mobile:stacked?1:0};
     gl.uniform2f(uniforms.resolution,canvas.width,canvas.height);
     gl.uniform2f(uniforms.center,layout.x,layout.y);gl.uniform2f(uniforms.spread,layout.sx,layout.sy);gl.uniform1f(uniforms.mobile,layout.mobile);
   }

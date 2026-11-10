@@ -2,6 +2,7 @@
   const dialog=document.getElementById('aboutDialog'),close=document.getElementById('aboutClose');
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),hover=matchMedia('(hover: hover) and (pointer: fine)'),compact=matchMedia('(max-width:760px),(max-height:550px)');
   const blocks=[...dialog.querySelectorAll('.about-block')],pages=[...dialog.querySelectorAll('.about-tabs button')],chapters=[...dialog.querySelectorAll('.about-chapter')];
+  const glass=createAboutGlass(dialog);
   let atmosphere=null;
   dialog.querySelector('.about-atmosphere').addEventListener('webglcontextrestored',()=>{atmosphere=createAboutAtmosphere(dialog);if(dialog.open)atmosphere.start()});
   let opener=null,current=0,closeTimer=null;
@@ -43,7 +44,7 @@
   }
   dialog.addEventListener('animationend',e=>{if(e.target===dialog&&e.animationName==='aboutExit'&&dialog.open)dialog.close()});
   window.MBAbout={open(){
-    if(dialog.open)return;clearTimeout(closeTimer);opener=document.activeElement;dialog.classList.remove('is-entering','is-closing');blocks.forEach(el=>el.style.animation='');selectPage(0);resetParallax();dialog.showModal();dialog.scrollTop=0;
+    if(dialog.open)return;clearTimeout(closeTimer);opener=document.activeElement;dialog.classList.remove('is-entering','is-closing');blocks.forEach(el=>el.style.animation='');selectPage(0);resetParallax();dialog.showModal();dialog.scrollTop=0;glass.resize();
     if(!atmosphere)atmosphere=createAboutAtmosphere(dialog);atmosphere.start();
     void dialog.offsetWidth;dialog.classList.add('is-entering');close.focus({preventScroll:true});
   },close:requestClose};

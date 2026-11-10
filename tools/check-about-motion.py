@@ -14,6 +14,8 @@ with sync_playwright() as p:
  page.route('http://about.test/',lambda r:r.fulfill(body=html,content_type='text/html; charset=utf-8'))
  page.goto('http://about.test/');page.click('#launch');page.wait_for_timeout(2800)
  page.wait_for_function('document.querySelector(".about-atmosphere").width>0')
+ assert page.locator('.about-glass-back').evaluate('(e)=>new DOMMatrix(getComputedStyle(e).transform).m43')< -20
+ assert page.locator('.about-panel').evaluate('(e)=>getComputedStyle(e).isolation')=='auto'
  sample="""()=>{const p=new DOMMatrix(getComputedStyle(document.querySelector('.about-panel')).transform);return {x:p.b,y:p.c,lift:p.f,fog:(()=>{const c=document.querySelector('.about-atmosphere'),g=c.getContext('webgl'),b=new Uint8Array(c.width*c.height*4);g.drawArrays(g.TRIANGLES,0,6);g.readPixels(0,0,c.width,c.height,g.RGBA,g.UNSIGNED_BYTE,b);let sum=0;for(let i=3;i<b.length;i+=148)sum+=b[i];return sum})(),portrait:getComputedStyle(document.querySelector('.about-portrait-motion')).transform}}"""
  for mode in ['normal','hover','focus','reduced','mobile']:
   if mode=='hover':page.mouse.move(1000,400)
