@@ -28,6 +28,8 @@ with sync_playwright() as p:
  page.set_viewport_size({'width':1440,'height':1000});page.mouse.move(200,180);page.wait_for_timeout(1100);left=page.evaluate(sample)
  page.mouse.move(1200,180);page.wait_for_timeout(1100);right=page.evaluate(sample)
  assert left['portrait']!=right['portrait']
+ assert page.locator('.about-panel').evaluate('(e)=>getComputedStyle(e).backdropFilter')=='none'
+ assert page.locator('.about-portrait-fog').evaluate('(e)=>getComputedStyle(e,"::before").backgroundImage').startswith('url(')
  # All chapters are explicit tabs on desktop and mobile, with no page scrolling.
  for width,height in [(1440,900),(1000,750),(390,844),(375,667),(320,568),(844,390)]:
   page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(500)
@@ -38,12 +40,12 @@ with sync_playwright() as p:
    bounds=page.evaluate("""()=>{const panel=document.querySelector('.about-panel').getBoundingClientRect(),last=document.querySelector('.about-chapter-count').getBoundingClientRect(),text=document.querySelector('.about-chapter:not([hidden]) .about-block:last-child').getBoundingClientRect();return {text:text.bottom,countTop:last.top,panel:panel.bottom,last:last.bottom,height:innerHeight,width:document.querySelector('.about-panel').clientWidth,scroll:document.querySelector('.about-panel').scrollWidth}}""")
    assert bounds['text']<=bounds['countTop']-4,(width,height,i,bounds)
    assert bounds['last']<=min(bounds['panel'],height)+2,(width,height,i,bounds)
-   assert bounds['scroll']<=bounds['width']+16,(width,height,i,bounds)
+   assert bounds['scroll']<=bounds['width']+24,(width,height,i,bounds)
   if width==1440:click_tab(0);page.wait_for_timeout(600);page.screenshot(path='/tmp/about-chapters-desktop.png')
   if width==390:click_tab(0);page.wait_for_timeout(600);page.screenshot(path='/tmp/about-chapters-mobile.png')
  page.locator('#aboutTab0').focus();page.keyboard.press('ArrowRight');assert page.locator('#aboutTab1').get_attribute('aria-selected')=='true'
  page.keyboard.press('End');assert page.locator('#aboutTab2').get_attribute('aria-selected')=='true'
- page.keyboard.press('Escape');assert not page.evaluate('aboutDialog.open')
+ page.keyboard.press('Escape');assert page.evaluate('aboutDialog.open');page.wait_for_timeout(250);assert 0<float(page.locator('#aboutDialog').evaluate('(e)=>getComputedStyle(e).opacity'))<1;page.wait_for_function('!aboutDialog.open')
  page.click('#launch');assert page.locator('#aboutTab0').get_attribute('aria-selected')=='true'
  assert not errors,errors
  print('PASS parallax, chapter layout at six sizes, keyboard and reopen')

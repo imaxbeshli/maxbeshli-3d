@@ -2,7 +2,7 @@
   const dialog=document.getElementById('aboutDialog'),close=document.getElementById('aboutClose');
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),hover=matchMedia('(hover: hover) and (pointer: fine)'),compact=matchMedia('(max-width:760px),(max-height:550px)');
   const blocks=[...dialog.querySelectorAll('.about-block')],pages=[...dialog.querySelectorAll('.about-tabs button')],chapters=[...dialog.querySelectorAll('.about-chapter')];
-  let opener=null,current=0;
+  let opener=null,current=0,closeTimer=null;
   // Preserve natural spacing, selection and line wrapping while styling each word.
   blocks.forEach(block=>{
     const fragment=document.createDocumentFragment();
@@ -33,12 +33,19 @@
     e.preventDefault();e.stopPropagation();selectPage(next,true);pages[next].focus({preventScroll:true});
   });
   function resetParallax(){dialog.style.setProperty('--px','0px');dialog.style.setProperty('--py','0px')}
+  function requestClose(){
+    if(!dialog.open||dialog.classList.contains('is-closing'))return;
+    dialog.style.setProperty('--exit-opacity',getComputedStyle(dialog).opacity);
+    dialog.classList.add('is-closing');
+    closeTimer=setTimeout(()=>{if(dialog.open)dialog.close()},1200);
+  }
+  dialog.addEventListener('animationend',e=>{if(e.target===dialog&&e.animationName==='aboutExit'&&dialog.open)dialog.close()});
   window.MBAbout={open(){
-    if(dialog.open)return;opener=document.activeElement;dialog.classList.remove('is-entering');blocks.forEach(el=>el.style.animation='');selectPage(0);resetParallax();dialog.showModal();dialog.scrollTop=0;
+    if(dialog.open)return;opener=document.activeElement;dialog.classList.remove('is-entering','is-closing');blocks.forEach(el=>el.style.animation='');selectPage(0);resetParallax();dialog.showModal();dialog.scrollTop=0;
     void dialog.offsetWidth;dialog.classList.add('is-entering');close.focus({preventScroll:true});
-  },close(){if(dialog.open)dialog.close()}};
-  close.addEventListener('click',()=>dialog.close());
-  dialog.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();dialog.close()});
+  },close:requestClose};
+  close.addEventListener('click',requestClose);
+  dialog.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();requestClose()});
   dialog.addEventListener('keydown',e=>{
     if(e.key==='Escape'){e.stopPropagation();return}
     if(e.key!=='Tab')return;
@@ -47,7 +54,7 @@
     if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
     else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
   });
-  dialog.addEventListener('close',()=>{dialog.classList.remove('is-entering');dialog.querySelectorAll('.about-block').forEach(el=>el.getAnimations().forEach(a=>a.cancel()));resetParallax();opener?.focus({preventScroll:true})});
+  dialog.addEventListener('close',()=>{clearTimeout(closeTimer);dialog.classList.remove('is-entering','is-closing');dialog.querySelectorAll('.about-block').forEach(el=>el.getAnimations().forEach(a=>a.cancel()));resetParallax();opener?.focus({preventScroll:true})});
   dialog.addEventListener('pointermove',e=>{
     if(e.pointerType!=='mouse'&&!hover.matches)return;
     const strength=(reduced.matches?.65:1)*(compact.matches?.5:1);
