@@ -51,7 +51,7 @@
 /* Approved Three.js solid and selectable HTML share exactly the same projection. */
 .about-panel-position{opacity:0;visibility:hidden;transition:opacity .65s ease;will-change:transform}
 #aboutDialog.glass-ready .about-panel-position{opacity:1;visibility:visible}
-.about-panel{--panel-angle:-12deg;border:0;background:transparent;border-radius:3.7%;box-shadow:none;isolation:auto;z-index:1}
+.about-panel{--panel-angle:-18deg;border:0;background:transparent;border-radius:3.7%;box-shadow:none;isolation:auto;z-index:1}
 .about-panel:before,.about-panel:after{display:none}
 .about-glass-canvas{position:absolute;pointer-events:none;z-index:0}
 .about-glass-shadow{position:absolute;left:12%;right:6%;height:30px;bottom:-29px;border-radius:50%;background:#000;opacity:.22;filter:blur(20px);pointer-events:none;z-index:-1}
@@ -59,7 +59,7 @@
 #aboutDialog[data-glass=ready] .about-glass-status{display:none}
 #aboutDialog[data-glass=error] .about-panel{background:#151919aa;border:1px solid #cbd4cb66}
 .about-atmosphere{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;filter:blur(.6px)}
-@media(max-width:760px){.about-panel{--panel-angle:-8deg}}
+@media(max-width:760px){.about-panel{--panel-angle:-11deg}}
 @media(max-width:360px) and (max-height:640px){.about-panel{padding-top:14px;padding-bottom:14px}}
 
 .about-tabs,#aboutTitle,.about-tagline,.about-block{text-shadow:0 1px 3px #0009}
