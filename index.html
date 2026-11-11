@@ -718,6 +718,54 @@ BESHLI</h1>
 @media(max-width:760px){.about-panel-float{perspective:1600px}}
 @media(prefers-reduced-motion:reduce){.about-panel-float{animation-duration:12s}}
 
+/* Mobile composition: portrait + identity, then one quiet reading surface. */
+.about-identity{flex-shrink:0}
+#aboutDialog:not(.using-keyboard) #aboutClose:focus{outline:none}
+@media(max-width:760px) and (orientation:portrait){
+ .about-top{top:max(14px,env(safe-area-inset-top));left:22px;right:22px}
+ .about-brand{font-size:25px}
+ #aboutClose{font-size:13px;min-height:44px;padding:11px 19px;border-radius:12px}
+ .about-stage{inset:76px 20px max(22px,env(safe-area-inset-bottom));max-height:620px;margin:0 auto;grid-template-columns:1fr;grid-template-rows:clamp(145px,31dvh,240px) minmax(270px,1fr);gap:18px;align-items:stretch}
+ .about-visual{overflow:visible}
+ .about-portrait-motion{width:59%;height:118%;left:-4%;bottom:-5%;mask-image:linear-gradient(#000 68%,transparent 98%)}
+ #aboutPortrait{object-position:center bottom;filter:drop-shadow(-3px -2px 8px #f3cd863b)}
+ .about-halo{inset:0 30% 0 -8%;filter:blur(24px)}
+ .about-visual .about-identity{position:absolute;left:53%;right:-1%;top:24%;transform:translate(calc(var(--px)*.3),calc(var(--py)*.3))}
+ #aboutTitle{font-size:clamp(36px,11.4vw,49px);letter-spacing:-.055em;line-height:1.05;margin:0 0 14px}
+ .about-tagline{font-size:13px;line-height:1.7;color:#d9c79f;margin:0}
+ .about-tagline span{display:block}
+ .about-panel{--panel-angle:-5deg;padding:23px 24px;min-height:0}
+ .about-tabs{gap:0;justify-content:space-between;margin-bottom:23px}
+ .about-tabs button{font-size:12px;min-height:32px;padding:0 0 12px}
+ .about-story{min-height:0}
+ .about-block{font-size:16px;line-height:1.6;color:#eeefeb;text-shadow:0 1px 3px #0008}
+ .about-block+.about-block{margin-top:17px}
+ .about-glass-shadow{opacity:.15;bottom:-19px}
+ .about-glass-status{top:auto;right:24px;bottom:24px}
+ #aboutDialog.is-entering .about-visual #aboutTitle>span{animation:aboutTextIn .8s ease calc(.45s + var(--letter)*.08s) both}
+ #aboutDialog.is-entering .about-visual .about-tagline{animation:aboutTextIn 1s ease .7s both}
+}
+@media(max-width:360px) and (orientation:portrait){
+ .about-stage{left:16px;right:16px;top:70px;gap:14px;grid-template-rows:clamp(145px,29dvh,190px) minmax(270px,1fr)}
+ .about-panel{padding:21px 20px}
+ .about-block{font-size:15px;line-height:1.55}
+ .about-tabs{margin-bottom:18px}
+ .about-tabs button{font-size:11px}
+ .about-block+.about-block{margin-top:14px}
+}
+@media(prefers-reduced-motion:reduce){
+ #aboutDialog.is-entering .about-visual #aboutTitle>span,#aboutDialog.is-entering .about-visual .about-tagline{animation-name:aboutFade}
+}
+
+@media(max-width:760px) and (orientation:portrait) and (max-height:600px){
+ .about-stage{top:66px;bottom:14px;gap:12px;grid-template-rows:clamp(120px,26dvh,150px) minmax(260px,1fr)}
+ .about-panel{padding-top:18px;padding-bottom:18px}
+ .about-tabs{margin-bottom:18px}
+ .about-visual .about-identity{top:18%}
+ #aboutTitle{margin-bottom:9px}
+ .about-tagline{font-size:12px;line-height:1.5}
+}
+
 </style>
 <dialog id="aboutDialog" aria-labelledby="aboutTitle">
   <div class="about-world-clip" aria-hidden="true"><div class="about-world"></div></div>
@@ -734,8 +782,8 @@ BESHLI</h1>
         <button id="aboutTab1" type="button" role="tab" aria-selected="false" aria-controls="aboutChapter1" tabindex="-1">Что создаю</button>
         <button id="aboutTab2" type="button" role="tab" aria-selected="false" aria-controls="aboutChapter2" tabindex="-1">Как работаю</button>
       </nav>
-      <h2 id="aboutTitle" aria-label="Я MAX"><span aria-hidden="true">Я</span> <span aria-hidden="true">M</span><span aria-hidden="true">A</span><span aria-hidden="true">X</span></h2>
-      <p class="about-tagline">Визуал. Технологии. Характер.</p>
+      <div class="about-identity"><h2 id="aboutTitle" aria-label="Я MAX"><span aria-hidden="true">Я</span> <span aria-hidden="true">M</span><span aria-hidden="true">A</span><span aria-hidden="true">X</span></h2>
+      <p class="about-tagline"><span>Визуал.</span> <span>Технологии.</span> <span>Характер.</span></p></div>
       <div class="about-story">
         <section id="aboutChapter0" class="about-chapter" role="tabpanel" aria-labelledby="aboutTab0">
           <p class="about-block">Снимаю и монтирую видео. Работаю с кадром, светом и ритмом, чтобы передать характер человека, продукта или проекта.</p>
@@ -847,6 +895,7 @@ function createAboutGlass(dialog){
   }
   function resize(){
     if(!engine||!dialog.open)return;
+    engine.backdrop.material.color.setHex(dialog.dataset.layout==='mobile'?0x080c10:0xffffff);
     const e=engine,w=panel.offsetWidth,h=panel.offsetHeight;if(!w||!h||(w===e.w&&h===e.h))return;
     e.w=w;e.h=h;e.unit=w/6;e.cw=w+e.pad*2;e.ch=h+e.pad*2;
     canvas.style.left=-e.pad+'px';canvas.style.top=-e.pad+'px';canvas.style.width=e.cw+'px';canvas.style.height=e.ch+'px';e.renderer.setSize(e.cw,e.ch,false);
@@ -916,7 +965,7 @@ function createAboutAtmosphere(dialog){
       float n=cloud(p);
       float detail=noise(p*7.2+vec3(0.,(42.+(time-42.)*1.7)*.035,0.));
       float vapor=.06+pow(smoothstep(.15,.85,n),2.5)*.94;
-      float density=vapor*(envelope+floorMist)*(.7+.3*sin(z*3.14159));
+      float density=vapor*(envelope+floorMist)*(.7+.3*sin(z*3.14159))*(1.-mobile*.4);
       float extinction=1.-exp(-density*.44);
       // Approximate attenuation towards the overhead light, varying through the volume.
       float occlusion=field(p+vec3(-.2,-.8,.25));
@@ -936,8 +985,8 @@ function createAboutAtmosphere(dialog){
   function resize(){
     const w=dialog.clientWidth,h=dialog.clientHeight;const scale=Math.min(.55,640/w,420/h);
     canvas.width=Math.round(w*scale);canvas.height=Math.round(h*scale);gl.viewport(0,0,canvas.width,canvas.height);
-    const r=dialog.querySelector('.about-visual').getBoundingClientRect();const stacked=w<=760&&h>550;
-    layout={x:(r.left+r.width*.5)/w,y:(r.top+r.height*(stacked?.96:1.01))/h,sx:stacked?.72:.38,sy:stacked?Math.min(.12,r.height/h*.42):.22,mobile:stacked?1:0};
+    const r=dialog.querySelector('.about-visual').getBoundingClientRect();const stacked=w<=760&&h>w;
+    layout={x:(r.left+r.width*(stacked?.25:.5))/w,y:(r.top+r.height*(stacked?.96:1.01))/h,sx:stacked?.40:.38,sy:stacked?Math.min(.075,r.height/h*.30):.22,mobile:stacked?1:0};
     gl.uniform2f(uniforms.resolution,canvas.width,canvas.height);
     gl.uniform2f(uniforms.center,layout.x,layout.y);gl.uniform2f(uniforms.spread,layout.sx,layout.sy);gl.uniform1f(uniforms.mobile,layout.mobile);
   }
@@ -959,16 +1008,35 @@ function createAboutAtmosphere(dialog){
   let atmosphere=null;
   dialog.querySelector('.about-atmosphere').addEventListener('webglcontextrestored',()=>{atmosphere=createAboutAtmosphere(dialog);if(dialog.open)atmosphere.start()});
   let opener=null,current=0,closeTimer=null,openEpoch=0;
-  // Preserve natural spacing, selection and line wrapping while styling each word.
-  blocks.forEach(block=>{
+  const mobileLayout=matchMedia('(max-width:760px) and (orientation:portrait)'),mobileCopy=matchMedia('(max-width:760px), (max-height:550px) and (max-width:1000px)');
+  const identity=dialog.querySelector('.about-identity'),story=dialog.querySelector('.about-story'),visual=dialog.querySelector('.about-visual');
+  const desktopText=blocks.map(el=>el.textContent),shortText=[
+    'Снимаю и монтирую видео. Соединяю визуальный опыт и современные технологии.',
+    'Работаю с кадром, светом и ритмом, чтобы передать характер человека, продукта или компании.',
+    'Видео: съёмка, монтаж и AI — от исходных кадров до готовой истории.',
+    'Сайты нового уровня с объёмом и анимацией. Telegram-боты и мини-приложения — от идеи до запуска.',
+    'Сам веду проект и отвечаю за результат.',
+    'Современные технологии позволяют объединить задачи. Главное — продуманный подход и ответственность.'
+  ];
+  function wrapWords(block,text){
     const fragment=document.createDocumentFragment();
-    block.textContent.split(/(\s+)/).forEach(part=>{
+    text.split(/(\s+)/).forEach(part=>{
       if(!part)return;
       if(/^\s+$/.test(part)){fragment.append(document.createTextNode(part));return}
       const word=document.createElement('span');word.className='about-word';word.textContent=part;fragment.append(word);
     });
     block.replaceChildren(fragment);
-  });
+  }
+  function updatePresentation(){
+    if(mobileLayout.matches)visual.append(identity);else story.before(identity);
+    blocks.forEach((block,i)=>wrapWords(block,mobileCopy.matches?shortText[i]:desktopText[i]));
+    close.textContent=mobileCopy.matches?'Назад':'Назад в пространство';
+    dialog.dataset.layout=mobileLayout.matches?'mobile':'desktop';
+  }
+  mobileLayout.addEventListener('change',updatePresentation);mobileCopy.addEventListener('change',updatePresentation);updatePresentation();
+  // Keep keyboard focus visible, without the ring caused by programmatic focus on touch.
+  document.addEventListener('keydown',e=>{if(['Tab','Enter',' '].includes(e.key))dialog.classList.add('using-keyboard')},true);
+  document.addEventListener('pointerdown',()=>dialog.classList.remove('using-keyboard'),true);
   dialog.querySelectorAll('#aboutTitle>span').forEach((el,i)=>el.style.setProperty('--letter',i));
   blocks.forEach((el,i)=>el.style.setProperty('--delay',`${.95+(i%2)*.17}s`));
   function selectPage(index,animate=false){

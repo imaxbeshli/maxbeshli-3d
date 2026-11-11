@@ -70,3 +70,51 @@
 .about-panel-float{position:relative;width:100%;height:100%;min-height:0;display:flex;align-items:center;perspective:1500px;animation:aboutFloat 7s ease-in-out infinite;will-change:transform}
 @media(max-width:760px){.about-panel-float{perspective:1600px}}
 @media(prefers-reduced-motion:reduce){.about-panel-float{animation-duration:12s}}
+
+/* Mobile composition: portrait + identity, then one quiet reading surface. */
+.about-identity{flex-shrink:0}
+#aboutDialog:not(.using-keyboard) #aboutClose:focus{outline:none}
+@media(max-width:760px) and (orientation:portrait){
+ .about-top{top:max(14px,env(safe-area-inset-top));left:22px;right:22px}
+ .about-brand{font-size:25px}
+ #aboutClose{font-size:13px;min-height:44px;padding:11px 19px;border-radius:12px}
+ .about-stage{inset:76px 20px max(22px,env(safe-area-inset-bottom));max-height:620px;margin:0 auto;grid-template-columns:1fr;grid-template-rows:clamp(145px,31dvh,240px) minmax(270px,1fr);gap:18px;align-items:stretch}
+ .about-visual{overflow:visible}
+ .about-portrait-motion{width:59%;height:118%;left:-4%;bottom:-5%;mask-image:linear-gradient(#000 68%,transparent 98%)}
+ #aboutPortrait{object-position:center bottom;filter:drop-shadow(-3px -2px 8px #f3cd863b)}
+ .about-halo{inset:0 30% 0 -8%;filter:blur(24px)}
+ .about-visual .about-identity{position:absolute;left:53%;right:-1%;top:24%;transform:translate(calc(var(--px)*.3),calc(var(--py)*.3))}
+ #aboutTitle{font-size:clamp(36px,11.4vw,49px);letter-spacing:-.055em;line-height:1.05;margin:0 0 14px}
+ .about-tagline{font-size:13px;line-height:1.7;color:#d9c79f;margin:0}
+ .about-tagline span{display:block}
+ .about-panel{--panel-angle:-5deg;padding:23px 24px;min-height:0}
+ .about-tabs{gap:0;justify-content:space-between;margin-bottom:23px}
+ .about-tabs button{font-size:12px;min-height:32px;padding:0 0 12px}
+ .about-story{min-height:0}
+ .about-block{font-size:16px;line-height:1.6;color:#eeefeb;text-shadow:0 1px 3px #0008}
+ .about-block+.about-block{margin-top:17px}
+ .about-glass-shadow{opacity:.15;bottom:-19px}
+ .about-glass-status{top:auto;right:24px;bottom:24px}
+ #aboutDialog.is-entering .about-visual #aboutTitle>span{animation:aboutTextIn .8s ease calc(.45s + var(--letter)*.08s) both}
+ #aboutDialog.is-entering .about-visual .about-tagline{animation:aboutTextIn 1s ease .7s both}
+}
+@media(max-width:360px) and (orientation:portrait){
+ .about-stage{left:16px;right:16px;top:70px;gap:14px;grid-template-rows:clamp(145px,29dvh,190px) minmax(270px,1fr)}
+ .about-panel{padding:21px 20px}
+ .about-block{font-size:15px;line-height:1.55}
+ .about-tabs{margin-bottom:18px}
+ .about-tabs button{font-size:11px}
+ .about-block+.about-block{margin-top:14px}
+}
+@media(prefers-reduced-motion:reduce){
+ #aboutDialog.is-entering .about-visual #aboutTitle>span,#aboutDialog.is-entering .about-visual .about-tagline{animation-name:aboutFade}
+}
+
+@media(max-width:760px) and (orientation:portrait) and (max-height:600px){
+ .about-stage{top:66px;bottom:14px;gap:12px;grid-template-rows:clamp(120px,26dvh,150px) minmax(260px,1fr)}
+ .about-panel{padding-top:18px;padding-bottom:18px}
+ .about-tabs{margin-bottom:18px}
+ .about-visual .about-identity{top:18%}
+ #aboutTitle{margin-bottom:9px}
+ .about-tagline{font-size:12px;line-height:1.5}
+}

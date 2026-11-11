@@ -38,7 +38,7 @@ function createAboutAtmosphere(dialog){
       float n=cloud(p);
       float detail=noise(p*7.2+vec3(0.,(42.+(time-42.)*1.7)*.035,0.));
       float vapor=.06+pow(smoothstep(.15,.85,n),2.5)*.94;
-      float density=vapor*(envelope+floorMist)*(.7+.3*sin(z*3.14159));
+      float density=vapor*(envelope+floorMist)*(.7+.3*sin(z*3.14159))*(1.-mobile*.4);
       float extinction=1.-exp(-density*.44);
       // Approximate attenuation towards the overhead light, varying through the volume.
       float occlusion=field(p+vec3(-.2,-.8,.25));
@@ -58,8 +58,8 @@ function createAboutAtmosphere(dialog){
   function resize(){
     const w=dialog.clientWidth,h=dialog.clientHeight;const scale=Math.min(.55,640/w,420/h);
     canvas.width=Math.round(w*scale);canvas.height=Math.round(h*scale);gl.viewport(0,0,canvas.width,canvas.height);
-    const r=dialog.querySelector('.about-visual').getBoundingClientRect();const stacked=w<=760&&h>550;
-    layout={x:(r.left+r.width*.5)/w,y:(r.top+r.height*(stacked?.96:1.01))/h,sx:stacked?.72:.38,sy:stacked?Math.min(.12,r.height/h*.42):.22,mobile:stacked?1:0};
+    const r=dialog.querySelector('.about-visual').getBoundingClientRect();const stacked=w<=760&&h>w;
+    layout={x:(r.left+r.width*(stacked?.25:.5))/w,y:(r.top+r.height*(stacked?.96:1.01))/h,sx:stacked?.40:.38,sy:stacked?Math.min(.075,r.height/h*.30):.22,mobile:stacked?1:0};
     gl.uniform2f(uniforms.resolution,canvas.width,canvas.height);
     gl.uniform2f(uniforms.center,layout.x,layout.y);gl.uniform2f(uniforms.spread,layout.sx,layout.sy);gl.uniform1f(uniforms.mobile,layout.mobile);
   }

@@ -68,7 +68,9 @@ with sync_playwright() as p:
   assert page.locator(f'#aboutTab{i}').get_attribute('aria-selected')=='true'
  r=page.locator('#aboutTab0').bounding_box();page.mouse.click(r['x']+r['width']/2,r['y']+r['height']/2);page.wait_for_timeout(800)
  page.screenshot(path='/tmp/about-final-desktop.png')
- page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(1000);page.screenshot(path='/tmp/about-final-mobile.png')
+ page.set_viewport_size({'width':390,'height':664});page.wait_for_timeout(1000);page.screenshot(path='/tmp/about-final-mobile.png')
+ page.keyboard.press('Tab');page.locator('#aboutClose').focus()
+ assert page.locator('#aboutClose').evaluate('(e)=>getComputedStyle(e).outlineStyle')=='solid'
  page.keyboard.press('Escape');page.wait_for_function('!aboutDialog.open')
  assert not errors,errors
  print('PASS full site About cold start without network, chapters, mobile and return',flush=True)

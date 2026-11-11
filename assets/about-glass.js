@@ -32,6 +32,7 @@ function createAboutGlass(dialog){
   }
   function resize(){
     if(!engine||!dialog.open)return;
+    engine.backdrop.material.color.setHex(dialog.dataset.layout==='mobile'?0x080c10:0xffffff);
     const e=engine,w=panel.offsetWidth,h=panel.offsetHeight;if(!w||!h||(w===e.w&&h===e.h))return;
     e.w=w;e.h=h;e.unit=w/6;e.cw=w+e.pad*2;e.ch=h+e.pad*2;
     canvas.style.left=-e.pad+'px';canvas.style.top=-e.pad+'px';canvas.style.width=e.cw+'px';canvas.style.height=e.ch+'px';e.renderer.setSize(e.cw,e.ch,false);

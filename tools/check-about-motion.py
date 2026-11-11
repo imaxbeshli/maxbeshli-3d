@@ -37,8 +37,17 @@ with sync_playwright() as p:
  assert page.locator('.about-panel').evaluate('(e)=>getComputedStyle(e).backdropFilter')=='none'
  assert page.locator('.about-fog-layer,.about-portrait-fog').count()==0
  # All chapters are explicit tabs on desktop and mobile, with no page scrolling.
- for width,height in [(1440,900),(1000,750),(390,844),(375,667),(320,568),(844,390)]:
+ for width,height in [(1440,900),(1000,750),(390,844),(390,664),(375,667),(320,568),(320,480),(844,390)]:
   page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(500)
+  if width<=760 and height>width:
+   assert page.locator('.about-visual #aboutTitle').count()==1
+   assert page.locator('.about-panel #aboutTitle').count()==0
+   assert page.locator('#aboutClose').inner_text()=='Назад'
+   page.locator('#aboutClose').focus()
+   assert page.locator('#aboutClose').evaluate('(e)=>getComputedStyle(e).outlineStyle')=='none'
+   assert page.locator('.about-block').first.evaluate('(e)=>parseFloat(getComputedStyle(e).fontSize)')>=15
+  else:
+   assert page.locator('.about-panel #aboutTitle').count()==1
   for i in range(3):
    click_tab(i);page.wait_for_timeout(600)
    assert page.locator('.about-chapter:visible').count()==1
@@ -47,7 +56,7 @@ with sync_playwright() as p:
    assert bounds['text']<=min(bounds['panel'],height)-10,(width,height,i,bounds)
    assert bounds['scroll']<=bounds['width']+24,(width,height,i,bounds)
   if width==1440:click_tab(0);page.wait_for_timeout(600);page.screenshot(path='/tmp/about-chapters-desktop.png')
-  if width==390:click_tab(0);page.wait_for_timeout(600);page.screenshot(path='/tmp/about-chapters-mobile.png')
+  if width==390 and height==664:click_tab(0);page.wait_for_timeout(600);page.screenshot(path='/tmp/about-chapters-mobile.png')
  page.locator('#aboutTab0').focus();page.keyboard.press('ArrowRight');assert page.locator('#aboutTab1').get_attribute('aria-selected')=='true'
  page.keyboard.press('End');assert page.locator('#aboutTab2').get_attribute('aria-selected')=='true'
  page.keyboard.press('Escape');assert page.evaluate('aboutDialog.open');page.wait_for_function('Number(getComputedStyle(aboutDialog).opacity)>0 && Number(getComputedStyle(aboutDialog).opacity)<1');assert page.evaluate('aboutDialog.open');page.wait_for_function('!aboutDialog.open')
@@ -56,5 +65,5 @@ with sync_playwright() as p:
  page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(500)
  assert page.locator('.about-atmosphere').evaluate('(c)=>{const g=c.getContext("webgl"),p=g.getParameter(g.CURRENT_PROGRAM);return g.getUniform(p,g.getUniformLocation(p,"mobile"))}')==1
  assert not errors,errors
- print('PASS parallax, chapter layout at six sizes, keyboard and reopen')
+ print('PASS parallax, chapter layout at eight sizes, keyboard and reopen')
  b.close()

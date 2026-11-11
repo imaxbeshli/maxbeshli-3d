@@ -6,16 +6,35 @@
   let atmosphere=null;
   dialog.querySelector('.about-atmosphere').addEventListener('webglcontextrestored',()=>{atmosphere=createAboutAtmosphere(dialog);if(dialog.open)atmosphere.start()});
   let opener=null,current=0,closeTimer=null,openEpoch=0;
-  // Preserve natural spacing, selection and line wrapping while styling each word.
-  blocks.forEach(block=>{
+  const mobileLayout=matchMedia('(max-width:760px) and (orientation:portrait)'),mobileCopy=matchMedia('(max-width:760px), (max-height:550px) and (max-width:1000px)');
+  const identity=dialog.querySelector('.about-identity'),story=dialog.querySelector('.about-story'),visual=dialog.querySelector('.about-visual');
+  const desktopText=blocks.map(el=>el.textContent),shortText=[
+    'Снимаю и монтирую видео. Соединяю визуальный опыт и современные технологии.',
+    'Работаю с кадром, светом и ритмом, чтобы передать характер человека, продукта или компании.',
+    'Видео: съёмка, монтаж и AI — от исходных кадров до готовой истории.',
+    'Сайты нового уровня с объёмом и анимацией. Telegram-боты и мини-приложения — от идеи до запуска.',
+    'Сам веду проект и отвечаю за результат.',
+    'Современные технологии позволяют объединить задачи. Главное — продуманный подход и ответственность.'
+  ];
+  function wrapWords(block,text){
     const fragment=document.createDocumentFragment();
-    block.textContent.split(/(\s+)/).forEach(part=>{
+    text.split(/(\s+)/).forEach(part=>{
       if(!part)return;
       if(/^\s+$/.test(part)){fragment.append(document.createTextNode(part));return}
       const word=document.createElement('span');word.className='about-word';word.textContent=part;fragment.append(word);
     });
     block.replaceChildren(fragment);
-  });
+  }
+  function updatePresentation(){
+    if(mobileLayout.matches)visual.append(identity);else story.before(identity);
+    blocks.forEach((block,i)=>wrapWords(block,mobileCopy.matches?shortText[i]:desktopText[i]));
+    close.textContent=mobileCopy.matches?'Назад':'Назад в пространство';
+    dialog.dataset.layout=mobileLayout.matches?'mobile':'desktop';
+  }
+  mobileLayout.addEventListener('change',updatePresentation);mobileCopy.addEventListener('change',updatePresentation);updatePresentation();
+  // Keep keyboard focus visible, without the ring caused by programmatic focus on touch.
+  document.addEventListener('keydown',e=>{if(['Tab','Enter',' '].includes(e.key))dialog.classList.add('using-keyboard')},true);
+  document.addEventListener('pointerdown',()=>dialog.classList.remove('using-keyboard'),true);
   dialog.querySelectorAll('#aboutTitle>span').forEach((el,i)=>el.style.setProperty('--letter',i));
   blocks.forEach((el,i)=>el.style.setProperty('--delay',`${.95+(i%2)*.17}s`));
   function selectPage(index,animate=false){
