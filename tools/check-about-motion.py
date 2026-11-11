@@ -23,8 +23,9 @@ with sync_playwright() as p:
   if mode=='focus':page.locator('#aboutClose').focus()
   if mode=='reduced':page.emulate_media(reduced_motion='reduce')
   if mode=='mobile':page.set_viewport_size({'width':390,'height':844})
-  before=page.evaluate(sample);page.wait_for_timeout(1900);after=page.evaluate(sample)
-  assert abs(after['lift']-before['lift'])>.2,(mode,before,after)
+  before=page.evaluate(sample);page.wait_for_timeout(950);middle=page.evaluate(sample);page.wait_for_timeout(950);after=page.evaluate(sample)
+  lifts=[state['lift'] for state in (before,middle,after)]
+  assert max(lifts)-min(lifts)>.2,(mode,before,middle,after)
   assert before['fog']>0 and before['fog']!=after['fog'],(mode,before['fog'],after['fog'])
   assert .001<abs(after['x'])<.04 and abs(after['y'])<.04
   print('PASS motion in '+mode,flush=True)
