@@ -5,7 +5,7 @@
   const glass=createAboutGlass(dialog);
   let atmosphere=null;
   dialog.querySelector('.about-atmosphere').addEventListener('webglcontextrestored',()=>{atmosphere=createAboutAtmosphere(dialog);if(dialog.open)atmosphere.start()});
-  let opener=null,current=0,closeTimer=null;
+  let opener=null,current=0,closeTimer=null,openEpoch=0;
   // Preserve natural spacing, selection and line wrapping while styling each word.
   blocks.forEach(block=>{
     const fragment=document.createDocumentFragment();
@@ -38,13 +38,15 @@
   function resetParallax(){dialog.style.setProperty('--px','0px');dialog.style.setProperty('--py','0px')}
   function requestClose(){
     if(!dialog.open||dialog.classList.contains('is-closing'))return;
+    openEpoch++;glass.stop();atmosphere?.stop();
     dialog.style.setProperty('--exit-opacity',getComputedStyle(dialog).opacity);
     dialog.classList.add('is-closing');
     closeTimer=setTimeout(()=>{if(dialog.open)dialog.close()},1200);
   }
   dialog.addEventListener('animationend',e=>{if(e.target===dialog&&e.animationName==='aboutExit'&&dialog.open)dialog.close()});
   window.MBAbout={open(){
-    if(dialog.open)return;clearTimeout(closeTimer);opener=document.activeElement;dialog.classList.remove('is-entering','is-closing');blocks.forEach(el=>el.style.animation='');selectPage(0);resetParallax();dialog.showModal();dialog.scrollTop=0;glass.resize();
+    if(dialog.open)return;clearTimeout(closeTimer);opener=document.activeElement;dialog.classList.remove('is-entering','is-closing','glass-ready');blocks.forEach(el=>el.style.animation='');selectPage(0);resetParallax();dialog.showModal();dialog.scrollTop=0;
+    const epoch=++openEpoch;glass.start().then(ok=>{if(epoch!==openEpoch||!dialog.open||dialog.classList.contains('is-closing'))return;dialog.classList.add('glass-ready');if(!ok)dialog.querySelector('.about-glass-status').textContent='Не удалось загрузить стекло. Обновите страницу.'});
     if(!atmosphere)atmosphere=createAboutAtmosphere(dialog);atmosphere.start();
     void dialog.offsetWidth;dialog.classList.add('is-entering');close.focus({preventScroll:true});
   },close:requestClose};
@@ -58,7 +60,7 @@
     if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
     else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
   });
-  dialog.addEventListener('close',()=>{if(dialog.open)return;clearTimeout(closeTimer);atmosphere?.stop();dialog.classList.remove('is-entering','is-closing');dialog.querySelectorAll('.about-block').forEach(el=>el.getAnimations().forEach(a=>a.cancel()));resetParallax();opener?.focus({preventScroll:true})});
+  dialog.addEventListener('close',()=>{if(dialog.open)return;clearTimeout(closeTimer);openEpoch++;glass.stop();atmosphere?.stop();dialog.classList.remove('is-entering','is-closing','glass-ready');dialog.querySelectorAll('.about-block').forEach(el=>el.getAnimations().forEach(a=>a.cancel()));resetParallax();opener?.focus({preventScroll:true})});
   dialog.addEventListener('pointermove',e=>{
     if(e.pointerType!=='mouse'&&!hover.matches)return;
     const strength=(reduced.matches?.65:1)*(compact.matches?.5:1);

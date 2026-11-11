@@ -12,9 +12,10 @@ with sync_playwright() as p:
  def click_tab(i):
   r=page.locator(f'#aboutTab{i}').bounding_box();page.mouse.click(r['x']+r['width']/2,r['y']+r['height']/2)
  page.route('http://about.test/',lambda r:r.fulfill(body=html,content_type='text/html; charset=utf-8'))
- page.goto('http://about.test/');page.click('#launch');page.wait_for_timeout(2800)
+ page.goto('http://about.test/');page.click('#launch');page.wait_for_function('aboutDialog.dataset.glass==="ready"',timeout=180000);page.wait_for_timeout(2800)
  page.wait_for_function('document.querySelector(".about-atmosphere").width>0')
- assert page.locator('.about-glass-back').evaluate('(e)=>new DOMMatrix(getComputedStyle(e).transform).m43')< -20
+ assert page.locator('.about-glass-back,.about-glass-side').count()==0
+ assert page.locator('.about-glass-canvas').evaluate('(e)=>e.width>200 && getComputedStyle(e).clipPath.startsWith("polygon(")')
  assert page.locator('.about-panel').evaluate('(e)=>getComputedStyle(e).isolation')=='auto'
  sample="""()=>{const p=new DOMMatrix(getComputedStyle(document.querySelector('.about-panel')).transform);return {x:p.b,y:p.c,lift:p.f,fog:(()=>{const c=document.querySelector('.about-atmosphere'),g=c.getContext('webgl'),b=new Uint8Array(c.width*c.height*4);g.drawArrays(g.TRIANGLES,0,6);g.readPixels(0,0,c.width,c.height,g.RGBA,g.UNSIGNED_BYTE,b);let sum=0;for(let i=3;i<b.length;i+=148)sum+=b[i];return sum})(),portrait:getComputedStyle(document.querySelector('.about-portrait-motion')).transform}}"""
  for mode in ['normal','hover','focus','reduced','mobile']:
@@ -47,8 +48,8 @@ with sync_playwright() as p:
   if width==390:click_tab(0);page.wait_for_timeout(600);page.screenshot(path='/tmp/about-chapters-mobile.png')
  page.locator('#aboutTab0').focus();page.keyboard.press('ArrowRight');assert page.locator('#aboutTab1').get_attribute('aria-selected')=='true'
  page.keyboard.press('End');assert page.locator('#aboutTab2').get_attribute('aria-selected')=='true'
- page.keyboard.press('Escape');assert page.evaluate('aboutDialog.open');page.wait_for_timeout(250);assert 0<float(page.locator('#aboutDialog').evaluate('(e)=>getComputedStyle(e).opacity'))<1;page.wait_for_function('!aboutDialog.open')
- page.click('#launch');assert page.locator('#aboutTab0').get_attribute('aria-selected')=='true'
+ page.keyboard.press('Escape');assert page.evaluate('aboutDialog.open');page.wait_for_function('Number(getComputedStyle(aboutDialog).opacity)>0 && Number(getComputedStyle(aboutDialog).opacity)<1');assert page.evaluate('aboutDialog.open');page.wait_for_function('!aboutDialog.open')
+ page.click('#launch');page.wait_for_function('aboutDialog.dataset.glass==="ready"');assert page.locator('#aboutTab0').get_attribute('aria-selected')=='true'
  page.wait_for_timeout(500);before=page.evaluate(sample);page.wait_for_timeout(1800);after=page.evaluate(sample);assert before['fog']!=after['fog']
  page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(500)
  assert page.locator('.about-atmosphere').evaluate('(c)=>{const g=c.getContext("webgl"),p=g.getParameter(g.CURRENT_PROGRAM);return g.getUniform(p,g.getUniformLocation(p,"mobile"))}')==1

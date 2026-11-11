@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.min.js';
 import {RGBELoader} from './vendor/RGBELoader.js';
+import {createApprovedGlass,createApprovedGlassEnvironment} from '../../assets/approved-glass.js';
 const canvas=document.querySelector('#scene'),loading=document.querySelector('#loading');
 let renderer;
 try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});}catch(error){loading.textContent='Для просмотра нужен браузер с поддержкой WebGL.';throw error;}
@@ -11,12 +12,8 @@ function mesh(geometry,material,parent=scene,x=0,y=0,z=0){const m=new THREE.Mesh
 const standard=(color,roughness=.6,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
 // Captured studio lighting: the same HDR environment drives background and glass reflections.
 const hdr=await new RGBELoader().loadAsync('./studio-small-08.hdr');hdr.mapping=THREE.EquirectangularReflectionMapping;
-const lightStudio=new THREE.Scene();lightStudio.background=hdr;
-const lightRig=new THREE.Group();lightRig.quaternion.setFromEuler(new THREE.Euler(.15,Math.PI/4,0)).invert();lightStudio.add(lightRig);
-const overhead=mesh(new THREE.PlaneGeometry(4,.65),new THREE.MeshBasicMaterial({color:new THREE.Color(1,1,.97).multiplyScalar(3),side:THREE.DoubleSide}),lightRig,-3.7,.9,8);overhead.lookAt(0,0,0);
-const pmrem=new THREE.PMREMGenerator(renderer),environment=pmrem.fromScene(lightStudio,0,.1,100);
-overhead.geometry.dispose();overhead.material.dispose();
-scene.environment=environment.texture;scene.environmentRotation.set(.15,Math.PI/4,0);scene.background=new THREE.Color('#171b1d');pmrem.dispose();
+const environment=createApprovedGlassEnvironment(THREE,renderer,hdr);
+scene.environment=environment.texture;scene.environmentRotation.set(.15,Math.PI/4,0);scene.background=new THREE.Color('#171b1d');
 const wall=standard('#15191b',.86);
 mesh(new THREE.BoxGeometry(35,18,.4),wall,scene,0,7,-5.5);
 for(const x of [-5,3.3,7])mesh(new THREE.BoxGeometry(.12,9,.16),standard('#141a1c',.4,.3),scene,x,4,-4.9);
@@ -36,13 +33,8 @@ const floor=mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshStandardMaterial({
 const shadowCanvas=document.createElement('canvas');shadowCanvas.width=256;shadowCanvas.height=256;
 const sc=shadowCanvas.getContext('2d'),grad=sc.createRadialGradient(128,128,5,128,128,126);grad.addColorStop(0,'rgba(0,0,0,.65)');grad.addColorStop(.45,'rgba(0,0,0,.28)');grad.addColorStop(1,'rgba(0,0,0,0)');sc.fillStyle=grad;sc.fillRect(0,0,256,256);
 const shadow=mesh(new THREE.PlaneGeometry(8,2.8),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(shadowCanvas),transparent:true,depthWrite:false}),scene,0,.008,.1);shadow.rotation.x=-Math.PI/2;
-// One closed, manifold extruded shape. Only outline corners are rounded; no rolled bevel.
-const width=6,height=4.2,radius=.22,depth=.30;
-const x=-width/2,y=-height/2,s=new THREE.Shape();s.moveTo(x+radius,y);s.lineTo(x+width-radius,y);s.quadraticCurveTo(x+width,y,x+width,y+radius);s.lineTo(x+width,y+height-radius);s.quadraticCurveTo(x+width,y+height,x+width-radius,y+height);s.lineTo(x+radius,y+height);s.quadraticCurveTo(x,y+height,x,y+height-radius);s.lineTo(x,y+radius);s.quadraticCurveTo(x,y,x+radius,y);
-const geometry=new THREE.ExtrudeGeometry(s,{depth,bevelEnabled:true,bevelSize:.008,bevelThickness:.008,bevelSegments:1,curveSegments:32,steps:1});geometry.translate(0,0,-depth/2);
-const glass=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:.035,transmission:1,thickness:depth,ior:1.52,attenuationColor:new THREE.Color('#d5e2dc'),attenuationDistance:3.5,envMapIntensity:.7,side:THREE.DoubleSide});
-const sides=glass.clone();sides.envMapIntensity=.45;sides.attenuationColor.set('#a5c4b6');sides.attenuationDistance=1.2;
-const pane=mesh(geometry,[glass,sides],scene,0,2.8,0);
+// Same mesh and optical material as the integrated About scene.
+const pane=createApprovedGlass(THREE);pane.position.set(0,2.8,0);scene.add(pane);
 // The back surface and the 90-degree side normals remain part of the same closed solid.
 let yaw=0,pitch=0,currentYaw=0,currentPitch=0,drag=null,visible=true;
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;const distance=Math.max(10.2,6.2/(2*Math.tan(Math.PI/10)*camera.aspect*.88));camera.position.set(distance*.43,3.5,distance*.903);camera.lookAt(target);camera.updateProjectionMatrix();}
