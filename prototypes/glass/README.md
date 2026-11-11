@@ -1,6 +1,6 @@
 # Interactive glass material prototype
 
-Open `prototypes/glass/` through an HTTP server. The approved geometry and material live in `assets/approved-glass.js`. About shares its studio lighting; its frame now follows the main-page tiles via `assets/about-frame.js`.
+Open `prototypes/glass/` through an HTTP server. The approved geometry and material live in `assets/approved-glass.js`. About now uses the main-page renderer and frame via `assets/about-frame.js`; this prototype remains independent.
 
 - Drag with a mouse or one finger to rotate the closed 3D mesh.
 - Arrow keys rotate the focused canvas; `0` restores the initial view.

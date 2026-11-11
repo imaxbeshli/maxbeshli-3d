@@ -17,8 +17,11 @@ with sync_playwright() as p:
  page.locator('#loaderBtn').click();page.wait_for_function("__MB.state.studioEntered && __MB.state.phase==='orbit'")
  print('PASS main loads, lower scene absent',flush=True)
  page.set_viewport_size({'width':1440,'height':900});page.wait_for_timeout(500)
+ page.evaluate('window.__beforeAboutThree=window.THREE')
  page.context.set_offline(True)
  page.locator('header a[href="#about"]').click();page.wait_for_function('aboutDialog.open');page.wait_for_function('aboutDialog.dataset.glass==="ready"',timeout=180000);page.wait_for_timeout(2200)
+ assert page.evaluate('window.THREE === window.__beforeAboutThree && THREE.REVISION === "128"')
+ assert page.locator('.about-chapter-count').count()==0
  for i in range(3):
   r=page.locator(f'#aboutTab{i}').bounding_box();page.mouse.click(r['x']+r['width']/2,r['y']+r['height']/2);page.wait_for_timeout(700)
   assert page.locator('.about-chapter:visible').count()==1

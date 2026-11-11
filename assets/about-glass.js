@@ -11,21 +11,23 @@ function createAboutGlass(dialog){
   }
   async function init(){
     const assets=JSON.parse(document.getElementById('aboutGlassAssets').textContent);
-    const THREE=await import(assets.three),RGBELoader=createAboutRGBELoader(THREE);
+    // Reuse the main scene's exact renderer version; isolated/offline previews load the embedded copy.
+    if(!window.THREE)await import(assets.three);
+    const THREE=window.THREE;
     const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
-    renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+    renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
     const backgroundURL=getComputedStyle(world).backgroundImage.match(/url\(["']?(.*?)["']?\)/)[1];
-    const [hdr,background]=await Promise.all([new RGBELoader().loadAsync(assets.hdr),new THREE.TextureLoader().loadAsync(backgroundURL)]);
-    background.colorSpace=THREE.SRGBColorSpace;
-    const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(36,1,.01,100),environment=createApprovedGlassEnvironment(THREE,renderer,hdr);
-    scene.environment=environment.texture;scene.environmentRotation.set(-.08,Math.PI/4,0);
-    scene.add(new THREE.HemisphereLight(0xdce9ee,0x32332d,.8));
-    const key=new THREE.DirectionalLight(0xf3f3e8,2.2);key.position.set(-3,6.2,5);scene.add(key);
-    const backdrop=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:background,color:0xd5d5d5,toneMapped:false}));scene.add(backdrop);
-    engine={THREE,renderer,scene,camera,environment,frameEnvironment:createAboutFrameEnvironment(THREE),hdr,backdrop,background,pane:null,vertices:[],w:0,h:0,unit:1,pad:72,cw:1,ch:1,flip:new THREE.Matrix4().makeScale(1,-1,1)};
+    const background=await new THREE.TextureLoader().loadAsync(backgroundURL);
+    background.encoding=THREE.sRGBEncoding;
+    const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(36,1,.01,100),environment=createAboutFrameEnvironment(THREE);
+    scene.environment=environment;
+    scene.add(new THREE.AmbientLight(0x9aaec5,.48));
+    const key=new THREE.DirectionalLight(0xffe2bd,2);key.position.set(6.5,7.5,5.5);scene.add(key);
+    const backdrop=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:background,color:0xffffff,toneMapped:false}));scene.add(backdrop);
+    engine={THREE,renderer,scene,camera,environment,frameEnvironment:environment,backdrop,background,pane:null,vertices:[],w:0,h:0,unit:1,pad:72,cw:1,ch:1,flip:new THREE.Matrix4().makeScale(1,-1,1)};
     resize();render();
     canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;cancelAnimationFrame(frame);dialog.dataset.glass='error';dialog.querySelector('.about-glass-status').textContent='3D-просмотр приостановлен. Обновите страницу.'});
-    canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;engine.environment.dispose();engine.environment=createApprovedGlassEnvironment(THREE,renderer,hdr);scene.environment=engine.environment.texture;if(wanted){render();dialog.dataset.glass='ready';frame=requestAnimationFrame(tick)}});
+    canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;engine.environment.dispose();engine.environment=createAboutFrameEnvironment(THREE);engine.frameEnvironment=engine.environment;scene.environment=engine.environment;engine.w=0;resize();if(wanted){render();dialog.dataset.glass='ready';frame=requestAnimationFrame(tick)}});
     return true;
   }
   function resize(){
@@ -55,7 +57,6 @@ function createAboutGlass(dialog){
     const r=world.getBoundingClientRect(),c=canvas.getBoundingClientRect(),scale=c.width/e.cw||1,img=e.background.image,cover=Math.max(r.width/img.width,r.height/img.height),depth=8,factor=1+depth/e.camera.position.z;
     e.backdrop.position.set(((r.left+r.width/2)-(c.left+c.width/2))/scale/e.unit*factor,-((r.top+r.height/2)-(c.top+c.height/2))/scale/e.unit*factor,-depth);
     e.backdrop.scale.set(img.width*cover/scale/e.unit*factor,img.height*cover/scale/e.unit*factor,1);
-    e.scene.environmentRotation.y=Math.PI/4+Math.atan2(matrix.elements[8],matrix.elements[10])+(parseFloat(dialog.style.getPropertyValue('--px'))||0)*.0015;
     e.renderer.render(e.scene,e.camera);
   }
   function tick(now){if(!wanted)return;frame=requestAnimationFrame(tick);if(document.hidden||contextLost||now-last<33)return;last=now;render();}

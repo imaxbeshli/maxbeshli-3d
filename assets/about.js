@@ -22,7 +22,6 @@
     current=index;
     chapters.forEach((el,i)=>{el.getAnimations().forEach(a=>a.cancel());el.hidden=i!==index});
     pages.forEach((el,i)=>{el.setAttribute('aria-selected',String(i===index));el.tabIndex=i===index?0:-1});
-    dialog.querySelector('.about-chapter-count').textContent=`0${index+1} / 03`;
     dialog.style.setProperty('--chapter-light',`${index*6}px`);
     if(animate){
       blocks.forEach(el=>{el.getAnimations().forEach(a=>a.cancel());el.style.animation='none'});

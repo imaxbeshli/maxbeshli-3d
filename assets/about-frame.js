@@ -1,7 +1,7 @@
 /* Main-page tile frame, using the same rounded bevel, edge contours and material.
    Geometry below mirrors index.html glassOutline/glassEdgeGeometry/roundedGlassGeometry.
-   Adapted only for panel size, front anchoring and modern Three.js colorSpace. */
-function createAboutFrameEnvironment(T){const images=[];for(let face=0;face<6;face++){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,256,256);g.addColorStop(0,'#293747');g.addColorStop(.48,'#0b1017');g.addColorStop(1,'#36302a');x.fillStyle=g;x.fillRect(0,0,256,256);x.fillStyle=face===4?'#ffe1b1':'#a5bfd6';x.fillRect(face===4?30:180,12,face===4?58:12,210);x.fillStyle='#6e756f';x.fillRect(15,232,225,5);images.push(c)}const tex=new T.CubeTexture(images);tex.colorSpace=T.SRGBColorSpace;tex.needsUpdate=true;return tex}
+   Adapted only for panel size, front anchoring and the main scene’s Three.js version. */
+function createAboutFrameEnvironment(T){const images=[];for(let face=0;face<6;face++){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,256,256);g.addColorStop(0,'#293747');g.addColorStop(.48,'#0b1017');g.addColorStop(1,'#36302a');x.fillStyle=g;x.fillRect(0,0,256,256);x.fillStyle=face===4?'#ffe1b1':'#a5bfd6';x.fillRect(face===4?30:180,12,face===4?58:12,210);x.fillStyle='#6e756f';x.fillRect(15,232,225,5);images.push(c)}const tex=new T.CubeTexture(images);tex.encoding=T.sRGBEncoding;tex.needsUpdate=true;return tex}
 function createAboutFramedGlass(THREE,{width,height,environment}){
     function glassOutline(w,h,r){
       const s=new THREE.Shape(),x=-w/2,y=-h/2;
@@ -50,9 +50,12 @@ function createAboutFramedGlass(THREE,{width,height,environment}){
   const scale=width/4.85,depth=.36*scale;
   const geometry=roundedGlassGeometry(width,height,depth,.24*scale,.10*scale);
   geometry.translate(0,0,-depth/2);
-  // The text keeps a clear transmitting face; the perimeter uses the main tile finish.
-  const face=new THREE.MeshPhysicalMaterial({color:0xffffff,roughness:.035,transmission:1,thickness:depth,ior:1.52,attenuationColor:0xd5e2dc,attenuationDistance:3.5,envMap:environment,envMapIntensity:.5,side:THREE.DoubleSide});
-  const edge=new THREE.MeshPhysicalMaterial({color:0xb7c6cc,transparent:true,opacity:.82,roughness:.10,metalness:0,transmission:.78,thickness:depth,envMap:environment,envMapIntensity:2.4,depthWrite:false,reflectivity:.5,clearcoat:1,clearcoatRoughness:.08});
+  // Match the MAIN tile's complete optical setup. In particular, leave thickness
+  // at zero (thin glass) and use alpha blending; solid transmission made a grey rim.
+  const face=new THREE.MeshPhysicalMaterial({color:0xffffff,transparent:true,opacity:.48,roughness:.26,metalness:0,transmission:.80,envMap:environment,envMapIntensity:1,depthWrite:false,reflectivity:.5,clearcoat:.45,clearcoatRoughness:.06});
+  const edge=face.clone();edge.roughness=.10;edge.envMapIntensity=2.4;
+  edge.transmission=.78;edge.color.set(0xb7c6cc);edge.opacity=.82;
+  edge.clearcoat=1;edge.clearcoatRoughness=.08;
   const pane=new THREE.Mesh(geometry,[face,edge]);
   const addContour=(w,h,r,d,color,opacity)=>{
     const geo=glassEdgeGeometry(w,h,r,d);geo.translate(0,0,-depth/2);

@@ -14,7 +14,7 @@ with sync_playwright() as p:
  page.route('http://about.test/',lambda r:r.fulfill(body=html,content_type='text/html; charset=utf-8'))
  page.goto('http://about.test/');page.click('#launch');page.wait_for_function('aboutDialog.dataset.glass==="ready"',timeout=180000);page.wait_for_timeout(2800)
  page.wait_for_function('document.querySelector(".about-atmosphere").width>0')
- assert page.locator('.about-glass-back,.about-glass-side').count()==0
+ assert page.locator('.about-glass-back,.about-glass-side,.about-chapter-count').count()==0
  assert page.locator('.about-glass-canvas').evaluate('(e)=>e.width>200 && getComputedStyle(e).clipPath.startsWith("polygon(")')
  assert page.locator('.about-panel').evaluate('(e)=>getComputedStyle(e).isolation')=='auto'
  sample="""()=>{const p=new DOMMatrix(getComputedStyle(document.querySelector('.about-panel')).transform);return {x:p.b,y:p.c,lift:p.f,fog:(()=>{const c=document.querySelector('.about-atmosphere'),g=c.getContext('webgl'),b=new Uint8Array(c.width*c.height*4);g.drawArrays(g.TRIANGLES,0,6);g.readPixels(0,0,c.width,c.height,g.RGBA,g.UNSIGNED_BYTE,b);let sum=0;for(let i=3;i<b.length;i+=148)sum+=b[i];return sum})(),portrait:getComputedStyle(document.querySelector('.about-portrait-motion')).transform}}"""
@@ -27,7 +27,7 @@ with sync_playwright() as p:
   lifts=[state['lift'] for state in (before,middle,after)]
   assert max(lifts)-min(lifts)>.2,(mode,before,middle,after)
   assert before['fog']>0 and before['fog']!=after['fog'],(mode,before['fog'],after['fog'])
-  assert .001<abs(after['x'])<.04 and abs(after['y'])<.04
+  assert abs(after['x'])<.001 and abs(after['y'])<.001
   print('PASS motion in '+mode,flush=True)
  page.set_viewport_size({'width':1440,'height':1000});page.mouse.move(200,180);page.wait_for_timeout(1100);left=page.evaluate(sample)
  page.mouse.move(1200,180);page.wait_for_timeout(1100);right=page.evaluate(sample)
@@ -41,9 +41,8 @@ with sync_playwright() as p:
    click_tab(i);page.wait_for_timeout(600)
    assert page.locator('.about-chapter:visible').count()==1
    assert page.locator(f'#aboutTab{i}').get_attribute('aria-selected')=='true'
-   bounds=page.evaluate("""()=>{const panel=document.querySelector('.about-panel').getBoundingClientRect(),last=document.querySelector('.about-chapter-count').getBoundingClientRect(),text=document.querySelector('.about-chapter:not([hidden]) .about-block:last-child').getBoundingClientRect();return {text:text.bottom,countTop:last.top,panel:panel.bottom,last:last.bottom,height:innerHeight,width:document.querySelector('.about-panel').clientWidth,scroll:document.querySelector('.about-panel').scrollWidth}}""")
-   assert bounds['text']<=bounds['countTop']-4,(width,height,i,bounds)
-   assert bounds['last']<=min(bounds['panel'],height)+2,(width,height,i,bounds)
+   bounds=page.evaluate("""()=>{const panel=document.querySelector('.about-panel').getBoundingClientRect(),text=document.querySelector('.about-chapter:not([hidden]) .about-block:last-child').getBoundingClientRect();return {text:text.bottom,panel:panel.bottom,height:innerHeight,width:document.querySelector('.about-panel').clientWidth,scroll:document.querySelector('.about-panel').scrollWidth}}""")
+   assert bounds['text']<=min(bounds['panel'],height)-10,(width,height,i,bounds)
    assert bounds['scroll']<=bounds['width']+24,(width,height,i,bounds)
   if width==1440:click_tab(0);page.wait_for_timeout(600);page.screenshot(path='/tmp/about-chapters-desktop.png')
   if width==390:click_tab(0);page.wait_for_timeout(600);page.screenshot(path='/tmp/about-chapters-mobile.png')
