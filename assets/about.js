@@ -34,10 +34,35 @@
     let next;if(e.key==='ArrowRight')next=(i+1)%3;else if(e.key==='ArrowLeft')next=(i+2)%3;else if(e.key==='Home')next=0;else if(e.key==='End')next=2;else return;
     e.preventDefault();e.stopPropagation();selectPage(next,true);pages[next].focus({preventScroll:true});
   });
-  function resetParallax(){dialog.style.setProperty('--px','0px');dialog.style.setProperty('--py','0px')}
+  // One critically damped motion drives every depth layer. Pointer events only
+  // update the destination; velocity stays continuous when the cursor reverses.
+  const motion={x:0,y:0,vx:0,vy:0,tx:0,ty:0,frame:0,last:0};
+  function paintParallax(){dialog.style.setProperty('--px',`${motion.x.toFixed(4)}px`);dialog.style.setProperty('--py',`${motion.y.toFixed(4)}px`)}
+  function stopParallax(){cancelAnimationFrame(motion.frame);motion.frame=0;motion.last=0}
+  function resetParallax(){stopParallax();Object.assign(motion,{x:0,y:0,vx:0,vy:0,tx:0,ty:0});paintParallax()}
+  function animateParallax(now){
+    motion.frame=0;
+    if(!dialog.open||dialog.classList.contains('is-closing')||document.hidden){motion.last=0;return}
+    // Bound catch-up after a stalled frame so resuming never teleports a layer.
+    const dt=motion.last?Math.min((now-motion.last)/1000,.05):1/60;
+    motion.last=now;
+    const frequency=reduced.matches?7:9,decay=Math.exp(-frequency*dt);
+    for(const [position,velocity,target] of [['x','vx','tx'],['y','vy','ty']]){
+      const distance=motion[position]-motion[target],impulse=motion[velocity]+frequency*distance;
+      motion[position]=motion[target]+(distance+impulse*dt)*decay;
+      motion[velocity]=(motion[velocity]-frequency*impulse*dt)*decay;
+    }
+    const moving=Math.abs(motion.tx-motion.x)+Math.abs(motion.ty-motion.y)>.002||Math.abs(motion.vx)+Math.abs(motion.vy)>.01;
+    if(!moving){motion.x=motion.tx;motion.y=motion.ty;motion.vx=motion.vy=0;motion.last=0}
+    paintParallax();if(moving)motion.frame=requestAnimationFrame(animateParallax);
+  }
+  function aimParallax(x=0,y=0){
+    motion.tx=x;motion.ty=y;
+    if(dialog.open&&!dialog.classList.contains('is-closing')&&!document.hidden&&!motion.frame)motion.frame=requestAnimationFrame(animateParallax);
+  }
   function requestClose(){
     if(!dialog.open||dialog.classList.contains('is-closing'))return;
-    openEpoch++;glass.stop();atmosphere?.stop();
+    openEpoch++;stopParallax();glass.stop();atmosphere?.stop();
     dialog.style.setProperty('--exit-opacity',getComputedStyle(dialog).opacity);
     dialog.classList.add('is-closing');
     closeTimer=setTimeout(()=>{if(dialog.open)dialog.close()},1200);
@@ -59,10 +84,14 @@
     if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
     else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
   });
-  dialog.addEventListener('close',()=>{if(dialog.open)return;clearTimeout(closeTimer);openEpoch++;glass.stop();atmosphere?.stop();dialog.classList.remove('is-entering','is-closing','glass-ready');dialog.querySelectorAll('.about-block').forEach(el=>el.getAnimations().forEach(a=>a.cancel()));resetParallax();opener?.focus({preventScroll:true})});
+  dialog.addEventListener('close',()=>{if(dialog.open)return;clearTimeout(closeTimer);openEpoch++;stopParallax();glass.stop();atmosphere?.stop();dialog.classList.remove('is-entering','is-closing','glass-ready');dialog.querySelectorAll('.about-block').forEach(el=>el.getAnimations().forEach(a=>a.cancel()));resetParallax();opener?.focus({preventScroll:true})});
   dialog.addEventListener('pointermove',e=>{
-    if(e.pointerType!=='mouse'&&!hover.matches)return;
-    const strength=(reduced.matches?.65:1)*(compact.matches?.5:1);
-    const r=dialog.getBoundingClientRect();dialog.style.setProperty('--px',`${((e.clientX-r.left)/r.width-.5)*40*strength}px`);dialog.style.setProperty('--py',`${((e.clientY-r.top)/r.height-.5)*24*strength}px`);
-  });dialog.addEventListener('pointerleave',resetParallax);
+    if(e.pointerType!=='mouse'||!hover.matches||!dialog.open||dialog.classList.contains('is-closing'))return;
+    const strength=(reduced.matches?.65:1)*(compact.matches?.5:1),clamp=n=>Math.max(-1,Math.min(1,n));
+    aimParallax(clamp(e.clientX/innerWidth*2-1)*14*strength,clamp(e.clientY/innerHeight*2-1)*8*strength);
+  },{passive:true});
+  dialog.addEventListener('pointerleave',()=>aimParallax());
+  window.addEventListener('blur',()=>aimParallax());
+  window.addEventListener('resize',()=>aimParallax());
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){stopParallax();motion.tx=motion.ty=motion.vx=motion.vy=0}else if(dialog.open)aimParallax()});
 })();
