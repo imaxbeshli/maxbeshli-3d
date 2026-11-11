@@ -5821,7 +5821,7 @@ window.MBTileArt={
   let video=null,playbackActive=false,lastVideoTime=-1;
   refresh();
   const phoneDemo=type==='tg_miniapp'?window.MBPhoneDemo.create(c,window.MB_PHONE_ASSETS,refresh):null;
-  if(phoneDemo){window.MBLoading.phone=false;phoneDemo.ready.then(()=>{window.MBLoading.phone=true})}
+  if(phoneDemo){window.MBLoading.phone=false;phoneDemo.ready.then(()=>{window.MBLoading.phone=true},error=>{window.MBLoading.phone=true;console.warn('Phone preview unavailable:',error)})}
   const architectureDemo=type==='web_3d'?window.MBArchitectureDemo.create(c,T,refresh):null;
   function paintVideoFrame(){
    if(!video||video.readyState<2||!video.videoWidth)return;
@@ -5852,14 +5852,18 @@ window.MBTileArt={
    video.addEventListener('loadeddata',()=>{paintVideoFrame();window.MBLoading.art=true},{once:true});
    video.addEventListener('error',()=>{window.MBLoading.art=true;console.warn('SHOWREEL could not be decoded')},{once:true});
    video.addEventListener('pause',paintVideoFrame);
+   // iOS Low Power Mode can reject autoplay. Retry only from a real gesture,
+   // never continuously from the render loop, and only while this tile is active.
+   window.addEventListener('pointerup',()=>{if(playbackActive&&video.paused&&!document.getElementById('aboutDialog').open)setPlaybackActive(true,true)},{passive:true});
+   video.load();
    document.addEventListener('visibilitychange',()=>{if(document.hidden)setPlaybackActive(false)});
   }
-  function setPlaybackActive(active){
+  function setPlaybackActive(active,fromGesture=false){
    if(phoneDemo)phoneDemo.update(active);
    if(architectureDemo)architectureDemo.update(active);
    if(!video)return;
    active=Boolean(active&&!document.hidden);
-   if(active!==playbackActive){
+   if(active!==playbackActive||(active&&fromGesture)){
     playbackActive=active;
     if(active){video.muted=true;video.play().catch(error=>{
      if(error.name!=='AbortError')console.warn('SHOWREEL playback unavailable:',error.name);
@@ -6113,6 +6117,9 @@ window.MBEnvironment={
     async function enterStudio(){
       if(studioEntered||!window.MBLoading.ready)return;studioEntered=true;
       phase='entering';entryElapsed=0;loaderBtn.disabled=true;
+      // Start the active media within this click/tap, before any await or rAF.
+      // Safari may require user activation even for a muted inline video.
+      slateObjects[selectedIndex].setPlaybackActive(true,true);
       camera.position.copy(BASE_CAM_POS).add(new THREE.Vector3(0,0,8));camera.lookAt(BASE_LOOK_AT);
       preloader.classList.add('entering');preloader.setAttribute('aria-hidden','true');
       await initAudio();playWhooshSound(Math.max(.16,ENTRY_DURATION-entryElapsed),'entry');canvas.focus({preventScroll:true});
@@ -7153,7 +7160,10 @@ window.MBEnvironment={
       updateSpatialUI();
       fitBackdropToCamera();
       water.update(t,camera,lightReveal);
-      renderer.render(scene,camera);window.MBLoading.scene=window.MBLoading.phone!==false&&window.MBLoading.art!==false&&window.MBLoading.stone!==false&&window.MBLoading.backdrop!==false&&window.MBLoading.island!==false&&window.MBLoading.foreground!==false;
+      renderer.render(scene,camera);
+      // Video loadeddata is not a prerequisite for entry: Safari can defer it
+      // until the entry tap. Keep waiting for the actual scene/image assets.
+      window.MBLoading.scene=window.MBLoading.phone!==false&&window.MBLoading.stone!==false&&window.MBLoading.backdrop!==false&&window.MBLoading.island!==false&&window.MBLoading.foreground!==false;
     }
 
     window.__MB={scene,camera,slateObjects,water,backdrop:backdropMesh,rocks:[rightPedestalRock,foregroundRockBottomLeft],focusTile,startDive,returnToOrbit,closeEcosystemModal,get state(){return {phase,selectedIndex,activeIndex,currentProgress,targetProgress,velocity,coastVelocity,zoomFactor,hoverIndex,studioEntered,isMuted,glitchActive:glitchStart!==null,audioState:audioCtx?.state,cameraSpeed:CAMERA_SPEED,travelDistance:travel?.from.distanceTo(travel.to),travelDuration:travel?.duration}}};
