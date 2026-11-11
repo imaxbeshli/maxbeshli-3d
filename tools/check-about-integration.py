@@ -22,6 +22,19 @@ with sync_playwright() as p:
  page.locator('header a[href="#about"]').click();page.wait_for_function('aboutDialog.open');page.wait_for_function('aboutDialog.dataset.glass==="ready"',timeout=180000);page.wait_for_timeout(2200)
  assert page.evaluate('window.THREE === window.__beforeAboutThree && THREE.REVISION === "128"')
  assert page.locator('.about-chapter-count').count()==0
+ # Seek across the reveal boundary with non-zero parallax: it must not snap.
+ jump=page.evaluate("""()=>{const host=document.querySelector('.about-panel-position');
+  host.style.transition='none';aboutDialog.style.setProperty('--px','32px');aboutDialog.style.setProperty('--py','16px');
+  host.style.animation='none';void host.offsetWidth;host.style.animation='';
+  const entry=host.getAnimations().find(a=>a.animationName==='aboutPanelIn');
+  if(!entry)throw new Error('Missing panel reveal animation');
+  entry.pause();const timing=entry.effect.getTiming();entry.currentTime=timing.delay+timing.duration-1;
+  const before=host.getBoundingClientRect();entry.finish();const after=host.getBoundingClientRect();
+  host.style.transition='';aboutDialog.style.setProperty('--px','0px');aboutDialog.style.setProperty('--py','0px');
+  return {x:Math.abs(after.x-before.x),y:Math.abs(after.y-before.y)};
+ }""")
+ assert max(jump.values())<.5,jump
+ print('PASS reveal ends without a parallax position jump',flush=True)
  for i in range(3):
   r=page.locator(f'#aboutTab{i}').bounding_box();page.mouse.click(r['x']+r['width']/2,r['y']+r['height']/2);page.wait_for_timeout(700)
   assert page.locator('.about-chapter:visible').count()==1

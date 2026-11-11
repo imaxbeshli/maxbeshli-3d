@@ -1,7 +1,7 @@
 /* Render physical glass with the main-page tile frame behind selectable HTML text.
    CSS and WebGL share one transform; the old CSS extrusion is not used. */
 function createAboutGlass(dialog){
-  const host=dialog.querySelector('.about-panel-position'),panel=dialog.querySelector('.about-panel'),canvas=dialog.querySelector('.about-glass-canvas'),world=dialog.querySelector('.about-world');
+  const host=dialog.querySelector('.about-panel-float'),panel=dialog.querySelector('.about-panel'),canvas=dialog.querySelector('.about-glass-canvas'),world=dialog.querySelector('.about-world');
   let wanted=false,initializing=null,engine=null,frame=0,last=0,contextLost=false;
   function hull(points){
     points.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
@@ -48,9 +48,6 @@ function createAboutGlass(dialog){
     const css=new DOMMatrix(getComputedStyle(panel).transform),matrix=new e.THREE.Matrix4().fromArray(css.toFloat64Array());
     matrix.elements[12]/=e.unit;matrix.elements[13]/=e.unit;matrix.elements[14]/=e.unit;matrix.premultiply(e.flip).multiply(e.flip);
     e.pane.matrix.copy(matrix);e.pane.updateMatrixWorld(true);e.camera.updateMatrixWorld();
-    const normal=new e.THREE.Vector3(0,0,1).transformDirection(matrix),view=e.camera.position.clone().sub(new e.THREE.Vector3().setFromMatrixPosition(matrix)).normalize(),grazing=1-Math.abs(normal.dot(view));
-    e.pane.userData.outerEdge.material.opacity=.09+grazing*.08;
-    e.pane.userData.innerEdge.material.opacity=.02+grazing*.02;
     const outline=e.vertices.map(v=>{const p=v.clone().applyMatrix4(matrix).project(e.camera);return [(p.x+1)*e.cw/2,(1-p.y)*e.ch/2]});
     canvas.style.clipPath='polygon('+hull(outline).map(p=>p.map(n=>n.toFixed(2)+'px').join(' ')).join(',')+')';
     // Align a photographic background plane with the real cave, before the glass refracts it.

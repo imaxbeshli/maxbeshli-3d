@@ -17,7 +17,9 @@ with sync_playwright() as p:
  assert page.locator('.about-glass-back,.about-glass-side,.about-chapter-count').count()==0
  assert page.locator('.about-glass-canvas').evaluate('(e)=>e.width>200 && getComputedStyle(e).clipPath.startsWith("polygon(")')
  assert page.locator('.about-panel').evaluate('(e)=>getComputedStyle(e).isolation')=='auto'
- sample="""()=>{const p=new DOMMatrix(getComputedStyle(document.querySelector('.about-panel')).transform);return {x:p.b,y:p.c,lift:p.f,fog:(()=>{const c=document.querySelector('.about-atmosphere'),g=c.getContext('webgl'),b=new Uint8Array(c.width*c.height*4);g.drawArrays(g.TRIANGLES,0,6);g.readPixels(0,0,c.width,c.height,g.RGBA,g.UNSIGNED_BYTE,b);let sum=0;for(let i=3;i<b.length;i+=148)sum+=b[i];return sum})(),portrait:getComputedStyle(document.querySelector('.about-portrait-motion')).transform}}"""
+ assert page.locator('.about-panel-float > .about-glass-canvas').count()==1
+ assert page.locator('.about-panel-float > .about-panel').count()==1
+ sample="""()=>{const p=new DOMMatrix(getComputedStyle(document.querySelector('.about-panel')).transform);return {x:p.b,y:p.c,lift:new DOMMatrix(getComputedStyle(document.querySelector('.about-panel-float')).transform).m42,fog:(()=>{const c=document.querySelector('.about-atmosphere'),g=c.getContext('webgl'),b=new Uint8Array(c.width*c.height*4);g.drawArrays(g.TRIANGLES,0,6);g.readPixels(0,0,c.width,c.height,g.RGBA,g.UNSIGNED_BYTE,b);let sum=0;for(let i=3;i<b.length;i+=148)sum+=b[i];return sum})(),portrait:getComputedStyle(document.querySelector('.about-portrait-motion')).transform}}"""
  for mode in ['normal','hover','focus','reduced','mobile']:
   if mode=='hover':page.mouse.move(1000,400)
   if mode=='focus':page.locator('#aboutClose').focus()

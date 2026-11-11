@@ -1,5 +1,5 @@
-/* Main-page tile frame, using the same rounded bevel, edge contours and material.
-   Geometry below mirrors index.html glassOutline/glassEdgeGeometry/roundedGlassGeometry.
+/* Main-page tile frame, using the same rounded bevel and material.
+   Geometry below mirrors index.html glassOutline/roundedGlassGeometry.
    Adapted only for panel size, front anchoring and the main scene’s Three.js version. */
 function createAboutFrameEnvironment(T){const images=[];for(let face=0;face<6;face++){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,256,256);g.addColorStop(0,'#293747');g.addColorStop(.48,'#0b1017');g.addColorStop(1,'#36302a');x.fillStyle=g;x.fillRect(0,0,256,256);x.fillStyle=face===4?'#ffe1b1':'#a5bfd6';x.fillRect(face===4?30:180,12,face===4?58:12,210);x.fillStyle='#6e756f';x.fillRect(15,232,225,5);images.push(c)}const tex=new T.CubeTexture(images);tex.encoding=T.sRGBEncoding;tex.needsUpdate=true;return tex}
 function createAboutFramedGlass(THREE,{width,height,environment}){
@@ -11,14 +11,6 @@ function createAboutFramedGlass(THREE,{width,height,environment}){
       s.lineTo(x,y+r);s.absarc(x+r,y+r,r,Math.PI,Math.PI*1.5);
       s.closePath();return s;
     }
-    function glassEdgeGeometry(w,h,r,depth){
-      const points=glassOutline(w,h,r).getPoints(32),vertices=[];
-      for(const z of [-depth/2,depth/2])for(let i=1;i<points.length;i++){
-        vertices.push(points[i-1].x,points[i-1].y,z,points[i].x,points[i].y,z);
-      }
-      const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));return geo;
-    }
-
     function roundedGlassGeometry(w,h,depth,r=.24,bevel=.10){
       const positions=[],normals=[],uvs=[];
       const vertex=(x,y,z,nx,ny,nz)=>{positions.push(x,y,z);normals.push(nx,ny,nz);uvs.push(x/w+.5,y/h+.5)};
@@ -57,11 +49,6 @@ function createAboutFramedGlass(THREE,{width,height,environment}){
   edge.transmission=.78;edge.color.set(0xb7c6cc);edge.opacity=.82;
   edge.clearcoat=1;edge.clearcoatRoughness=.08;
   const pane=new THREE.Mesh(geometry,[face,edge]);
-  const addContour=(w,h,r,d,color,opacity)=>{
-    const geo=glassEdgeGeometry(w,h,r,d);geo.translate(0,0,-depth/2);
-    const line=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color,transparent:true,opacity,depthWrite:false}));pane.add(line);return line;
-  };
-  pane.userData.outerEdge=addContour(width-.20*scale,height-.20*scale,.14*scale,depth,0xffe4c4,.12);
-  pane.userData.innerEdge=addContour(width*.965,height*.955,.11*scale,depth*.92,0xffffff,.03);
+  // The bevel itself supplies the visible edge. No inset or rear outline frames.
   return pane;
 }
