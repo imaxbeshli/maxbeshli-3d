@@ -23,12 +23,11 @@
       saved.leads.every(l=>l&&services[l.service]&&statusNames[l.status]&&['Telegram','WhatsApp','Instagram'].includes(l.source)&&
         ['id','name','car','date','time'].every(k=>typeof l[k]==='string')&&Array.isArray(l.history)&&l.history.every(t=>typeof t==='string')))state=saved;
   }catch(e){}
-  let view=0,crmView='leads',selected=state.leads[0]?.id,source='all',query='',sequence=0,lastToast=0;
+  let view=0,crmView='leads',selected=state.leads[0]?.id,source='all',query='',sequence=0;
   let botStep='menu',draft={},replyTimer=0,replyToken=0,typing=false;
   function persist(){try{sessionStorage.setItem('mb-telegram-workspace',JSON.stringify(state))}catch(e){}}
   function log(text){state.activity.unshift({text,time:clockLabel()});state.activity=state.activity.slice(0,12);persist();renderActivity()}
   function badge(source){return `<span class="crm-source-icon source-${source.toLowerCase()}">${source==='Telegram'?'↗':source==='WhatsApp'?'W':'◎'}</span>`}
-  function toast(text){$('crmToast').textContent=text;$('crmToast').classList.add('visible');lastToast=performance.now()}
   function current(){return state.leads.find(l=>l.id===selected)}
   function free(date,exclude=''){
     return slots.filter(time=>new Date(date+'T'+time+':00').getTime()>Date.now()&& !state.leads.some(l=>l.id!==exclude&&l.status==='confirmed'&&l.date===date&&l.time===time));
@@ -157,9 +156,9 @@
     function refreshTimes(){const times=free($('crmBookingDay').value,l.id);$('crmBookingTime').replaceChildren(...times.map(t=>{const o=document.createElement('option');o.value=o.textContent=t;return o}));if(times.includes(l.time))$('crmBookingTime').value=l.time;$('crmBookingError').textContent=times.length?'':'На этот день свободного времени нет. Выберите другой день.'}
     refreshTimes();$('crmBookingDay').addEventListener('change',refreshTimes);
     $('crmTake')?.addEventListener('click',()=>{l.status='working';l.history.push('Администратор взял обращение в работу.');log(`${l.name}: заявка взята в работу`);renderList();renderDetail()});
-    $('crmBookingForm').addEventListener('submit',e=>{e.preventDefault();if(!applyConfirmation(l,$('crmBookingDay').value,$('crmBookingTime').value)){$('crmBookingError').textContent='Выберите свободное время. Эта запись уже занята.';return}persist();renderList();renderDetail();toast(`${l.name} · ${dateLabel(l.date)}, ${l.time}`)});
-    $('crmCancel')?.addEventListener('click',()=>{l.status='cancelled';l.onCalendar=false;l.reminder=false;l.history.push('Запись отменена, время освобождено.');log(`${l.name}: запись отменена`);renderList();renderDetail();toast('Время освобождено')});
-    $('crmAddCalendar')?.addEventListener('click',()=>{l.onCalendar=true;log(`${l.name}: запись добавлена в расписание`);renderDetail();toast('Запись в расписании')});
+    $('crmBookingForm').addEventListener('submit',e=>{e.preventDefault();if(!applyConfirmation(l,$('crmBookingDay').value,$('crmBookingTime').value)){$('crmBookingError').textContent='Выберите свободное время. Эта запись уже занята.';return}persist();renderList();renderDetail()});
+    $('crmCancel')?.addEventListener('click',()=>{l.status='cancelled';l.onCalendar=false;l.reminder=false;l.history.push('Запись отменена, время освобождено.');log(`${l.name}: запись отменена`);renderList();renderDetail()});
+    $('crmAddCalendar')?.addEventListener('click',()=>{l.onCalendar=true;log(`${l.name}: запись добавлена в расписание`);renderDetail()});
     $('crmReminder')?.addEventListener('click',()=>{$('crmReminderText').textContent=reminderText(l);$('crmReminderText').hidden=!$('crmReminderText').hidden});
   }
   $('crmSearch').addEventListener('input',e=>{query=e.target.value;renderList();renderDetail()});
@@ -194,7 +193,6 @@
   function update(now,dt){
     if(view===0)connections(now);
     glass?.update(now);
-    if(lastToast&&now-lastToast>4000){$('crmToast').classList.remove('visible');lastToast=0}
   }
   resetBot();renderList();renderDetail();renderActivity();
   window.MBTelegramStudio={setView,update,get state(){return {view,crmView,bookingLimit,visitorCount:visitorCount(),botStep,typing,selected,leads:JSON.parse(JSON.stringify(state.leads)),rules:{...state.rules}}}};
