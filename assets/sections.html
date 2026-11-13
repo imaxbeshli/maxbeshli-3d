@@ -1,0 +1,74 @@
+<div id="ecosystem-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" inert>
+  <div class="section-world" aria-hidden="true"><div class="section-environment"></div><div class="section-light"></div></div>
+  <header class="section-header"><div class="section-brand" aria-label="MAX BESHLI">MB<span></span></div><button class="section-button" id="modalCloseBtn">Назад в пространство</button></header>
+  <div class="section-layout">
+    <div class="section-intro">
+      <h2 id="modalTitle"></h2><p id="modalDesc"></p>
+      <div class="section-options" id="sectionOptions" role="tablist" aria-label="Возможности"></div>
+      <p class="section-detail" id="sectionDetail"></p>
+    </div>
+    <div class="section-presentation">
+      <section id="filmScene" class="section-content" aria-label="Видео и съёмка" hidden>
+        <div class="section-float"><div class="section-glass film-frame"><div id="sectionVideoSlot"></div><button class="film-start" id="filmStart" aria-label="Воспроизвести showreel">Смотреть showreel</button></div></div>
+        <div class="film-chapters" aria-label="Фрагменты showreel">
+          <button data-film-time="1"><img data-section-image="film-0" alt="Кадр из showreel"><span>Начало</span></button>
+          <button data-film-time="16"><img data-section-image="film-1" alt="Кадр из showreel"><span>Кадр и свет</span></button>
+          <button data-film-time="34"><img data-section-image="film-2" alt="Кадр из showreel"><span>Ритм и монтаж</span></button>
+        </div>
+        <p class="section-note">SHOWREEL / MAX BESHLI</p>
+      </section>
+      <section id="webScene" class="section-content" aria-label="Демонстрация сайта" hidden>
+        <div class="section-float"><div class="section-glass web-frame" id="webFrame">
+          <div class="forma-site" id="formaSite">
+            <header><span class="forma-logo">FORMA</span><span class="forma-nav">Архитектура · Пространство · Жизнь</span></header>
+            <div class="forma-copy"><h3>Архитектура<br>для жизни</h3><i></i><p>Современные пространства,<br>в которых хочется остаться.</p></div>
+            <img data-section-image="villa" alt="Концепция современного загородного дома" class="forma-villa">
+            <footer><span>HOUSE 01</span><span>Бетон. Стекло. Дерево.</span></footer>
+          </div>
+          <div id="architectureSlot" hidden></div>
+          <div class="web-controls" role="tablist" aria-label="Просмотр сайта"><button data-web-mode="0" role="tab" aria-selected="true">Обзор</button><button data-web-mode="1" role="tab" aria-selected="false">Взаимодействие</button><button data-web-mode="2" role="tab" aria-selected="false">На телефоне</button></div>
+        </div></div>
+        <p class="section-note" id="webNote">FORMA — концепция архитектурного сайта</p>
+      </section>
+      <section id="telegramScene" class="section-content" aria-label="Telegram-решения" hidden>
+        <div class="telegram-demo" id="telegramApp">
+          <div class="section-float phone-float"><div class="section-phone"><div id="phoneSlot"></div></div></div>
+          <div class="automation-flow" aria-label="Путь заявки"><div class="flow-line" aria-hidden="true"></div>
+            <article class="section-glass flow-step"><span class="flow-check">✓</span><div><h3>Услуга выбрана</h3><p>Защита автомобиля</p></div></article>
+            <article class="section-glass flow-step"><span class="flow-check">✓</span><div><h3>Запись подтверждена</h3><p>Удобные дата и время</p></div></article>
+            <article class="section-glass flow-step"><span class="flow-check">✓</span><div><h3>Заявка в CRM</h3><p>Контакт и услуга сохранены</p></div></article>
+            <p class="section-note">Пример сценария автоматизации</p>
+          </div>
+        </div>
+        <div class="section-float" id="telegramBot" hidden><div class="section-glass bot-panel">
+          <div class="demo-heading"><span class="status-dot"></span>Ассистент студии<span>Демо</span></div>
+          <div class="bot-messages" id="botMessages" aria-live="polite"><p class="bot-bubble">Здравствуйте! Помогу выбрать услугу или оставить заявку. Что вас интересует?</p></div>
+          <div class="bot-actions"><button class="section-button" data-bot="services">Услуги</button><button class="section-button" data-bot="booking">Запись</button><button class="section-button" data-bot="hours">Время работы</button></div>
+          <button class="text-button" id="botReset">Начать заново</button>
+        </div></div>
+        <div class="section-float" id="telegramCRM" hidden><div class="section-glass crm-panel">
+          <div class="demo-heading">Заявка без потерь<span>Демо</span></div><p>Пример того, как обращение из Telegram попадает в рабочий процесс.</p>
+          <div class="crm-track"><span class="current">Новая</span><span>В работе</span><span>Подтверждена</span></div>
+          <article class="crm-record"><span class="crm-avatar">А</span><div><h3>Александр</h3><p>Защитное покрытие · Telegram</p></div><strong id="crmStatus">Новая заявка</strong></article>
+          <dl class="crm-fields"><div><dt>Услуга</dt><dd>Защита кузова</dd></div><div><dt>Источник</dt><dd>Мини-приложение</dd></div><div><dt>Комментарий</dt><dd>Подобрать удобное время</dd></div></dl>
+          <button class="section-button primary" id="crmNext">Взять в работу</button><p class="section-note">Демонстрация · данные не отправляются</p>
+        </div></div>
+      </section>
+    </div>
+  </div>
+  <footer class="section-footer"><button class="section-button section-about" id="sectionAbout">Обо мне</button><button class="section-button section-cta" id="sectionContact"><span class="status-dot"></span>Обсудить проект</button></footer>
+</div>
+<dialog id="infoDialog" aria-labelledby="contactTitle">
+  <div class="contact-world" aria-hidden="true"></div>
+  <div class="section-brand contact-brand" aria-label="MAX BESHLI">MB<span></span></div>
+  <div class="contact-wrap"><form id="projectForm" class="section-glass contact-panel">
+    <button type="button" id="infoClose" aria-label="Закрыть">×</button>
+    <h2 id="contactTitle">Обсудим ваш проект</h2><p class="contact-lead">Расскажите, что хотите сделать. Я помогу определить следующий шаг.</p>
+    <fieldset><legend>Что планируете?</legend><div class="contact-choices"><label><input type="radio" name="direction" value="Видео"><span>Видео</span></label><label><input type="radio" name="direction" value="Сайт"><span>Сайт</span></label><label><input type="radio" name="direction" value="Telegram"><span>Telegram</span></label><label><input type="radio" name="direction" value="Пока не решил" checked><span>Пока не решил</span></label></div></fieldset>
+    <div class="contact-fields"><label>Ваше имя<input name="name" autocomplete="name" maxlength="80" placeholder="Как к вам обращаться" required></label><label>Telegram или почта <small>необязательно</small><input name="contact" autocomplete="off" maxlength="160" placeholder="@username или email"></label></div>
+    <label class="contact-task">Коротко о задаче<textarea name="task" rows="3" maxlength="1800" placeholder="Что нужно создать и для кого" required></textarea></label>
+    <div class="contact-actions"><button class="section-button primary" type="submit">Продолжить в Telegram</button><a class="section-button" href="https://t.me/IMAXBESHLI" target="_blank" rel="noopener noreferrer">Написать напрямую</a></div>
+    <p class="contact-hint">Откроется диалог с @IMAXBESHLI. Проверьте сообщение и отправьте его в Telegram.</p>
+    <div class="contact-result" id="contactResult" role="status" hidden><p>Черновик подготовлен. Если Telegram не открылся, скопируйте текст и напишите мне напрямую.</p><button type="button" class="text-button" id="copyBrief">Скопировать текст</button><textarea id="briefFallback" aria-label="Текст обращения для копирования" readonly hidden></textarea></div>
+  </form></div>
+</dialog>
