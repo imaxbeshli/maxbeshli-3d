@@ -44,7 +44,7 @@ with tempfile.TemporaryDirectory(prefix='mb-telegram-') as folder, sync_playwrig
     def crm_view(name): click(page.locator(f'[data-crm-view="{name}"]'))
     def book(name,service,time):
         select_tab(1);click(page.locator('#botReset'))
-        choice('Подобрать услугу');choice(service);choice('Перейти к записи');choice('BMW X5')
+        choice('Подобрать услугу');choice(service);choice('Перейти к записи');choice('Audi A6')
         page.wait_for_function('MBTelegramStudio.state.botStep==="name" && !MBTelegramStudio.state.typing')
         page.locator('#botInput').fill(name);click(page.locator('#botComposer button'))
         choice('Завтра')
