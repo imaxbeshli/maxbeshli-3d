@@ -9,10 +9,11 @@
       'Собираю материал в цельную историю: структура, ритм, цвет и звук. Готовлю версии для сайта, презентации и социальных сетей.',
       'Создаю сцены, оживляю изображения и добавляю эффекты, которые расширяют возможности съёмки и монтажа.'
     ]},
-    {title:'Сайты с характером',description:'Дизайн, объём и движение. Новый способ рассказать о вашем бизнесе.',tabs:['Дизайн','3D и анимация','На телефоне'],details:[
+    {title:'Сайты с характером',description:'Не просто страницы — визуальные истории для вашего бизнеса.',tabs:['Дизайн','3D и анимация','На телефоне','Как работаю'],details:[
       'Начинаю с содержания и структуры. Выстраиваю понятный путь от знакомства с компанией до обращения.',
       'Превращаю просмотр в взаимодействие: движение камеры, объёмные объекты и анимация, которая помогает раскрыть продукт.',
-      'Для телефона меняются композиция, масштаб и управление. Содержание остаётся читаемым, а действия — удобными для касания.'
+      'Для телефона меняются композиция, масштаб и управление. Содержание остаётся читаемым, а действия — удобными для касания.',
+      'Структура, дизайн, разработка и запуск — в одном процессе.'
     ]},
     {title:'Бизнес внутри Telegram',description:'Мини-приложения, боты и автоматизация — в одной системе.',tabs:['Приложение','Бот','CRM'],details:[
       'Приложение знакомит с услугами. Ниже можно записаться через бота, а в CRM — увидеть результат.',
@@ -23,12 +24,12 @@
   let index=-1,active=false,tab=0,webMode=0,raf=0,last=0,x=0,y=0,tx=0,ty=0,video=null,contactReturn=null,resumeVideo=false,wasMediaVisible=true;
   document.querySelectorAll('[data-section-image]').forEach(img=>img.src=window.MB_SECTION_IMAGES[img.dataset.sectionImage]);
   function tiles(){return window.__MB?.slateObjects||[]}
-  function stopMedia(){tiles().forEach(o=>o.setPlaybackActive(false));if(video)video.pause()}
+  function stopMedia(){window.MBWebStudio.suspend();tiles().forEach(o=>o.setPlaybackActive(false));if(video)video.pause()}
   function applyTab(n,focus=false){
     tab=n;const d=definitions[index];$('sectionDetail').textContent=d.details[n];
     [...$('sectionOptions').children].forEach((b,i)=>{b.setAttribute('aria-selected',String(i===n));b.tabIndex=i===n?0:-1;if(focus&&i===n)b.focus()});
     if(index===0)window.MBFilmStudio.setView(n,video);
-    if(index===1)setWebMode(n,false);
+    if(index===1){webMode=n;window.MBWebStudio.setView(n)}
     if(index===2){['telegramApp','telegramBot','telegramCRM'].forEach((id,i)=>$(id).hidden=window.MBSectionScroll.active?false:i!==n);if(n!==0)tiles()[2]?.phoneDemo.update(false);window.MBTelegramStudio.setView(n)}
   }
   let tabTransition=0,tabAnimations=[];
@@ -55,13 +56,6 @@
     await fade(0,1,320);if(token!==tabTransition)return false;
     tabAnimations.forEach(a=>a.cancel());tabAnimations=[];panel.inert=false;root.removeAttribute('aria-busy');return true;
   }
-  function setWebMode(n,sync=true){
-    webMode=n;$('formaSite').hidden=n===1;$('architectureSlot').hidden=n!==1;$('webFrame').classList.toggle('is-mobile',n===2);
-    document.querySelectorAll('[data-web-mode]').forEach(b=>{b.setAttribute('aria-selected',String(+b.dataset.webMode===n));b.tabIndex=+b.dataset.webMode===n?0:-1});
-    $('webNote').textContent=n===1?'Живая 3D-сцена · строительство и смена света':'FORMA — концепция архитектурного сайта';
-    if(n!==1)tiles()[1]?.architectureDemo.update(false);
-    if(sync){tab=n;$('sectionDetail').textContent=definitions[1].details[n];[...$('sectionOptions').children].forEach((b,i)=>{b.setAttribute('aria-selected',String(i===n));b.tabIndex=i===n?0:-1})}
-  }
   function open(n){
     cancelTabTransition();index=n;active=true;stopMedia();document.body.classList.add('section-open');root.dataset.scene=String(n);root.scrollTop=0;
     x=y=tx=ty=0;root.style.setProperty('--sx','0px');root.style.setProperty('--sy','0px');
@@ -73,7 +67,7 @@
       video.onplay=()=>{$('filmStart').hidden=true};video.onpause=()=>{$('filmStart').hidden=false};
       $('filmStart').hidden=false;video.play().catch(()=>{$('filmStart').hidden=false});
     }
-    if(n===1){const c=tiles()[1].screenMat.map.image;c.setAttribute('aria-label','Строительство дома в 3D');$('architectureSlot').append(c)}
+    if(n===1){const c=tiles()[1].screenMat.map.image;c.setAttribute('aria-label','Строительство дома в 3D');$('architectureSlot').append(c);window.MBWebStudio.open(tiles()[1].architectureDemo)}
     if(n===2){const c=tiles()[2].screenMat.map.image;c.setAttribute('aria-label','Мини-приложение AVTOLAB77');$('phoneSlot').append(c)}
     window.MBSectionScroll.open(n,applyTab);if(!window.MBSectionScroll.active)applyTab(0);last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
   }
@@ -92,7 +86,7 @@
     if(!visible){stopMedia();wasMediaVisible=false;return}
     if(index===0){if(!wasMediaVisible)window.MBFilmStudio.resume();window.MBFilmStudio.update(now,dt);}
     wasMediaVisible=true;
-    if(index===1&&webMode===1)tiles()[1].architectureDemo.update(true,now);
+    if(index===1)window.MBWebStudio.update(now);
     if(index===2)window.MBTelegramStudio.update(now,dt);
     if(index===2&&tab===0){
       const demo=tiles()[2].phoneDemo;demo.update(true,now);
@@ -117,7 +111,6 @@
   });
   $('filmStart').addEventListener('click',()=>video?.play().catch(()=>{}));
   document.querySelectorAll('[data-film-time]').forEach(b=>b.addEventListener('click',async()=>{if(!video)return;if(window.MBSectionScroll.active&&tab!==0&&!await setTab(0))return;video.currentTime=Math.min(+b.dataset.filmTime,Number.isFinite(video.duration)?video.duration-.1:Infinity);video.play().catch(()=>{})}));
-  document.querySelectorAll('[data-web-mode]').forEach(b=>b.addEventListener('click',()=>setWebMode(+b.dataset.webMode)));
   function openContact(){
     if(contact.open)return;
     contactReturn=document.activeElement;resumeVideo=Boolean(active&&index===0&&video&&!video.paused);

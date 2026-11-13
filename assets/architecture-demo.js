@@ -270,6 +270,7 @@ window.MBArchitectureDemo = {
     document.addEventListener('visibilitychange',()=>{if(document.hidden){active=false;last=performance.now()}});
     return {
       render,ready,
+      seek(value){time=Math.max(0,Math.min(29.9,Number(value)||0));last=performance.now();render(time)},
       update(running,now=performance.now()){
         running=Boolean(running&&!document.hidden);
         if(running&&active)time=(time+Math.max(0,now-last)/1000)%30;

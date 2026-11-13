@@ -1,8 +1,9 @@
 /* Turn the existing interfaces into a continuous story without cloning state. */
 (()=>{
   const root=document.getElementById('ecosystem-modal'),$=id=>document.getElementById(id),reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  const sceneIds=['filmScene','webScene','telegramScene'];
   const prepared=new Set();let blocks=[],index=-1,onActive=null,current=-1,observer=null,lastMeasure=0,navigation=0;
-  const copy={0:[['Съёмка','Кадр, свет и движение. Снимаю людей, продукты и пространство. Ниже — фрагменты моих работ.'],['Монтаж','От исходного материала к цельной истории: видеоряд, звук и цвет.'],['AI-видео','Создаю образы и оживляю сцены с помощью современных технологий.']],2:[['Мини-приложение','Услуги, выбор времени и запись — прямо внутри Telegram.'],['Бот','Выберите услугу и удобное время. Бот проведёт через запись, а результат появится в CRM ниже.'],['CRM','Обращения из разных каналов, записи и расписание — в одном рабочем пространстве.']]};
+  const copy={0:[['Съёмка','Кадр, свет и движение. Снимаю людей, продукты и пространство. Ниже — фрагменты моих работ.'],['Монтаж','От исходного материала к цельной истории: видеоряд, звук и цвет.'],['AI-видео','Создаю образы и оживляю сцены с помощью современных технологий.']],1:[['Первое впечатление','Сайт знакомит с вами ещё до разговора. Выстраиваю композицию, типографику и визуал так, чтобы они передавали характер проекта.'],['Движение со смыслом','Объём помогает показать то, что трудно объяснить статичным кадром. Здесь можно управлять строительством дома и сменой света.'],['На любом экране','Мобильная версия — отдельная продуманная композиция. С тем же характером и удобным управлением пальцем.'],['От идеи до запуска','Веду проект целиком: связываю содержание, дизайн и разработку в один понятный процесс.']],2:[['Мини-приложение','Услуги, выбор времени и запись — прямо внутри Telegram.'],['Бот','Выберите услугу и удобное время. Бот проведёт через запись, а результат появится в CRM ниже.'],['CRM','Обращения из разных каналов, записи и расписание — в одном рабочем пространстве.']]};
   function chapter(scene,n,visual){
     const block=document.createElement('section');block.className='scroll-chapter';block.id=`story-${scene}-${n}`;block.dataset.chapter=n;
     const intro=document.createElement('div');intro.className='scroll-copy';const h=document.createElement('h2'),p=document.createElement('p');h.id=block.id+'-title';h.textContent=copy[scene][n][0];p.textContent=copy[scene][n][1];intro.append(h,p);block.setAttribute('aria-labelledby',h.id);
@@ -10,7 +11,7 @@
   }
   function prepare(scene){
     if(prepared.has(scene))return;prepared.add(scene);
-    const container=$(scene===0?'filmScene':'telegramScene');container.classList.add('scroll-story');
+    const container=$(sceneIds[scene]);container.classList.add('scroll-story');
     if(scene===0){
       const first=container.querySelector('.section-float'),chapters=$('filmChapters'),views=['filmEditing','filmAI'].map($),content=document.createElement('div');content.append(first,chapters);
       const visuals=[content,...views.map(view=>{
@@ -20,14 +21,16 @@
       ['filmShooting','filmEditing','filmAI'].forEach(id=>$(id).hidden=false);chapters.hidden=false;
       // Keep the shooting screen composed while its shared video is in the editor.
       $('sectionVideoSlot').style.backgroundImage=`url("${window.MB_SECTION_IMAGES['film-0']}")`;
+    }else if(scene===1){
+      ['webDesign','webMotion','webResponsive','webProcess'].forEach((id,n)=>container.append(chapter(scene,n,$(id))));
     }else{
       ['telegramApp','telegramBot','telegramCRM'].forEach((id,n)=>{const el=$(id);el.hidden=false;container.append(chapter(scene,n,el))});
     }
   }
   function open(scene,callback){
-    close();index=scene;onActive=callback;root.classList.toggle('is-scroll-story',scene===0||scene===2);
+    close();index=scene;onActive=callback;root.classList.toggle('is-scroll-story',scene>=0&&scene<=2);
     if(!root.classList.contains('is-scroll-story'))return;
-    prepare(scene);blocks=[...$(scene===0?'filmScene':'telegramScene').querySelectorAll('.scroll-chapter')];
+    prepare(scene);blocks=[...$(sceneIds[scene]).querySelectorAll('.scroll-chapter')];
     blocks.forEach(b=>b.classList.remove('is-revealed','is-visible'));
     observer=new IntersectionObserver(entries=>entries.forEach(e=>{e.target.classList.toggle('is-visible',e.isIntersecting);if(e.isIntersecting)e.target.classList.add('is-revealed')}),{root,rootMargin:'0px',threshold:0});blocks.forEach(b=>observer.observe(b));
     root.scrollTop=0;current=0;onActive(0);lastMeasure=0;
@@ -57,5 +60,5 @@
       }requestAnimationFrame(check);
     });
   }
-  window.MBSectionScroll={open,close,update,navigate,get active(){return index===0||index===2}};
+  window.MBSectionScroll={open,close,update,navigate,get active(){return index>=0&&index<=2}};
 })();

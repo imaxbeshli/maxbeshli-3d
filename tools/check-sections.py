@@ -109,15 +109,15 @@ with sync_playwright() as p:
     print('PASS video shares existing source, plays, seeks and returns',flush=True)
 
     enter(1);screenshot('web')
-    click_floating('[data-web-mode="1"]')
+    page.evaluate('MBSections.selectTab(1)')
     page.wait_for_timeout(500)
     t=page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')
     page.wait_for_timeout(500)
     assert page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')>t
     assert page.locator('#architectureSlot canvas').is_visible()
-    click_floating('[data-web-mode="2"]')
-    assert page.locator('#webFrame').evaluate('(e)=>e.classList.contains("is-mobile")')
-    click_floating('[data-web-mode="0"]');mobile('web');leave()
+    page.evaluate('MBSections.selectTab(2)')
+    assert page.locator('[data-web-site="mobile"]').is_visible()
+    page.evaluate('MBSections.selectTab(0)');mobile('web');leave()
     print('PASS website overview, live architecture and mobile composition',flush=True)
 
     enter(2);screenshot('telegram')
