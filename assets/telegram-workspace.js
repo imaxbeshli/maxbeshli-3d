@@ -177,13 +177,12 @@
     const svg=$('telegramConnections');svg.setAttribute('viewBox',`0 0 ${r.width} ${r.height}`);
     const point=el=>{const b=el.getBoundingClientRect();return {x:b.x+b.width/2-r.x,y:b.y+b.height/2-r.y}};
     const mobile=innerWidth<=540,ends=[...root.querySelectorAll('.flow-port')].map(point),start=point(root.querySelector('.phone-bottom-port'));
-    const spine=10;
-    $('flowTrunk').setAttribute('d',mobile?`M${start.x},${start.y} C${start.x},${start.y+25} ${spine},${start.y+15} ${spine},${start.y+42} L${spine},${ends[2].y}`:'');
+    $('flowTrunk').setAttribute('d','');
     root.querySelectorAll('.connection').forEach((g,i)=>{
-      const s=mobile?{x:spine,y:ends[i].y}:point(root.querySelector(`[data-port="${i}"]`)),e=ends[i],bend=Math.max(14,(e.x-s.x)*.48);
-      const d=mobile?`M${spine},${e.y} L${e.x},${e.y}`:`M${s.x},${s.y} C${s.x+bend},${s.y} ${e.x-bend},${e.y} ${e.x},${e.y}`;
+      const s=mobile?start:point(root.querySelector(`[data-port="${i}"]`)),e=ends[i],bend=Math.max(14,(e.x-s.x)*.48);
+      const d=mobile?`M${s.x},${s.y} C${s.x},${s.y+(e.y-s.y)*.5} ${e.x},${s.y+(e.y-s.y)*.5} ${e.x},${e.y}`:`M${s.x},${s.y} C${s.x+bend},${s.y} ${e.x-bend},${e.y} ${e.x},${e.y}`;
       const path=g.children[0],route=g.children[1],dot=g.children[2];path.setAttribute('d',d);
-      route.setAttribute('d',mobile?`M${start.x},${start.y} C${start.x},${start.y+25} ${spine},${start.y+15} ${spine},${start.y+42} L${spine},${e.y} L${e.x},${e.y}`:d);
+      route.setAttribute('d',d);
       const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,p=((now/4700+i*.32)%1),pos=route.getPointAtLength(route.getTotalLength()*p);
       dot.setAttribute('cx',pos.x);dot.setAttribute('cy',pos.y);dot.style.opacity=reduced?'0':String(Math.sin(p*Math.PI)*.85);
     });

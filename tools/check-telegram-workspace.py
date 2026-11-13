@@ -125,6 +125,7 @@ with tempfile.TemporaryDirectory(prefix='mb-telegram-') as folder, sync_playwrig
     for n in [0,1,2]:
         page.set_viewport_size({'width':390,'height':844});select_tab(n);page.wait_for_timeout(800)
         dims=page.locator('#ecosystem-modal').evaluate('(e)=>[e.clientWidth,e.scrollWidth]');assert dims[1]<=dims[0]+1,dims
+        heights=page.locator('#ecosystem-modal').evaluate('(e)=>[e.clientHeight,e.scrollHeight]');assert heights[1]<=heights[0]+1,heights
         if n==0:assert endpoint_error()<2
         page.screenshot(path=f'/tmp/telegram-workspace-mobile-{n}.png')
     page.emulate_media(reduced_motion='reduce');select_tab(0);page.wait_for_timeout(300)
