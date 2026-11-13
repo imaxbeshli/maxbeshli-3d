@@ -98,11 +98,11 @@ with sync_playwright() as p:
     assert page.evaluate('__MB.slateObjects[0].video.currentTime')==contact_time
     page.locator('#infoClose').evaluate('(e)=>e.click()');page.wait_for_function('!infoDialog.open && !__MB.slateObjects[0].video.paused')
 
-    page.locator('[data-film-time="16"]').click()
+    page.locator('[data-film-time="16"]').evaluate('(e)=>e.click()')
     assert page.evaluate('__MB.slateObjects[0].video.currentTime')>=16
-    page.locator('#sectionOptions button').nth(1).click()
+    page.evaluate('MBSections.selectTab(1)')
     page.wait_for_function('MBSections.state.tab===1 && !document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
-    assert 'структура' in page.locator('#sectionDetail').inner_text()
+    assert 'видеоряд' in page.locator('#story-0-1 .scroll-copy').inner_text()
     assert page.locator('#editVideoSlot video').is_visible()
     screenshot('film');mobile('film');leave()
     assert page.locator('#sectionVideoSlot video').count()==0
@@ -122,15 +122,15 @@ with sync_playwright() as p:
 
     enter(2);screenshot('telegram')
     assert page.evaluate('__MB.slateObjects[2].phoneDemo.state.active')
-    page.locator('#sectionOptions button').nth(1).click()
+    page.evaluate('MBSections.selectTab(1)')
     click_floating('[data-bot-command="price"]')
     page.wait_for_timeout(850)
     assert page.locator('.tg-message').count()==3
-    page.locator('#sectionOptions button').nth(2).click()
+    page.evaluate('MBSections.selectTab(2)')
     click_floating('[data-lead="seed-wa"]')
     click_floating('#crmTake')
     assert page.evaluate('MBTelegramStudio.state.leads.find(l=>l.id==="seed-wa").status')=='working'
-    page.locator('#sectionOptions button').nth(0).click();mobile('telegram')
+    page.evaluate('MBSections.selectTab(0)');mobile('telegram')
     print('PASS mini-app playback, bot answers and CRM demonstration',flush=True)
 
     before_contact=page.evaluate('({section:MBSections.state,crm:MBTelegramStudio.state.leads})')

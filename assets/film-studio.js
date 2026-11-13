@@ -18,12 +18,22 @@
     if(!editingStarted){video.currentTime=0;editingStarted=true}
     video.play().catch(()=>{});
   }
+  function holdFrame(){
+    const slot=video?.parentElement;
+    if(!slot||!['sectionVideoSlot','editVideoSlot'].includes(slot.id)||video.readyState<2)return;
+    let still=slot.querySelector('canvas');
+    if(!still){still=document.createElement('canvas');still.className='film-held-frame';still.setAttribute('aria-hidden','true');slot.prepend(still)}
+    still.width=800;still.height=Math.round(800*video.videoHeight/video.videoWidth);
+    try{still.getContext('2d').drawImage(video,0,0,still.width,still.height)}catch(e){}
+  }
   function setView(n,v){
     const previous=view;if(v)video=v;
+    if(previous!==n)holdFrame();
     if(video&&previous===0&&n!==0)shootingTime=video.currentTime;
     view=n;frame=0;
-    ['filmShooting','filmEditing','filmAI'].forEach((id,i)=>$(id).hidden=i!==n);
-    $('filmChapters').hidden=n!==0;$('filmScene').dataset.filmView=String(n);
+    const scrolling=$('ecosystem-modal').classList.contains('is-scroll-story');
+    ['filmShooting','filmEditing','filmAI'].forEach((id,i)=>$(id).hidden=scrolling?false:i!==n);
+    $('filmChapters').hidden=scrolling?false:n!==0;$('filmScene').dataset.filmView=String(n);
     if(n===1&&previous!==1){clocks[1]=reduced.matches?16:0;paused[1]=reduced.matches;rewindEdit();playbackButton('edit',1)}
     if(n===2&&previous!==2){clocks[2]=reduced.matches?14:0;paused[2]=reduced.matches;playbackButton('ai',2)}
     if(n===1)measureDrags();

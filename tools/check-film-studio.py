@@ -27,7 +27,7 @@ with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() 
     page.goto(f'http://127.0.0.1:{server.server_port}/index.html')
     page.wait_for_function('window.__MB && !__MB.slateObjects[0].video.paused && __MB.slateObjects[0].video.readyState>=2')
     def tab(n):
-        page.locator('#sectionOptions button').nth(n).click()
+        assert page.evaluate('(n)=>MBSections.selectTab(n)',n)
         page.wait_for_function(f'MBSections.state.tab==={n} && !document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
     def stationary_click(selector):
         # Real pointer click in the center avoids Playwright waiting for a floating card to stop.
@@ -118,14 +118,12 @@ with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() 
         positions=[]
         for n in range(3):
             tab(n);page.wait_for_timeout(250)
-            positions.append(page.locator('#modalTitle').bounding_box())
+            positions.append(page.locator('#filmScene .film-frame').nth(n).evaluate('e=>[e.offsetWidth,e.offsetHeight]'))
             dims=page.locator('#ecosystem-modal').evaluate('e=>[e.clientWidth,e.scrollWidth,e.clientHeight,e.scrollHeight]')
             assert dims[1]<=dims[0]+1,(width,height,n,dims)
-            if width>900:
-                assert dims[3]<=dims[2]+1,(width,height,n,dims)
-                for selector in ['.section-intro','#filmScene','.section-footer']:
-                    rect=page.locator(selector).bounding_box()
-                    assert rect['y']>=0 and rect['y']+rect['height']<=height,(width,height,n,selector,rect)
+            assert dims[3]>dims[2], 'Stories must scroll vertically'
+            assert page.locator('#filmScene .scroll-chapter').count()==3
+            assert page.locator('#sectionOptions').is_hidden()
             if n==1:
                 label=page.locator('#editTarget3>span').bounding_box();wave=page.locator('#editTarget3 svg').bounding_box()
                 assert wave['y']>=label['y']+label['height'],(width,'Audio wave overlaps filename',label,wave)
@@ -134,11 +132,10 @@ with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() 
             if width==1440 or width==390:
                 if n>0:advance(n,14);page.wait_for_timeout(100)
                 page.screenshot(path=f'/tmp/film-studio-{width}-{n}.png')
-        if width>900:
-            assert max(r['y'] for r in positions)-min(r['y'] for r in positions)<1,(width,positions)
-    print('PASS all tabs fit desktop without scrolling, stable heading and mobile width',flush=True)
+        assert positions[0]==positions[1]==positions[2],(width,positions)
+    print('PASS scroll chapters, equal frame sizes and no horizontal overflow on desktop and mobile',flush=True)
     advance(2,4.9)
-    prompt_box=page.locator('.ai-prompt-bar').bounding_box();viewport=page.locator('.film-viewport').bounding_box()
+    prompt_box=page.locator('.ai-prompt-bar').bounding_box();viewport=page.locator('#filmAI').bounding_box()
     assert prompt_box['x']>=viewport['x'] and prompt_box['x']+prompt_box['width']<=viewport['x']+viewport['width']
     assert prompt_box['y']>=viewport['y'] and prompt_box['y']+prompt_box['height']<=viewport['y']+viewport['height']
     page.screenshot(path='/tmp/film-studio-ai-prompt-mobile.png')

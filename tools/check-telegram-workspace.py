@@ -30,7 +30,7 @@ with tempfile.TemporaryDirectory(prefix='mb-telegram-') as folder, sync_playwrig
     page.set_default_timeout(45000);errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(f'http://127.0.0.1:{server.server_port}/index.html')
-    page.wait_for_function('MBSections.state.active && telegramScene.dataset.glass==="ready"')
+    page.wait_for_function('MBSections.state.active && telegramScene.dataset.glass==="ready"');page.evaluate('MBSections.selectTab(0)')
     page.wait_for_timeout(1000)
 
     def state(): return page.evaluate('MBTelegramStudio.state')
@@ -40,7 +40,7 @@ with tempfile.TemporaryDirectory(prefix='mb-telegram-') as folder, sync_playwrig
         page.wait_for_function('!MBTelegramStudio.state.typing')
         click(page.locator('#botActions').get_by_role('button',name=text,exact=True))
     def select_tab(n):
-        click(page.locator('#sectionOptions button').nth(n));page.wait_for_function('!document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
+        assert page.evaluate('(n)=>MBSections.selectTab(n)',n);page.wait_for_function('!document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
     def crm_view(name): click(page.locator(f'[data-crm-view="{name}"]'))
     def book(name,service,time):
         select_tab(1);click(page.locator('#botReset'))
@@ -125,7 +125,7 @@ with tempfile.TemporaryDirectory(prefix='mb-telegram-') as folder, sync_playwrig
     for n in [0,1,2]:
         page.set_viewport_size({'width':390,'height':844});select_tab(n);page.wait_for_timeout(800)
         dims=page.locator('#ecosystem-modal').evaluate('(e)=>[e.clientWidth,e.scrollWidth]');assert dims[1]<=dims[0]+1,dims
-        heights=page.locator('#ecosystem-modal').evaluate('(e)=>[e.clientHeight,e.scrollHeight]');assert heights[1]<=heights[0]+1,heights
+        heights=page.locator('#ecosystem-modal').evaluate('(e)=>[e.clientHeight,e.scrollHeight]');assert heights[1]>heights[0],heights
         if n==0:assert endpoint_error()<2
         page.screenshot(path=f'/tmp/telegram-workspace-mobile-{n}.png')
     page.emulate_media(reduced_motion='reduce');select_tab(0);page.wait_for_timeout(300)

@@ -62,6 +62,11 @@ window.createTelegramGlass=function(root){
   }
   return {invalidate(){dirty=true;init()},update(now){
     if(!engine){init();return}if(failed||document.hidden||(!dirty&&now-lastPaint<(innerWidth<541?66:42)))return;
-    lastPaint=now;dirty=false;hosts.forEach(h=>{if(h.getClientRects().length&&!h.closest('[hidden]'))paint(h,now)});
+    lastPaint=now;dirty=false;hosts.forEach(h=>{
+      const panel=h.querySelector('.tg-glass-panel'),record=records.get(h);
+      // A hidden desktop canvas must not widen the mobile scroll container.
+      if(record&&(record.w!==panel.offsetWidth||record.h!==panel.offsetHeight))h.classList.remove('glass-ready');
+      const r=h.getBoundingClientRect();if(r.bottom>0&&r.top<innerHeight&&h.getClientRects().length&&!h.closest('[hidden]'))paint(h,now);
+    });
   }};
 };

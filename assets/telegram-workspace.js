@@ -133,6 +133,7 @@
       const detail=$('crmLeadDetail');detail.tabIndex=-1;detail.focus({preventScroll:true});
       const list=$('crmLeadList'),item=list.querySelector('.selected');
       if(item)list.scrollTop+=item.getBoundingClientRect().top-list.getBoundingClientRect().top;
+      detail.classList.remove('is-highlighted');void detail.offsetWidth;detail.classList.add('is-highlighted');
       if(innerWidth<=900)detail.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
     }
   }
