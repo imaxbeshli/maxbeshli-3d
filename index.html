@@ -1208,34 +1208,48 @@ window.MBPhoneDemo={
       text('Индивидуальный подбор покрытия',28,1000,20,'#7f858e');
       button('Выбрать время',t,5.5);
     }
-    // Original illustrative city plan: river bend, urban blocks and a route.
-    // It is not a geocoded map or a Yandex basemap; no map service is requested.
+    // One shared, rounded centreline for both the street and its route overlay.
+    // The schematic is original artwork, not a geocoded navigation map.
+    const routePoints=[];
+    function routeLine(a,b,steps){for(let i=0;i<=steps;i++){const f=i/steps;routePoints.push([a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f]);}}
+    function routeBend(a,c,b){for(let i=1;i<=24;i++){const f=i/24,q=1-f;routePoints.push([q*q*a[0]+2*q*f*c[0]+f*f*b[0],q*q*a[1]+2*q*f*c[1]+f*f*b[1]]);}}
+    routeLine([82,318],[230,318],36);routeBend([230,318],[254,318],[254,294]);
+    routeLine([254,294],[254,154],35);routeBend([254,154],[254,130],[278,130]);routeLine([278,130],[368,130],23);
+    const routeLengths=routePoints.slice(1).map((p,i)=>Math.hypot(p[0]-routePoints[i][0],p[1]-routePoints[i][1]));
+    const routeLength=routeLengths.reduce((a,b)=>a+b,0);
     function districtMap(t){
       x.save();x.translate(26,620);x.beginPath();x.roundRect(0,0,548,367,22);x.clip();
-      box(0,0,548,367,'#101419',0);
-      // A broad river bend defines the district instead of a regular grid.
-      x.beginPath();x.moveTo(-40,286);x.bezierCurveTo(94,225,167,315,286,257);x.bezierCurveTo(399,202,397,111,590,126);
-      x.strokeStyle='#1b2b35';x.lineWidth=55;x.lineCap='round';x.stroke();
-      const streets=[[[12,69],[168,70],[257,18]],[[42,144],[221,145],[315,71],[548,72]],[[56,212],[263,211],[346,142],[548,170]],[[94,-10],[93,220]],[[191,18],[191,214]],[[315,-12],[322,107]],[[463,0],[448,168]],[[267,264],[307,367]],[[432,196],[478,367]],[[15,333],[244,327],[410,275],[562,310]]];
-      streets.forEach(points=>{line(points,'#303943',12);line(points,'#20272e',8)});
-      // Small building footprints and the tall cluster evoke Moscow's cityscape.
-      [[30,92,36,32],[112,91,58,29],[116,160,55,29],[214,87,28,36],[350,24,32,27],[393,25,35,26],[354,91,56,26],[482,94,35,38],[57,347,55,26],[148,345,62,28],[334,309,38,48]].forEach(b=>box(...b,'#232b33',4));
-      [[275,100,17,46],[296,85,16,53],[318,121,18,42],[340,141,17,37]].forEach(([a,b,w,h])=>{box(a+3,b+3,w,h,'#090c10',3);box(a,b,w,h,'#3b4651',3);line([[a+4,b+5],[a+4,b+h-6]],'#52606c',2)});
-      // Route crosses a bridge and draws continuously at a steady pace.
-      const route=[[113,328],[208,328],[263,302],[263,211],[235,145]],p=smooth(.1,2.25,t);
-      line(route,'#ff173424',13);
-      const lengths=route.slice(1).map((pt,i)=>Math.hypot(pt[0]-route[i][0],pt[1]-route[i][1]));
-      let remaining=lengths.reduce((a,b)=>a+b,0)*p,head=route[0];
-      x.beginPath();x.moveTo(...route[0]);
-      for(let i=0;i<lengths.length;i++){const f=Math.min(1,remaining/lengths[i]);if(f<=0)break;head=[route[i][0]+(route[i+1][0]-route[i][0])*f,route[i][1]+(route[i+1][1]-route[i][1])*f];x.lineTo(...head);remaining-=lengths[i];}
-      x.strokeStyle=red;x.lineWidth=4;x.lineCap='round';x.lineJoin='round';x.stroke();
-      circle(113,328,6,'#e9eef3');circle(...head,4,'#ffe5e8');
-      const reveal=smooth(1.8,2.35,t);x.save();x.globalAlpha*=reveal;
-      const pulse=(t*.45)%1;circle(235,145,17+pulse*14,`rgba(255,23,52,${.12*(1-pulse)})`);
-      circle(235,145,12,red);circle(235,145,4,white);
-      box(163,104,144,28,'#080b0fe8',8);text('AVTOLAB77',235,124,16,white,650,'center');x.restore();
-      text('МОСКВА',20,31,15,'#7b8792',600);text('РЕКА',409,232,12,'#647f8f');
-      box(327,325,204,27,'#101419dc',8);text('Схематичный маршрут',429,344,14,'#8c98a4',400,'center');
+      box(0,0,548,367,'#111519',0);
+      // Simple aligned blocks leave clear space for the streets.
+      [[33,68,55,42],[133,69,44,42],[214,67,60,42],[292,67,36,42],[416,68,25,42],[471,68,45,42],
+       [32,148,56,25],[132,148,45,25],[192,148,34,25],[288,150,49,26],[355,150,36,26],[410,150,30,26],[473,149,43,27],
+       [38,337,56,22],[111,337,58,22],[187,337,43,22]].forEach(b=>box(...b,'#222a30',5));
+      box(342,64,53,43,'#303b43',6);box(349,71,39,29,'#38454f',3);
+      // Quiet urban blocks; no river, bridge or decorative terrain.
+      [[32,215,56,80],[132,215,45,80],[193,215,32,80],
+       [288,215,49,80],[355,215,36,80],[410,215,30,80],[473,215,43,80]].forEach(b=>box(...b,'#222a30',5));
+      function street(points,width=12){line(points,'#3a434b',width+2);line(points,'#282f36',width);}
+      [[[30,50],[520,50]],[[116,50],[116,318]],[[198,50],[198,194]],[[454,50],[454,318]],
+       [[0,130],[278,130]],[[368,130],[548,130]],[[0,194],[548,194]],
+       [[0,318],[82,318]],[[274,318],[548,318]]].forEach(points=>street(points,10));
+      // Draw the exact same geometry beneath the red route, including its bends.
+      street(routePoints,16);
+      // Reveal by distance, avoiding corner snaps or diagonal shortcuts.
+      let remaining=routeLength*smooth(.15,2.35,t),head=routePoints[0];const visible=[head];
+      for(let i=0;i<routeLengths.length;i++){
+        const length=routeLengths[i];if(length<.0001)continue;
+        const f=Math.min(1,remaining/length);if(f<=0)break;
+        head=[routePoints[i][0]+(routePoints[i+1][0]-routePoints[i][0])*f,routePoints[i][1]+(routePoints[i+1][1]-routePoints[i][1])*f];
+        visible.push(head);remaining-=length;
+      }
+      line(visible,'#ff173426',10);line(visible,red,4.5);
+      circle(82,318,7,'#111519');circle(82,318,4.5,'#e9eef3');circle(...head,3.5,'#ffe5e8');
+      // Fixed destination; only a soft halo breathes after the route arrives.
+      const reveal=smooth(1.9,2.4,t);x.save();x.globalAlpha*=reveal;
+      circle(368,130,19+Math.sin(t*1.7)*2,'#ff17341b');circle(368,130,11,red);circle(368,130,4,white);
+      box(301,18,134,29,'#090c0feF',8);text('AVTOLAB77',368,38,16,white,650,'center');x.restore();
+      text('МОСКВА',20,29,14,'#8a969f',600);
+      text('Схема проезда',511,349,13,'#7c8993',400,'right');
       x.restore();
     }
     function contacts(t){
