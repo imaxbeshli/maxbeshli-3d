@@ -7,7 +7,7 @@
     {title:'Истории в движении',description:'Съёмка, монтаж и AI. От идеи до готового фильма.',tabs:['Съёмка','Монтаж','AI-видео'],details:[
       'Помогаю найти визуальный язык проекта. Продумываю кадр, свет и движение, снимаю людей, продукты и пространство.',
       'Собираю материал в цельную историю: структура, ритм, цвет и звук. Готовлю версии для сайта, презентации и социальных сетей.',
-      'Использую генеративные инструменты для визуальных концепций, необычных сцен и дополнения съёмки. Подбираю технологию под задачу.'
+      'Создаю сцены, оживляю изображения и добавляю эффекты, которые расширяют возможности съёмки и монтажа.'
     ]},
     {title:'Сайты с характером',description:'Дизайн, объём и движение. Новый способ рассказать о вашем бизнесе.',tabs:['Дизайн','3D и анимация','На телефоне'],details:[
       'Начинаю с содержания и структуры. Выстраиваю понятный путь от знакомства с компанией до обращения.',
@@ -27,6 +27,7 @@
   function applyTab(n,focus=false){
     tab=n;const d=definitions[index];$('sectionDetail').textContent=d.details[n];
     [...$('sectionOptions').children].forEach((b,i)=>{b.setAttribute('aria-selected',String(i===n));b.tabIndex=i===n?0:-1;if(focus&&i===n)b.focus()});
+    if(index===0)window.MBFilmStudio.setView(n,video);
     if(index===1)setWebMode(n,false);
     if(index===2){['telegramApp','telegramBot','telegramCRM'].forEach((id,i)=>$(id).hidden=i!==n);if(n!==0)tiles()[2]?.phoneDemo.update(false);window.MBTelegramStudio.setView(n)}
   }
@@ -38,7 +39,7 @@
   }
   async function setTab(n,focus=false){
     cancelTabTransition();const token=tabTransition;
-    if(index!==2||n===tab||reduced.matches){applyTab(n,focus);return true}
+    if((index!==0&&index!==2)||n===tab||reduced.matches){applyTab(n,focus);return true}
     const panel=root.querySelector('.section-presentation'),detail=$('sectionDetail');
     if(panel.contains(document.activeElement))$('sectionOptions').children[n]?.focus({preventScroll:true});
     panel.inert=true;root.setAttribute('aria-busy','true');
@@ -77,6 +78,7 @@
   }
   function close(){
     cancelTabTransition();active=false;cancelAnimationFrame(raf);stopMedia();document.body.classList.remove('section-open');
+    window.MBFilmStudio.setView(-1);
     if(video){video.controls=false;video.onplay=video.onpause=null;video.remove()}
   }
   function tick(now){
@@ -85,6 +87,7 @@
     if(document.hidden||contact.open||$('aboutDialog').open){stopMedia();return}
     const ease=1-Math.exp(-4*dt);x+=(tx-x)*ease;y+=(ty-y)*ease;
     root.style.setProperty('--sx',x.toFixed(3)+'px');root.style.setProperty('--sy',y.toFixed(3)+'px');
+    if(index===0)window.MBFilmStudio.update(now,dt);
     if(index===1&&webMode===1)tiles()[1].architectureDemo.update(true,now);
     if(index===2)window.MBTelegramStudio.update(now,dt);
     if(index===2&&tab===0){
@@ -120,13 +123,13 @@
   let closingContact=false;
   function closeContact(){
     if(!contact.open||closingContact)return;closingContact=true;contact.classList.add('is-closing');
-    setTimeout(()=>{contact.close();contact.classList.remove('is-closing');document.body.classList.remove('contact-open');closingContact=false;contactReturn?.focus({preventScroll:true});if(resumeVideo)video?.play().catch(()=>{})},reduced.matches?0:350);
+    setTimeout(()=>{contact.close();contact.classList.remove('is-closing');document.body.classList.remove('contact-open');closingContact=false;contactReturn?.focus({preventScroll:true});if(resumeVideo)window.MBFilmStudio.resume()},reduced.matches?0:350);
   }
   $('sectionContact').addEventListener('click',openContact);
   $('infoClose').addEventListener('click',closeContact);
   contact.addEventListener('click',e=>{if(!e.target.closest('.contact-panel'))closeContact()});
   contact.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();closeContact()});
   contact.addEventListener('keydown',e=>{if(e.key==='Escape')e.stopPropagation()});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMedia();else if(active&&index===0&&!contact.open&&!$('aboutDialog').open)video?.play().catch(()=>{})});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMedia();else if(active&&index===0&&!contact.open&&!$('aboutDialog').open)window.MBFilmStudio.resume()});
   window.MBSections={open,close,openContact,closeContact,selectTab:setTab,get state(){return {active,index,tab,webMode,contactOpen:contact.open}}};
 })();

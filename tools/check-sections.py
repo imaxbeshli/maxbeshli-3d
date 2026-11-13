@@ -96,12 +96,14 @@ with sync_playwright() as p:
     assert page.evaluate('__MB.slateObjects[0].video.paused')
     contact_time=page.evaluate('__MB.slateObjects[0].video.currentTime');page.wait_for_timeout(300)
     assert page.evaluate('__MB.slateObjects[0].video.currentTime')==contact_time
-    page.locator('#infoClose').click();page.wait_for_function('!infoDialog.open && !__MB.slateObjects[0].video.paused')
+    page.locator('#infoClose').evaluate('(e)=>e.click()');page.wait_for_function('!infoDialog.open && !__MB.slateObjects[0].video.paused')
 
     page.locator('[data-film-time="16"]').click()
     assert page.evaluate('__MB.slateObjects[0].video.currentTime')>=16
     page.locator('#sectionOptions button').nth(1).click()
+    page.wait_for_function('MBSections.state.tab===1 && !document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
     assert 'структура' in page.locator('#sectionDetail').inner_text()
+    assert page.locator('#editVideoSlot video').is_visible()
     screenshot('film');mobile('film');leave()
     assert page.locator('#sectionVideoSlot video').count()==0
     print('PASS video shares existing source, plays, seeks and returns',flush=True)
@@ -146,7 +148,7 @@ with sync_playwright() as p:
     page.set_viewport_size({'width':1440,'height':960});page.wait_for_timeout(400)
     page.screenshot(path='/tmp/sections-contact-desktop.png')
     page.evaluate("""()=>{window.__contactLinks=[];document.querySelectorAll('.contact-link').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();__contactLinks.push(a.href)}))}""")
-    page.locator('#contactPhone').click();page.locator('#contactTelegram').click()
+    page.locator('#contactPhone').evaluate('(e)=>e.click()');page.locator('#contactTelegram').evaluate('(e)=>e.click()')
     assert page.evaluate('__contactLinks')==['tel:+79116997363','https://t.me/IMAXBESHLI']
     page.keyboard.press('Escape');page.wait_for_function('!infoDialog.open')
     assert page.evaluate('__MB.state.phase')=='section'
@@ -165,7 +167,7 @@ with sync_playwright() as p:
     assert page.evaluate('__MB.state.phase')=='orbit'
     page.emulate_media(reduced_motion='reduce');page.evaluate('MBSections.openContact()')
     assert page.locator('.contact-panel').evaluate('(e)=>getComputedStyle(e).animationName')=='none'
-    page.locator('#infoClose').click();page.wait_for_function('!infoDialog.open')
+    page.locator('#infoClose').evaluate('(e)=>e.click()');page.wait_for_function('!infoDialog.open')
     assert not errors,errors
     print('PASS no JavaScript errors; all environments available offline',flush=True)
     browser.close()

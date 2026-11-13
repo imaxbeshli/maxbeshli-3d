@@ -1,0 +1,47 @@
+<div class="section-float"><div class="section-glass film-frame">
+  <div class="film-viewport">
+    <div id="filmShooting" class="film-view">
+      <div id="sectionVideoSlot"></div>
+      <button class="film-start" id="filmStart" aria-label="Воспроизвести showreel">Смотреть showreel</button>
+    </div>
+    <div id="filmEditing" class="film-view edit-workspace" hidden aria-label="Анимированная монтажная сцена">
+      <header class="edit-toolbar"><span class="edit-mark">M</span><span>SHOWREEL <small>/ Монтаж</small></span><button class="film-playback" id="editPlayback" aria-label="Приостановить монтажную сцену">Пауза</button></header>
+      <div class="edit-monitors">
+        <div class="edit-bin"><span class="edit-caption">Исходный материал</span><div><img data-section-image="film-0" alt="Исходный кадр"><img data-section-image="film-1" alt="Исходный кадр"><img data-section-image="film-2" alt="Исходный кадр"></div><small>SHOWREEL / 3 фрагмента</small></div>
+        <div class="edit-preview"><div id="editVideoSlot"></div><span class="edit-preview-title">ИСТОРИИ В ДВИЖЕНИИ</span><div class="edit-monitor-footer"><span id="editTimecode">00:00:00:00</span><span>ПРЕДПРОСМОТР</span></div></div>
+        <div class="edit-tools"><span class="edit-caption" id="editToolTitle">Сборка</span><div class="edit-level"><i></i><i></i><i></i><i></i><i></i></div><svg viewBox="0 0 100 65" aria-hidden="true"><path class="edit-grid" d="M0 16H100M0 32H100M0 48H100M25 0V65M50 0V65M75 0V65"/><path class="edit-curve" d="M0 64C28 64 25 15 50 26S75 0 100 0"/></svg><small id="editToolDetail">Точная склейка</small></div>
+      </div>
+      <div class="edit-timeline">
+        <div class="edit-ruler"><span>00:00</span><span>00:05</span><span>00:10</span><span>00:15</span></div>
+        <div class="edit-track"><b>V2</b><div class="edit-lane"><div class="edit-clip edit-title-clip">Истории в движении</div></div></div>
+        <div class="edit-track"><b>V1</b><div class="edit-lane"><div class="edit-clip edit-shot shot-one"><img data-section-image="film-0" alt="">Кадр 01</div><div class="edit-clip edit-shot shot-two"><img data-section-image="film-1" alt="">Кадр 02</div><div class="edit-clip edit-shot shot-three"><img data-section-image="film-2" alt="">Кадр 03</div></div></div>
+        <div class="edit-track"><b>A1</b><div class="edit-lane"><div class="edit-audio"><svg viewBox="0 0 600 28" preserveAspectRatio="none" aria-label="Звуковая волна"><path id="editWaveform"/></svg></div></div></div>
+        <div class="edit-playhead" aria-hidden="true"><i></i></div>
+      </div>
+      <footer class="edit-status"><span><i></i><span id="editStageLabel">Сборка истории</span></span><span>ВИДЕО · ЦВЕТ · ЗВУК</span></footer>
+    </div>
+    <div id="filmAI" class="film-view ai-workspace" hidden aria-label="AI-концепция рекламы парфюма">
+      <div class="ai-image"><img data-section-image="perfume" alt="Концепция рекламы: янтарный флакон NOIR на тёмном фоне"></div>
+      <div class="ai-light" aria-hidden="true"></div>
+      <canvas id="aiAtmosphere" aria-hidden="true"></canvas>
+      <div class="ai-concept" aria-hidden="true"><svg viewBox="0 0 1600 900"><g><path d="M674 185H923V278H674ZM730 278V324M867 278V324M643 340Q643 327 660 327H937Q954 327 954 344V738Q954 752 936 752H660Q643 752 643 734ZM658 352H937V707H658ZM670 718H927M691 498H906M691 510H855"/><path class="ai-guide" d="M615 185H560M615 752H560M575 185V752M643 788V814M954 788V814M643 800H954M799 140V810"/></g></svg><span class="ai-brief">Янтарное стекло<br>Мягкий свет<br>Атмосфера</span></div>
+      <header class="ai-topline"><span>NOIR <small>/ AI-концепция</small></span><button class="film-playback" id="aiPlayback" aria-label="Приостановить AI-сцену">Пауза</button></header>
+      <footer class="ai-caption"><span id="aiStageLabel">От замысла к кадру</span><span class="ai-progress"><i></i></span></footer>
+    </div>
+  </div>
+</div></div>
+<div id="filmChapters" class="film-chapters" aria-label="Фрагменты showreel">
+  <button data-film-time="1"><img data-section-image="film-0" alt="Кадр из showreel"><span>Начало</span></button>
+  <button data-film-time="16"><img data-section-image="film-1" alt="Кадр из showreel"><span>Кадр и свет</span></button>
+  <button data-film-time="34"><img data-section-image="film-2" alt="Кадр из showreel"><span>Ритм и монтаж</span></button>
+</div>
+<div id="editChapters" class="film-chapters film-stages" aria-label="Этапы монтажа" hidden>
+  <button data-edit-stage="0" aria-pressed="true"><span class="stage-symbol stage-cut" aria-hidden="true">▰ / ▰</span><span>Сборка</span><i></i></button>
+  <button data-edit-stage="1" aria-pressed="false"><span class="stage-symbol stage-color" aria-hidden="true"></span><span>Цвет</span><i></i></button>
+  <button data-edit-stage="2" aria-pressed="false"><span class="stage-symbol stage-wave" aria-hidden="true">▂▅▃▇▅▂▆▃</span><span>Звук</span><i></i></button>
+</div>
+<div id="aiChapters" class="film-chapters film-stages" aria-label="Этапы AI-сцены" hidden>
+  <button data-ai-stage="0" aria-pressed="true"><span class="stage-symbol stage-idea" aria-hidden="true">✧</span><span>Идея</span><i></i></button>
+  <button data-ai-stage="1" aria-pressed="false"><img data-section-image="perfume" alt=""><span>Изображение</span><i></i></button>
+  <button data-ai-stage="2" aria-pressed="false"><img data-section-image="perfume" alt=""><span>Движение</span><i></i></button>
+</div>
