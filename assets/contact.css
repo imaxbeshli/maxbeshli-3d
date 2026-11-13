@@ -4,19 +4,20 @@
 #infoDialog[open]::backdrop{animation:contactBackdropIn .55s ease both}
 #infoDialog.is-closing::backdrop{animation:contactBackdropOut .35s ease both}
 .contact-wrap{min-height:100%;display:grid;place-items:center;padding:24px max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));perspective:1400px}
-.contact-panel{position:relative;width:min(540px,100%);padding:42px 34px 32px;background:linear-gradient(135deg,#d1e2ef18,#101923bf 65%);border:1px solid #d2e5ed70;border-radius:20px;box-shadow:inset 1px 1px 1px #effaff80,inset -2px -2px 2px #9db6c644,5px 3px 0 -1px #9aaeb747,6px 3px 1px #e4edf34a,0 30px 90px #0006;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);isolation:isolate}
-#infoDialog[open] .contact-panel{animation:contactPanelIn .7s cubic-bezier(.22,.61,.36,1) .14s both}
-#infoDialog.is-closing .contact-panel{animation:contactPanelOut .35s ease both}
+.contact-panel{position:relative;width:min(540px,100%);padding:42px 34px 32px;background:linear-gradient(135deg,#d1e2ef18,#101923bf 65%);border:1px solid #d2e5ed70;border-radius:20px;box-shadow:inset 0 0 0 1px #effaff36,inset 0 1px 2px #effaff55,inset 0 -1px 2px #9db6c633,0 0 0 1px #9aaeb733,0 24px 70px #0006;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);isolation:isolate}
+#infoDialog[open] .contact-panel{animation:contactPanelIn .7s cubic-bezier(.22,.61,.36,1) .14s both,contactFloat 7s ease-in-out infinite}
+#infoDialog.is-closing .contact-panel{animation:contactPanelOut .35s ease both,contactFloat 7s ease-in-out infinite}
 #infoDialog.is-closing{pointer-events:none}
-#infoClose{float:none;position:absolute;right:14px;top:12px;width:40px;height:40px;display:grid;place-items:center;padding:0;border:1px solid #d0e0ed25;border-radius:11px;background:#ffffff07;color:#e8edef;font:300 27px/1 Arial;transition:background .2s}
-#infoClose:hover{background:#ffffff17}
-.contact-panel h2{font-size:clamp(27px,3vw,36px);line-height:1.15;font-weight:450;letter-spacing:-.035em;margin:10px 30px 12px 0}
-.contact-lead{font-size:14px;line-height:1.55;color:#c2cbd0;margin:0 0 28px}
+#infoClose{float:none;position:absolute;right:14px;top:12px;width:40px;height:40px;display:grid;place-items:center;padding:0;border:0;border-radius:0;background:transparent;color:#e8edef;font:300 27px/1 Arial;transition:color .2s,text-shadow .2s}
+#infoClose:hover,#infoClose:focus-visible{color:#fff;text-shadow:0 0 10px #ffffff80}
+#infoDialog #infoClose:focus{outline:none;box-shadow:none}
+.contact-panel h2{font-size:clamp(27px,3vw,36px);line-height:1.15;font-weight:450;letter-spacing:-.035em;margin:10px 0 12px;text-align:center}
+.contact-lead{font-size:14px;line-height:1.55;color:#c2cbd0;margin:0 0 28px;text-align:center}
 .contact-actions{display:grid;gap:12px}
-.contact-link{display:flex;align-items:center;gap:17px;min-height:82px;padding:17px 20px;border:1px solid #d5e6ee30;border-radius:13px;text-decoration:none;color:#f3f5f6;background:linear-gradient(135deg,#e4f3ff0d,#101b2430);box-shadow:inset 0 1px #ffffff0d;transition:background .25s,border-color .25s}
+.contact-link{display:grid;grid-template-columns:25px minmax(0,1fr) 25px;align-items:center;gap:17px;min-height:82px;padding:17px 20px;border:1px solid #d5e6ee30;border-radius:13px;text-decoration:none;color:#f3f5f6;background:linear-gradient(135deg,#e4f3ff0d,#101b2430);box-shadow:inset 0 1px #ffffff0d;transition:background .25s,border-color .25s}
 .contact-link:hover{background-color:#c7d9e512;border-color:#d3e6f075}
 .contact-link svg{width:25px;height:25px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;color:#d3e1e9}
-.contact-link span{display:flex;flex-direction:column;gap:6px;min-width:0}
+.contact-link span{display:flex;flex-direction:column;gap:6px;min-width:0;text-align:center}
 .contact-link strong{font-size:18px;font-weight:500;letter-spacing:-.015em;white-space:nowrap}
 .contact-link small{font-size:12px;color:#aebfc9}
 .contact-telegram{border-color:#ed647b45;background:linear-gradient(125deg,#b7253b24,#151d2940)}
@@ -24,7 +25,10 @@
 body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contact-open .hero-left *,body.contact-open .bottom-wrap *{animation-play-state:paused!important}
 @keyframes contactBackdropIn{from{background:rgba(3,7,12,0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0)}to{background:rgba(3,7,12,.62);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}}
 @keyframes contactBackdropOut{from{background:rgba(3,7,12,.62);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}to{background:rgba(3,7,12,0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0)}}
+@keyframes contactFloat{0%,100%{translate:0 0}50%{translate:0 -4px}}
 @keyframes contactPanelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes contactPanelOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(3px)}}
-@media(max-width:540px){.contact-wrap{padding:18px max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))}.contact-panel{padding:38px 20px 24px;border-radius:18px}.contact-panel h2{font-size:27px;margin-right:10px}.contact-lead{font-size:13px;margin-bottom:22px}.contact-link{padding:16px 14px;gap:13px;min-height:80px}.contact-link strong{font-size:17px}.contact-link small{font-size:12px}}
+@media(max-width:540px){.contact-wrap{padding:18px max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))}.contact-panel{padding:38px 20px 24px;border-radius:18px}.contact-panel h2{font-size:27px;margin-right:0}.contact-lead{font-size:13px;margin-bottom:22px}.contact-link{padding:16px 14px;gap:13px;min-height:80px}.contact-link strong{font-size:17px}.contact-link small{font-size:12px}}
 @media(prefers-reduced-motion:reduce){#infoDialog[open]::backdrop,#infoDialog.is-closing::backdrop,#infoDialog[open] .contact-panel,#infoDialog.is-closing .contact-panel{animation:none!important}.contact-link{transition:none}}
+
+@media(max-width:360px){.contact-link{grid-template-columns:20px minmax(0,1fr) 20px;gap:8px;padding:16px 10px}.contact-link svg{width:20px;height:20px}.contact-link strong{font-size:15px}}
