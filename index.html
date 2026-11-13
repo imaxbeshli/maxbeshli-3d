@@ -542,10 +542,8 @@
     .loader-brand{font-size:clamp(22px,3vw,36px);color:#eee;letter-spacing:.3em;margin:0 0 14px;text-align:center}
     .loader-subtitle{font-size:14px;color:#a8abb2;margin-bottom:32px;letter-spacing:.04em}
     .loader-bar{transition:none}.loader-perc{font-variant-numeric:tabular-nums;font-size:40px}
-    #mainHeader{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center;min-height:44px}
-    #mainHeader nav{align-items:center;justify-content:center;gap:clamp(20px,3vw,44px)}
-    #mainHeader nav a{display:inline-flex;align-items:center;min-height:44px;white-space:nowrap}
-    .header-right{justify-self:end;align-items:center}.logo{justify-self:start;align-items:center;min-height:44px}.cta-btn{justify-content:center;white-space:nowrap;min-height:40px}
+    #mainHeader{display:flex;justify-content:flex-end;align-items:center;min-height:44px;pointer-events:none}
+    .header-right{justify-self:end;align-items:center;pointer-events:auto}.logo{justify-self:start;align-items:center;min-height:44px}.cta-btn{justify-content:center;white-space:nowrap;min-height:40px}
     .bottom-wrap{will-change:opacity,transform,filter}.bottom-caption{background:linear-gradient(135deg,rgba(42,46,54,.76),rgba(13,16,23,.68));backdrop-filter:blur(24px) saturate(85%);-webkit-backdrop-filter:blur(24px) saturate(85%);border-color:rgba(232,237,245,.23);box-shadow:inset 0 1px 0 #ffffff15,0 12px 35px #0004}.caption-title{color:#ffca96;text-shadow:0 1px 3px #0008}.caption-text{color:rgba(248,249,252,.92);text-shadow:0 1px 3px #0009}
     #travelVeil{position:fixed;inset:0;z-index:45;background:radial-gradient(circle at 70% 30%,#161822 0%,#06070a 100%);opacity:0;pointer-events:none}
     #ecosystem-modal{overflow:auto}#ecosystem-modal.active{transition:opacity .45s ease;opacity:1;visibility:visible}
@@ -553,8 +551,8 @@
     #infoDialog::backdrop{background:#0009;backdrop-filter:blur(12px)}#infoTitle{margin-bottom:18px}#infoClose{float:right;background:none;border:0;color:#ddd;font-size:28px}
     a:focus-visible,button:focus-visible,#webgl-canvas:focus-visible{outline:1px solid #ffb169;outline-offset:5px}
     #webgl-canvas{touch-action:none}
-    @media(max-width:1050px){.ui-layer{padding:26px 28px}#mainHeader{gap:16px}.header-right{gap:8px}#mainHeader nav{gap:20px}.sound-btn{padding:9px}.hero-left{left:28px}}
-    @media(max-width:760px){.ui-layer{padding:18px}#mainHeader{grid-template-columns:1fr auto;gap:6px}#mainHeader nav{grid-row:2;grid-column:1/-1;justify-content:space-between;gap:12px}.header-right{grid-column:2;grid-row:1}.cta-btn{padding:10px 12px;font-size:10px}.sound-btn{font-size:9px}.hero-left{left:24px;top:31%;width:85vw;max-width:390px}.hero-title{font-size:38px;margin-bottom:15px}.hero-subtitle{font-size:16px;margin-bottom:12px}.hero-desc{font-size:12px}.bottom-caption{padding:12px 16px;max-width:90vw}.caption-title{font-size:14px}.caption-text{font-size:11px}#ecosystem-modal{padding:24px}.modal-grid{grid-template-columns:1fr;gap:12px}.modal-body{margin:26px 0}.modal-close{font-size:10px;padding:10px 12px}}
+    @media(max-width:1050px){.ui-layer{padding:26px 28px}#mainHeader{gap:16px}.header-right{gap:8px}.sound-btn{padding:9px}.hero-left{left:28px}}
+    @media(max-width:760px){.ui-layer{padding:18px}#mainHeader{gap:6px}.cta-btn{padding:10px 12px;font-size:10px}.sound-btn{font-size:9px}.hero-left{left:24px;top:31%;width:85vw;max-width:390px}.hero-title{font-size:38px;margin-bottom:15px}.hero-subtitle{font-size:16px;margin-bottom:12px}.hero-desc{font-size:12px}.bottom-caption{padding:12px 16px;max-width:90vw}.caption-title{font-size:14px}.caption-text{font-size:11px}#ecosystem-modal{padding:24px}.modal-grid{grid-template-columns:1fr;gap:12px}.modal-body{margin:26px 0}.modal-close{font-size:10px;padding:10px 12px}}
     @media(pointer:coarse){#custom-cursor{display:none}html,body,a,button,.interactive-el{cursor:auto}}
     @media(prefers-reduced-motion:reduce){.hero-left-inner.glitching{animation:none;filter:drop-shadow(2px 0 #e45064) drop-shadow(-2px 0 #4ce0ec)}}
 .modal-body{opacity:0;transform:translateY(12px);transition:opacity .55s ease,transform .55s ease}#ecosystem-modal.active .modal-body{opacity:1;transform:none}
@@ -592,13 +590,6 @@
 
   <div class="ui-layer">
     <header id="mainHeader">
-      <a href="#" class="logo interactive-el" id="logoGlitch" title="Нажмите для глитч-эффекта"><span class="logo-mark">MB<span class="logo-dot"></span></span></a>
-      <nav>
-        <a href="#works" class="interactive-el">Работы</a>
-        <a href="#services" class="interactive-el">Услуги</a>
-        <a href="#about" class="interactive-el">Обо мне</a>
-        <a href="#contact" class="interactive-el">Контакты</a>
-      </nav>
       <div class="header-right">
         <button class="sound-btn interactive-el" id="soundToggle" type="button" aria-label="Включить звук" aria-pressed="false"><svg class="sound-wave" viewBox="0 0 44 24" aria-hidden="true" focusable="false"><path id="soundWave" d="M2 12 L42 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <a href="#contact" class="cta-btn interactive-el">
@@ -6973,14 +6964,14 @@ window.MBEnvironment={
     canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',e=>{releaseVelocity=0;release(e)});
     canvas.addEventListener('pointerleave',()=>{if(!isDragging){mouseNDC.set(5,5);hoverIndex=-1}});
     window.addEventListener('keydown',e=>{if(!studioEntered||document.getElementById('aboutDialog').open)return;if(e.key==='Escape'){if(phase==='section')closeEcosystemModal();else returnToOrbit()}if(e.target!==canvas)return;if(e.key==='Enter'){e.preventDefault();zoomState?startDive():focusTile(activeIndex)}if(phase==='orbit'&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();coastVelocity=0;targetProgress=Math.round(targetProgress)+(e.key==='ArrowRight'?1:-1)}});
-    document.querySelectorAll('header nav a,.cta-btn').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const id=a.getAttribute('href');if(id==='#works')focusTile(0);else if(id==='#services')focusTile(1);else if(id==='#about')window.MBAbout.open();else{document.getElementById('infoTitle').textContent=id==='#about'?'MAX BESHLI':'Обсудить проект';document.getElementById('infoText').textContent=id==='#about'?'Видео и цифровые решения. Помогаю идеям превращаться в сильные визуальные истории и работающие цифровые решения.':'Расскажите о задаче, сроках и желаемом результате. Канал отправки заявки пока не подключён.';document.getElementById('infoDialog').showModal()}}));
+    document.querySelectorAll('.cta-btn').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const id=a.getAttribute('href');if(id==='#works')focusTile(0);else if(id==='#services')focusTile(1);else if(id==='#about')window.MBAbout.open();else{document.getElementById('infoTitle').textContent=id==='#about'?'MAX BESHLI':'Обсудить проект';document.getElementById('infoText').textContent=id==='#about'?'Видео и цифровые решения. Помогаю идеям превращаться в сильные визуальные истории и работающие цифровые решения.':'Расскажите о задаче, сроках и желаемом результате. Канал отправки заявки пока не подключён.';document.getElementById('infoDialog').showModal()}}));
     document.getElementById('infoClose').addEventListener('click',()=>document.getElementById('infoDialog').close());
     const logoGlitch=document.getElementById('logoGlitch'),heroLeft=document.getElementById('heroLeft'),heroLeftInner=document.getElementById('heroLeftInner');
     const heroTitle=document.getElementById('heroTitle'),heroSubtitle=document.getElementById('heroSubtitle'),heroDesc=document.getElementById('heroDesc');
     const originals=[heroTitle,heroSubtitle,heroDesc].map(el=>({el,text:el.textContent})),GLITCH_DURATION=3.6;
     let glitchStart=null,glitchToken=0,lastGlitchFrame=0;
     function finishGlitch(){glitchStart=null;originals.forEach(r=>r.el.textContent=r.text);heroLeftInner.classList.remove('glitching');heroLeftInner.style.transform='none';heroLeftInner.style.filter='none';stopGlitchSound()}
-    logoGlitch.addEventListener('click',async e=>{e.preventDefault();const token=++glitchToken;finishGlitch();await initAudio();if(token!==glitchToken)return;glitchStart=audioCtx?.state==='running'?audioCtx.currentTime:performance.now()/1000;playGlitchSound(GLITCH_DURATION);heroLeftInner.classList.add('glitching');updateGlitch()});
+    logoGlitch?.addEventListener('click',async e=>{e.preventDefault();const token=++glitchToken;finishGlitch();await initAudio();if(token!==glitchToken)return;glitchStart=audioCtx?.state==='running'?audioCtx.currentTime:performance.now()/1000;playGlitchSound(GLITCH_DURATION);heroLeftInner.classList.add('glitching');updateGlitch()});
     function updateGlitch(){
       if(glitchStart===null)return;
       const now=audioCtx?.state==='running'?audioCtx.currentTime:performance.now()/1000,p=(now-glitchStart)/GLITCH_DURATION;

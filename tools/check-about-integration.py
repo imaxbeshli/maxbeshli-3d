@@ -19,7 +19,7 @@ with sync_playwright() as p:
  page.set_viewport_size({'width':1440,'height':900});page.wait_for_timeout(500)
  page.evaluate('window.__beforeAboutThree=window.THREE')
  page.context.set_offline(True)
- page.locator('header a[href="#about"]').click();page.wait_for_function('aboutDialog.open');page.wait_for_function('aboutDialog.dataset.glass==="ready"',timeout=180000);page.wait_for_timeout(2200)
+ page.evaluate('MBAbout.open()');page.wait_for_function('aboutDialog.open');page.wait_for_function('aboutDialog.dataset.glass==="ready"',timeout=180000);page.wait_for_timeout(2200)
  assert page.evaluate('window.THREE === window.__beforeAboutThree && THREE.REVISION === "128"')
  assert page.locator('.about-chapter-count').count()==0
  # Seek across the reveal boundary with non-zero parallax: it must not snap.
