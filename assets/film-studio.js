@@ -2,19 +2,38 @@
 (()=>{
   const $=id=>document.getElementById(id), reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const edit=$('filmEditing'),ai=$('filmAI'),canvas=$('aiAtmosphere'),ctx=canvas.getContext('2d');
-  const clocks=[0,0,0],paused=[false,false,false];let view=-1,video=null,frame=0,texture=null,dragBounds=[];
+  const clocks=[0,0,0],paused=[false,false,false];let view=-1,video=null,frame=0,texture=null,dragBounds=[],shootingTime=null,editingStarted=false;
   const clamp=x=>Math.max(0,Math.min(1,x)),smooth=(a,b,t)=>{const x=clamp((t-a)/(b-a));return x*x*(3-2*x)};
   const editStages=['Перенос исходного материала','Добавление звука','Цветокоррекция','Предпросмотр секвенции'];
   const arrivals=[2.1,4.2,6.3,8.4],duration=[0,22,18];
-  const aiStages=['От замысла к кадру','Стекло. Свет. Фактура.','Изображение оживает'];
+  const editStart=arrivals[0]+.2;
+  const prompt='Стеклянный флакон духов на тёмном фоне. Янтарное свечение, мягкий свет и лёгкий туман.';
+  const aiStages=['Ввод запроса','Изображение готово','Изображение оживает'];
   function playbackButton(type,n){const b=$(type+'Playback');b.textContent=paused[n]?'Продолжить':'Пауза';b.setAttribute('aria-label',(paused[n]?'Продолжить':'Приостановить')+(n===1?' монтажную сцену':' AI-сцену'))}
-  function resume(){if(video&&(view===0||view===1&&!paused[1]))video.play().catch(()=>{})}
+  function rewindEdit(){editingStarted=false;if(video){video.pause();video.currentTime=0}}
+  function resume(){
+    if(!video||document.hidden||$('infoDialog').open)return;
+    if(view===0){video.play().catch(()=>{});return}
+    if(view!==1||paused[1]||clocks[1]<editStart)return;
+    if(!editingStarted){video.currentTime=0;editingStarted=true}
+    video.play().catch(()=>{});
+  }
   function setView(n,v){
-    view=n;if(v)video=v;frame=0;
+    const previous=view;if(v)video=v;
+    if(video&&previous===0&&n!==0)shootingTime=video.currentTime;
+    view=n;frame=0;
     ['filmShooting','filmEditing','filmAI'].forEach((id,i)=>$(id).hidden=i!==n);
     $('filmChapters').hidden=n!==0;$('filmScene').dataset.filmView=String(n);
+    if(n===1&&previous!==1){clocks[1]=reduced.matches?16:0;paused[1]=reduced.matches;rewindEdit();playbackButton('edit',1)}
+    if(n===2&&previous!==2){clocks[2]=reduced.matches?14:0;paused[2]=reduced.matches;playbackButton('ai',2)}
     if(n===1)measureDrags();
-    if(video){video.pause();if(n===0||n===1){$(n===0?'sectionVideoSlot':'editVideoSlot').append(video);video.controls=n===0;resume()}}
+    if(video){
+      video.pause();
+      const restore=(n===0||n===-1)&&(previous===1||previous===2)&&shootingTime!==null;
+      const position=restore?shootingTime:video.currentTime;
+      if(n===0||n===1){$(n===0?'sectionVideoSlot':'editVideoSlot').append(video);video.controls=n===0;video.currentTime=position;resume()}
+      else if(restore)video.currentTime=position;
+    }
     render();
   }
   // Deterministic, soft fractal noise; built once, then moved in overlapping layers.
@@ -53,11 +72,12 @@
   function renderEdit(){
     const t=clocks[1],stage=t<7?0:t<10?1:t<14?2:3,color=smooth(10,13.8,t);
     edit.style.setProperty('--edit-color',color);
+    edit.style.setProperty('--edit-preview',smooth(editStart,editStart+.3,t));
     edit.style.setProperty('--edit-audio',smooth(8.23,8.6,t));
-    edit.style.setProperty('--edit-head',clamp((t-2.1)/18.5));
+    edit.style.setProperty('--edit-head',clamp((t-editStart)/18.5));
     edit.style.setProperty('--edit-reset',Math.max(1-smooth(.02,.6,t),smooth(21,22,t)));
     $('editStageLabel').textContent=editStages[stage];
-    edit.querySelectorAll('.edit-workspaces span').forEach((el,i)=>el.classList.toggle('is-current',i===(stage===1?2:stage===2?1:0)));
+    edit.querySelectorAll('.edit-workspaces span').forEach((el,i)=>el.classList.toggle('is-current',i===(stage===1?1:stage===2?2:0)));
     for(let i=0;i<3;i++)$('editTarget'+i).style.setProperty('--clip-visible',smooth(arrivals[i]-.16,arrivals[i]+.2,t));
     const ghost=edit.querySelector('.edit-drag');let moving=-1;
     arrivals.forEach((end,i)=>{if(t>=end-1.55&&t<end+.18)moving=i;$('editSource'+i).classList.toggle('is-current',t>=end-1.55&&t<end+.3)});
@@ -81,11 +101,16 @@
     edit.querySelectorAll('.edit-meter-pair i').forEach((el,i)=>el.style.setProperty('--level',(smooth(8.4,9,t)*(30+Math.abs(Math.sin(t*3.4+i*.7))*52))+'%'));
   }
   function renderAI(){
-    const t=clocks[2],reveal=smooth(1.7,4.8,t)*(1-smooth(17,18,t)),motion=smooth(5.8,9,t)*(1-smooth(17,18,t)),stage=t<5?0:t<10?1:2;
-    ai.style.setProperty('--ai-reveal',reveal);ai.style.setProperty('--ai-concept',1-reveal);
-    ai.style.setProperty('--ai-scale',1+smooth(6,17.4,t)*.17);
-    ai.style.setProperty('--ai-shift',(Math.sin((t-7)*.25)*motion*1.2).toFixed(3)+'%');
-    ai.style.setProperty('--ai-light-shift',(-30+smooth(6,17,t)*60)+'%');
+    const t=clocks[2],reveal=smooth(5.5,7.2,t)*(1-smooth(17,18,t)),motion=smooth(9,11.5,t)*(1-smooth(17,18,t)),stage=t<5.5?0:t<9?1:2;
+    ai.style.setProperty('--ai-reveal',reveal);
+    ai.style.setProperty('--ai-prompt',t<6.25?1-smooth(5.25,6.25,t):smooth(17.6,18,t));
+    const typed=t>=17.2?0:Math.floor(clamp((t-.45)/4.25)*prompt.length);
+    $('aiPromptText').textContent=prompt.slice(0,typed);
+    ai.style.setProperty('--ai-caret',t<4.9&&Math.sin(t*9)>.1?1:0);
+    ai.style.setProperty('--ai-send',smooth(4.7,5.15,t)*(1-smooth(17,18,t)));
+    ai.style.setProperty('--ai-scale',1+smooth(9,17.4,t)*.17);
+    ai.style.setProperty('--ai-shift',(Math.sin((t-10)*.25)*motion*1.2).toFixed(3)+'%');
+    ai.style.setProperty('--ai-light-shift',(-30+smooth(9,17,t)*60)+'%');
     ai.style.setProperty('--ai-glow',motion*(.45+Math.sin(t*.65)*.25));ai.style.setProperty('--ai-progress',t/18);
     $('aiStageLabel').textContent=aiStages[stage];atmosphere(t,motion);
   }
@@ -93,7 +118,8 @@
   function update(now,dt){
     if(view<1||document.hidden||$('infoDialog').open)return;
     if(paused[view])return;
-    clocks[view]=(clocks[view]+dt)%duration[view];
+    const previous=clocks[view];clocks[view]=(previous+dt)%duration[view];
+    if(view===1){if(clocks[1]<previous)rewindEdit();if(!editingStarted&&clocks[1]>=editStart)resume()}
     if(now-frame<1000/30)return;frame=now;render();
   }
   ['edit','ai'].forEach((type,i)=>{
@@ -103,5 +129,5 @@
   function motionPreference(){if(reduced.matches){clocks[1]=16;clocks[2]=14;paused[1]=paused[2]=true;playbackButton('edit',1);playbackButton('ai',2);if(view===1)video?.pause()}render()}
   reduced.addEventListener('change',motionPreference);motionPreference();
   const resize=new ResizeObserver(()=>{if(view===1)measureDrags();if(view>0)render()});resize.observe(ai);resize.observe(edit);
-  window.MBFilmStudio={setView,update,resume,get state(){return {view,editingTime:clocks[1],aiTime:clocks[2],paused:[...paused]}}};
+  window.MBFilmStudio={setView,update,resume,get state(){return {view,editingTime:clocks[1],aiTime:clocks[2],editingStarted,shootingTime,paused:[...paused]}}};
 })();

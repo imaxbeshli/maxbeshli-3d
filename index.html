@@ -931,7 +931,7 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 .film-playback{margin-left:auto;min-height:28px;padding:5px 9px;border:1px solid #ffffff30;border-radius:7px;background:#10121665;color:#e8e8ea;font-size:10px}
 .film-playback:hover{background:#ffffff18}
 #filmScene[data-film-view="1"] .film-viewport{aspect-ratio:16/10}
-.edit-workspace{display:grid;grid-template-rows:8% 44% 43% 5%;background:#17181d;font:10px/1.3 Inter,Arial,sans-serif;--edit-color:0;--edit-head:0;--edit-audio:0;--edit-reset:0}
+.edit-workspace{display:grid;grid-template-rows:8% 44% 43% 5%;background:#17181d;font:10px/1.3 Inter,Arial,sans-serif;--edit-color:0;--edit-head:0;--edit-audio:0;--edit-reset:0;--edit-preview:0}
 .edit-toolbar{display:flex;align-items:center;gap:9px;padding:0 1.6%;background:#25262c;color:#ececf0;border-bottom:1px solid #ffffff12}
 .edit-mark{display:grid;place-items:center;width:19px;height:19px;border:1px solid #bc94fc66;border-radius:4px;background:#211b35;color:#c8b3f4;font-size:10px;font-weight:600}
 .edit-workspaces{display:flex;gap:14px;margin:auto;color:#a6a8b2;font-size:9px}
@@ -950,7 +950,7 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 .edit-preview{position:relative;min-width:0;background:#08090c;overflow:hidden}
 .edit-preview-heading{position:absolute;top:0;left:0;right:0;padding:6px 9px;display:flex;justify-content:space-between;background:#202127;color:#cccdd7;font-size:8px}
 .edit-preview-heading span{color:#8e909f}
-#editVideoSlot{position:absolute;inset:25px 0 22px;filter:saturate(calc(.45 + var(--edit-color)*.65)) contrast(calc(.95 + var(--edit-color)*.12))}
+#editVideoSlot{opacity:var(--edit-preview);position:absolute;inset:25px 0 22px;filter:saturate(calc(.45 + var(--edit-color)*.65)) contrast(calc(.95 + var(--edit-color)*.12))}
 .edit-monitor-footer{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;padding:5px 9px;background:#202127;font:8px/1.2 monospace;color:#aeb8d2}
 .edit-inspector{display:grid;grid-template-columns:1fr 39%;border-left:1px solid #ffffff10;min-width:0;background:#1e1f25}
 .edit-color-panel{padding:8px 7px;display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;gap:5px;min-width:0;opacity:calc(.5 + var(--edit-color)*.5)}
@@ -993,15 +993,19 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 .edit-drag>svg{position:absolute;right:2px;bottom:-16px;width:17px;height:21px;fill:#f0edf5;stroke:#15151e;stroke-width:1.1;filter:drop-shadow(1px 2px 2px #0008)}
 .edit-drag.is-audio{background:#356c57eb;border-color:#b1d9be}.edit-drag.is-audio img{display:none}
 .edit-cycle-veil{position:absolute;inset:8% 0 0;background:#17181d;opacity:var(--edit-reset);pointer-events:none;z-index:6}
-.ai-workspace{background:#0d0c0c;--ai-reveal:0;--ai-concept:1;--ai-scale:1;--ai-shift:0px;--ai-glow:0;--ai-progress:0}
+.ai-workspace{background:#0d0c0c;--ai-reveal:0;--ai-prompt:1;--ai-caret:1;--ai-send:0;--ai-scale:1;--ai-shift:0px;--ai-glow:0;--ai-progress:0}
 .ai-image{position:absolute;inset:0;opacity:var(--ai-reveal);transform:translateX(var(--ai-shift)) scale(var(--ai-scale));transform-origin:50% 60%;will-change:transform}
 .ai-image img{width:100%;height:100%;object-fit:cover;display:block}
 .ai-light{position:absolute;inset:-20%;background:linear-gradient(110deg,transparent 38%,#f6dfb42b 50%,transparent 62%);transform:translateX(var(--ai-light-shift,0%));opacity:var(--ai-glow);mix-blend-mode:screen;pointer-events:none}
 #aiAtmosphere{position:absolute;inset:0;width:100%;height:100%;opacity:var(--ai-reveal);pointer-events:none}
-.ai-concept{position:absolute;inset:0;opacity:var(--ai-concept);background:radial-gradient(ellipse at 50% 60%,#a3896524,transparent 60%);pointer-events:none}
-.ai-concept svg{width:100%;height:100%;fill:none;stroke:#c7b69b;stroke-width:1.4}
-.ai-concept .ai-guide{stroke:#a7998355;stroke-dasharray:8 8;stroke-width:1}
-.ai-brief{position:absolute;left:10%;top:42%;font-size:clamp(9px,1vw,13px);line-height:1.8;letter-spacing:.02em;color:#b0a694}
+.ai-prompt-scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:19px;opacity:var(--ai-prompt);background:radial-gradient(ellipse at 50% 50%,#96744f19,transparent 65%);pointer-events:none}
+.ai-prompt-heading{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#bfb3a1}
+.ai-prompt-bar{width:84%;min-height:100px;display:flex;align-items:center;gap:16px;padding:22px;border:1px solid #d7c3a542;border-radius:15px;background:linear-gradient(130deg,#d5c8b311,#191817b8);box-shadow:inset 0 1px 0 #efe3cc19,0 14px 50px #0004}
+.ai-prompt-icon{width:21px;height:21px;flex:none;fill:none;stroke:#baab94;stroke-width:1.4;stroke-linecap:round}
+.ai-prompt-copy{flex:1;min-width:0;font-size:clamp(12px,1.25vw,17px);line-height:1.65;color:#e5ded2}
+.ai-prompt-caret{display:inline-block;height:1em;width:1px;background:#d4b785;vertical-align:-.1em;opacity:var(--ai-caret);margin-left:2px}
+.ai-prompt-send{width:30px;height:30px;display:grid;place-items:center;flex:none;border:1px solid #b99c7240;border-radius:8px;background:rgb(182 146 90 / calc(.06 + var(--ai-send)*.22));box-shadow:0 0 20px rgb(209 162 92 / calc(var(--ai-send)*.12))}
+.ai-prompt-send svg{width:18px;height:18px;fill:none;stroke:#d0ba99;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
 .ai-topline{position:absolute;inset:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 15px;font-size:11px;letter-spacing:.08em;background:linear-gradient(#08090ba3,transparent);z-index:2}
 .ai-caption{position:absolute;inset:auto 0 0;padding:22px 15px 12px;background:linear-gradient(transparent,#08090bb5);display:flex;align-items:center;justify-content:space-between;gap:20px;font-size:10px;color:#e0d8cb;z-index:2}
 .ai-progress{width:23%;height:1px;background:#d3c2a638}
@@ -1037,7 +1041,7 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
   .edit-timeline{padding-bottom:3px}.edit-track{gap:3px;padding:1px 0}.edit-track>b{font-size:5px}.edit-clip{font-size:5px;padding:1px 3px;gap:2px}.edit-audio>span{font-size:4px}
   .edit-playhead{bottom:3px}.edit-status{font-size:5px}.edit-status i{width:3px;height:3px}.edit-drag{font-size:5px;gap:3px;padding:2px}.edit-drag>svg{width:11px;height:14px;bottom:-10px}.edit-cycle-veil{top:11%}
   .ai-topline{padding:7px 9px;font-size:9px}.ai-caption{padding:15px 9px 8px;font-size:8px}
-  .ai-brief{left:7%;font-size:8px}.ai-concept svg{stroke-width:2}
+  .ai-prompt-scene{gap:11px}.ai-prompt-heading{font-size:8px;letter-spacing:.12em}.ai-prompt-bar{width:90%;min-height:84px;gap:9px;padding:13px 11px;border-radius:11px}.ai-prompt-copy{font-size:10px;line-height:1.6}.ai-prompt-icon{width:13px;height:13px}.ai-prompt-send{width:22px;height:22px;border-radius:6px}.ai-prompt-send svg{width:14px;height:14px}
 }
 @media(prefers-reduced-motion:reduce){.ai-image{will-change:auto}}
 
@@ -1060,7 +1064,7 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
       <button class="film-start" id="filmStart" aria-label="Воспроизвести showreel">Смотреть showreel</button>
     </div>
     <div id="filmEditing" class="film-view edit-workspace" hidden aria-label="Анимированная монтажная сцена">
-      <header class="edit-toolbar"><span class="edit-mark">M</span><span>SHOWREEL</span><div class="edit-workspaces" aria-hidden="true"><span>Монтаж</span><span>Цвет</span><span>Звук</span></div><button class="film-playback" id="editPlayback" aria-label="Приостановить монтажную сцену">Пауза</button></header>
+      <header class="edit-toolbar"><span class="edit-mark">M</span><span>SHOWREEL</span><div class="edit-workspaces" aria-hidden="true"><span>Монтаж</span><span>Звук</span><span>Цвет</span></div><button class="film-playback" id="editPlayback" aria-label="Приостановить монтажную сцену">Пауза</button></header>
       <div class="edit-monitors">
         <div class="edit-bin"><span class="edit-caption">Исходный материал</span><div class="edit-media-list">
           <div class="edit-source" id="editSource0"><img data-section-image="film-0" alt="Первый исходный кадр"><span>A001.mov<small>Видео · 00:12</small></span></div>
@@ -1087,7 +1091,10 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
       <div class="ai-image"><img data-section-image="perfume" alt="Концепция рекламы: янтарный флакон NOIR на тёмном фоне"></div>
       <div class="ai-light" aria-hidden="true"></div>
       <canvas id="aiAtmosphere" aria-hidden="true"></canvas>
-      <div class="ai-concept" aria-hidden="true"><svg viewBox="0 0 1600 900"><g><path d="M674 185H923V278H674ZM730 278V324M867 278V324M643 340Q643 327 660 327H937Q954 327 954 344V738Q954 752 936 752H660Q643 752 643 734ZM658 352H937V707H658ZM670 718H927M691 498H906M691 510H855"/><path class="ai-guide" d="M615 185H560M615 752H560M575 185V752M643 788V814M954 788V814M643 800H954M799 140V810"/></g></svg><span class="ai-brief">Янтарное стекло<br>Мягкий свет<br>Атмосфера</span></div>
+      <div class="ai-prompt-scene" role="img" aria-label="Запрос: стеклянный флакон духов на тёмном фоне. Янтарное свечение, мягкий свет и лёгкий туман.">
+        <div class="ai-prompt-heading" aria-hidden="true">Идея кадра</div>
+        <div class="ai-prompt-bar" aria-hidden="true"><svg class="ai-prompt-icon" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 6 6"/></svg><div class="ai-prompt-copy"><span id="aiPromptText"></span><i class="ai-prompt-caret"></i></div><span class="ai-prompt-send"><svg viewBox="0 0 24 24"><path d="M5 12H19M13 6L19 12L13 18"/></svg></span></div>
+      </div>
       <header class="ai-topline"><button class="film-playback" id="aiPlayback" aria-label="Приостановить AI-сцену">Пауза</button></header>
       <footer class="ai-caption"><span id="aiStageLabel">От замысла к кадру</span><span class="ai-progress"><i></i></span></footer>
     </div>
@@ -1453,19 +1460,38 @@ window.createTelegramGlass=function(root){
 (()=>{
   const $=id=>document.getElementById(id), reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const edit=$('filmEditing'),ai=$('filmAI'),canvas=$('aiAtmosphere'),ctx=canvas.getContext('2d');
-  const clocks=[0,0,0],paused=[false,false,false];let view=-1,video=null,frame=0,texture=null,dragBounds=[];
+  const clocks=[0,0,0],paused=[false,false,false];let view=-1,video=null,frame=0,texture=null,dragBounds=[],shootingTime=null,editingStarted=false;
   const clamp=x=>Math.max(0,Math.min(1,x)),smooth=(a,b,t)=>{const x=clamp((t-a)/(b-a));return x*x*(3-2*x)};
   const editStages=['Перенос исходного материала','Добавление звука','Цветокоррекция','Предпросмотр секвенции'];
   const arrivals=[2.1,4.2,6.3,8.4],duration=[0,22,18];
-  const aiStages=['От замысла к кадру','Стекло. Свет. Фактура.','Изображение оживает'];
+  const editStart=arrivals[0]+.2;
+  const prompt='Стеклянный флакон духов на тёмном фоне. Янтарное свечение, мягкий свет и лёгкий туман.';
+  const aiStages=['Ввод запроса','Изображение готово','Изображение оживает'];
   function playbackButton(type,n){const b=$(type+'Playback');b.textContent=paused[n]?'Продолжить':'Пауза';b.setAttribute('aria-label',(paused[n]?'Продолжить':'Приостановить')+(n===1?' монтажную сцену':' AI-сцену'))}
-  function resume(){if(video&&(view===0||view===1&&!paused[1]))video.play().catch(()=>{})}
+  function rewindEdit(){editingStarted=false;if(video){video.pause();video.currentTime=0}}
+  function resume(){
+    if(!video||document.hidden||$('infoDialog').open)return;
+    if(view===0){video.play().catch(()=>{});return}
+    if(view!==1||paused[1]||clocks[1]<editStart)return;
+    if(!editingStarted){video.currentTime=0;editingStarted=true}
+    video.play().catch(()=>{});
+  }
   function setView(n,v){
-    view=n;if(v)video=v;frame=0;
+    const previous=view;if(v)video=v;
+    if(video&&previous===0&&n!==0)shootingTime=video.currentTime;
+    view=n;frame=0;
     ['filmShooting','filmEditing','filmAI'].forEach((id,i)=>$(id).hidden=i!==n);
     $('filmChapters').hidden=n!==0;$('filmScene').dataset.filmView=String(n);
+    if(n===1&&previous!==1){clocks[1]=reduced.matches?16:0;paused[1]=reduced.matches;rewindEdit();playbackButton('edit',1)}
+    if(n===2&&previous!==2){clocks[2]=reduced.matches?14:0;paused[2]=reduced.matches;playbackButton('ai',2)}
     if(n===1)measureDrags();
-    if(video){video.pause();if(n===0||n===1){$(n===0?'sectionVideoSlot':'editVideoSlot').append(video);video.controls=n===0;resume()}}
+    if(video){
+      video.pause();
+      const restore=(n===0||n===-1)&&(previous===1||previous===2)&&shootingTime!==null;
+      const position=restore?shootingTime:video.currentTime;
+      if(n===0||n===1){$(n===0?'sectionVideoSlot':'editVideoSlot').append(video);video.controls=n===0;video.currentTime=position;resume()}
+      else if(restore)video.currentTime=position;
+    }
     render();
   }
   // Deterministic, soft fractal noise; built once, then moved in overlapping layers.
@@ -1504,11 +1530,12 @@ window.createTelegramGlass=function(root){
   function renderEdit(){
     const t=clocks[1],stage=t<7?0:t<10?1:t<14?2:3,color=smooth(10,13.8,t);
     edit.style.setProperty('--edit-color',color);
+    edit.style.setProperty('--edit-preview',smooth(editStart,editStart+.3,t));
     edit.style.setProperty('--edit-audio',smooth(8.23,8.6,t));
-    edit.style.setProperty('--edit-head',clamp((t-2.1)/18.5));
+    edit.style.setProperty('--edit-head',clamp((t-editStart)/18.5));
     edit.style.setProperty('--edit-reset',Math.max(1-smooth(.02,.6,t),smooth(21,22,t)));
     $('editStageLabel').textContent=editStages[stage];
-    edit.querySelectorAll('.edit-workspaces span').forEach((el,i)=>el.classList.toggle('is-current',i===(stage===1?2:stage===2?1:0)));
+    edit.querySelectorAll('.edit-workspaces span').forEach((el,i)=>el.classList.toggle('is-current',i===(stage===1?1:stage===2?2:0)));
     for(let i=0;i<3;i++)$('editTarget'+i).style.setProperty('--clip-visible',smooth(arrivals[i]-.16,arrivals[i]+.2,t));
     const ghost=edit.querySelector('.edit-drag');let moving=-1;
     arrivals.forEach((end,i)=>{if(t>=end-1.55&&t<end+.18)moving=i;$('editSource'+i).classList.toggle('is-current',t>=end-1.55&&t<end+.3)});
@@ -1532,11 +1559,16 @@ window.createTelegramGlass=function(root){
     edit.querySelectorAll('.edit-meter-pair i').forEach((el,i)=>el.style.setProperty('--level',(smooth(8.4,9,t)*(30+Math.abs(Math.sin(t*3.4+i*.7))*52))+'%'));
   }
   function renderAI(){
-    const t=clocks[2],reveal=smooth(1.7,4.8,t)*(1-smooth(17,18,t)),motion=smooth(5.8,9,t)*(1-smooth(17,18,t)),stage=t<5?0:t<10?1:2;
-    ai.style.setProperty('--ai-reveal',reveal);ai.style.setProperty('--ai-concept',1-reveal);
-    ai.style.setProperty('--ai-scale',1+smooth(6,17.4,t)*.17);
-    ai.style.setProperty('--ai-shift',(Math.sin((t-7)*.25)*motion*1.2).toFixed(3)+'%');
-    ai.style.setProperty('--ai-light-shift',(-30+smooth(6,17,t)*60)+'%');
+    const t=clocks[2],reveal=smooth(5.5,7.2,t)*(1-smooth(17,18,t)),motion=smooth(9,11.5,t)*(1-smooth(17,18,t)),stage=t<5.5?0:t<9?1:2;
+    ai.style.setProperty('--ai-reveal',reveal);
+    ai.style.setProperty('--ai-prompt',t<6.25?1-smooth(5.25,6.25,t):smooth(17.6,18,t));
+    const typed=t>=17.2?0:Math.floor(clamp((t-.45)/4.25)*prompt.length);
+    $('aiPromptText').textContent=prompt.slice(0,typed);
+    ai.style.setProperty('--ai-caret',t<4.9&&Math.sin(t*9)>.1?1:0);
+    ai.style.setProperty('--ai-send',smooth(4.7,5.15,t)*(1-smooth(17,18,t)));
+    ai.style.setProperty('--ai-scale',1+smooth(9,17.4,t)*.17);
+    ai.style.setProperty('--ai-shift',(Math.sin((t-10)*.25)*motion*1.2).toFixed(3)+'%');
+    ai.style.setProperty('--ai-light-shift',(-30+smooth(9,17,t)*60)+'%');
     ai.style.setProperty('--ai-glow',motion*(.45+Math.sin(t*.65)*.25));ai.style.setProperty('--ai-progress',t/18);
     $('aiStageLabel').textContent=aiStages[stage];atmosphere(t,motion);
   }
@@ -1544,7 +1576,8 @@ window.createTelegramGlass=function(root){
   function update(now,dt){
     if(view<1||document.hidden||$('infoDialog').open)return;
     if(paused[view])return;
-    clocks[view]=(clocks[view]+dt)%duration[view];
+    const previous=clocks[view];clocks[view]=(previous+dt)%duration[view];
+    if(view===1){if(clocks[1]<previous)rewindEdit();if(!editingStarted&&clocks[1]>=editStart)resume()}
     if(now-frame<1000/30)return;frame=now;render();
   }
   ['edit','ai'].forEach((type,i)=>{
@@ -1554,7 +1587,7 @@ window.createTelegramGlass=function(root){
   function motionPreference(){if(reduced.matches){clocks[1]=16;clocks[2]=14;paused[1]=paused[2]=true;playbackButton('edit',1);playbackButton('ai',2);if(view===1)video?.pause()}render()}
   reduced.addEventListener('change',motionPreference);motionPreference();
   const resize=new ResizeObserver(()=>{if(view===1)measureDrags();if(view>0)render()});resize.observe(ai);resize.observe(edit);
-  window.MBFilmStudio={setView,update,resume,get state(){return {view,editingTime:clocks[1],aiTime:clocks[2],paused:[...paused]}}};
+  window.MBFilmStudio={setView,update,resume,get state(){return {view,editingTime:clocks[1],aiTime:clocks[2],editingStarted,shootingTime,paused:[...paused]}}};
 })();
 
 /* Section UI: reuse the existing media, pause hidden scenes, keep all content offline. */
@@ -1695,6 +1728,12 @@ window.createTelegramGlass=function(root){
 
 </script>
 <!-- SECTIONS_END -->
+
+
+
+
+
+
 
 
 
