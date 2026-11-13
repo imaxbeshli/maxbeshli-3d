@@ -631,7 +631,7 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
 #infoDialog a{cursor:pointer}
 #ecosystem-modal [hidden],#infoDialog [hidden]{display:none!important}
 #ecosystem-modal{padding:clamp(20px,3vw,48px);height:100dvh;overflow:auto;background:#0c0e11;transition:opacity .65s ease,visibility .65s;gap:24px;overscroll-behavior:contain}
-#ecosystem-modal.active{transition:opacity .65s ease;opacity:1;visibility:visible}
+#ecosystem-modal.active{transition:opacity 1.35s cubic-bezier(.4,0,.2,1);opacity:1;visibility:visible}
 #ecosystem-modal button,#infoDialog button,#infoDialog input,#infoDialog textarea{font-family:inherit;cursor:pointer}
 #ecosystem-modal button:focus-visible,#infoDialog :focus-visible{outline:2px solid #f97083;outline-offset:5px}
 .section-world{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:#0d1015}
@@ -725,12 +725,10 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
 .crm-avatar{width:38px;height:38px;display:grid;place-items:center;background:#ad344f55;border-radius:50%}
 .crm-record h3{font-size:16px;font-weight:500;margin:0 0 7px}.crm-record p{font-size:11px;color:#ccd3dc;margin:0}.crm-record strong{font-size:10px;font-weight:400;margin-left:auto;color:#f9aeb8}
 .crm-fields{margin:20px 0 25px}.crm-fields>div{display:flex;justify-content:space-between;gap:15px;padding:12px 0;border-bottom:1px solid #ffffff15;font-size:12px}.crm-fields dt{color:#a9b6c6}.crm-fields dd{margin:0;text-align:right}
-#ecosystem-modal.active .section-intro{animation:sectionEnter .8s .08s both}#ecosystem-modal.active .section-content:not([hidden]){animation:sectionEnter .9s .16s both}
 .section-footer{max-width:1600px;width:100%;margin:0 auto}.section-footer{justify-content:flex-end}
 @keyframes sectionFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes sectionLight{from{transform:translate(-1%,0) rotate(-2deg);opacity:.12}to{transform:translate(2%,2%) rotate(2deg);opacity:.24}}
 @keyframes villaBreath{from{transform:scale(1)}to{transform:scale(1.035)}}
-@keyframes sectionEnter{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @keyframes bubbleIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
 #infoDialog{inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:#161411;overflow:auto;line-height:normal;overscroll-behavior:contain}
 #infoDialog::backdrop{background:#090b0f;backdrop-filter:none}
@@ -754,6 +752,8 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
 @media(max-width:900px){#ecosystem-modal{padding:20px 24px;gap:25px}.section-layout{grid-template-columns:1fr;gap:24px;align-items:start;max-width:700px;flex:0;margin:15px auto}.section-intro h2{font-size:38px;margin-bottom:16px;max-width:540px}.section-intro>p{max-width:600px;font-size:15px}.section-options{margin:16px 0 12px}.section-intro .section-detail{min-height:0;font-size:12px;max-width:600px}.section-presentation{transform:none}.section-phone{max-width:230px}.section-footer{max-width:700px;margin-top:auto}.section-environment{background-position:center}.contact-brand{left:25px;top:25px}.contact-wrap{padding-top:85px}.web-frame.is-mobile{max-width:75%;width:270px}.section-intro h2 br{display:none}}
 @media(max-width:540px){#ecosystem-modal{padding:18px 18px calc(20px + env(safe-area-inset-bottom));gap:20px}.section-brand{font-size:27px}.section-header .section-button{font-size:11px;min-height:40px;padding:10px 13px;border-radius:12px}.section-layout{margin:5px auto;gap:23px}.section-intro h2{font-size:34px;max-width:340px;margin-bottom:12px}.section-intro>p{font-size:13px}.section-intro .section-detail{font-size:11px;line-height:1.6}.section-options{gap:8px;margin:14px 0 11px}.section-options button{font-size:12px;padding:9px 0;margin-right:10px}.film-frame{padding:7px;transform:none;border-radius:12px}.film-chapters{gap:8px;margin-top:18px}.film-chapters button{aspect-ratio:1.35}.film-chapters span{padding:15px 7px 8px;font-size:9px}.section-note{font-size:9px!important}.section-footer .section-button{font-size:11px;padding:12px 14px}.web-frame{transform:none;padding:7px;border-radius:12px}.forma-site header{padding:14px 15px}.forma-logo{font-size:12px}.forma-nav{display:none}.forma-copy{padding:10px 15px}.forma-copy h3{font-size:28px}.forma-copy i{margin:12px 0}.forma-copy p{font-size:9px}.forma-site{aspect-ratio:1.15}.forma-site footer{font-size:7px;padding:10px 12px}.web-controls button{font-size:9px;padding:9px 4px}.telegram-demo{grid-template-columns:1fr;gap:28px}.section-phone{max-width:225px}.automation-flow{gap:13px}.flow-step{padding:14px 17px;min-height:70px;border-radius:12px}.flow-step h3{font-size:14px;margin-bottom:5px}.flow-step p{font-size:11px}.flow-line{left:32px}.automation-flow .section-note{margin-top:0}.bot-panel,.crm-panel{padding:20px}.demo-heading{font-size:16px}.bot-messages{min-height:190px;max-height:300px}.bot-bubble{font-size:12px}.crm-record{padding:13px;flex-wrap:wrap}.crm-record strong{margin-left:52px}.crm-fields>div{font-size:11px}.contact-wrap{padding:80px 16px 25px}.contact-panel{padding:27px 20px 22px;border-radius:16px}.contact-panel h2{font-size:29px;max-width:250px}.contact-lead{font-size:12px}.contact-choices{grid-template-columns:1fr 1fr;gap:8px}.contact-fields{grid-template-columns:1fr;gap:18px}.contact-actions{grid-template-columns:1fr;gap:10px}.contact-actions .section-button{font-size:12px}#infoDialog input:not([type="radio"]),#infoDialog textarea{font-size:16px}.contact-hint{font-size:10px}.section-light{filter:blur(12px)}}
 @media(prefers-reduced-motion:reduce){#ecosystem-modal *,#infoDialog *{animation:none!important;transition:none!important}.section-presentation,.section-environment{transform:none!important}#infoDialog[open],#infoDialog.is-closing{animation:none!important}}
+
+@media(prefers-reduced-motion:reduce){#ecosystem-modal.active{transition:opacity .2s linear}}
 
 /* The glass helpers below render the same beveled geometry as the main tiles. */
 .sr-only{position:absolute!important;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -1365,6 +1365,8 @@ window.createTelegramGlass=function(root){
 
 </script>
 <!-- SECTIONS_END -->
+
+
 
 
 
@@ -3594,9 +3596,19 @@ window.MBEnvironment={
       veil.style.opacity='0';
       playWhooshSound(travel.duration);
     }
-    function openEcosystemModal(){fillSection(selectedIndex);phase='section';ecosystemModal.classList.add('active');ecosystemModal.style.opacity='1';ecosystemModal.inert=false;canvas.inert=true;document.getElementById('modalCloseBtn').focus({preventScroll:true});veil.style.opacity='1'}
+    let sectionRevealFrame=0;
+    function openEcosystemModal(){
+      fillSection(selectedIndex);phase='section';veil.style.opacity='1';
+      ecosystemModal.style.opacity='0';ecosystemModal.classList.add('active');
+      ecosystemModal.inert=false;canvas.inert=true;document.getElementById('modalCloseBtn').focus({preventScroll:true});
+      // Paint the prepared section at zero opacity before revealing it as one scene.
+      cancelAnimationFrame(sectionRevealFrame);
+      sectionRevealFrame=requestAnimationFrame(()=>{sectionRevealFrame=requestAnimationFrame(()=>{
+        if(phase==='section')ecosystemModal.style.opacity='1';sectionRevealFrame=0;
+      })});
+    }
     function closeEcosystemModal(){
-      if(phase!=='section')return;window.MBSections.close();veil.style.opacity='1';ecosystemModal.style.opacity='0';ecosystemModal.classList.remove('active');ecosystemModal.inert=true;canvas.inert=false;phase='returning';
+      if(phase!=='section')return;cancelAnimationFrame(sectionRevealFrame);sectionRevealFrame=0;window.MBSections.close();veil.style.opacity='1';ecosystemModal.style.opacity='0';ecosystemModal.classList.remove('active');ecosystemModal.inert=true;canvas.inert=false;phase='returning';
       travel={...cameraJourney(travel.focusPosition.clone(),travel.focusQuaternion.clone()),centre:travel.centre,normal:travel.normal};
       playWhooshSound(travel.duration,'return');
     }

@@ -33,14 +33,21 @@ with sync_playwright() as p:
                 obj.updateWorldMatrix(true,false);
                 const centre=obj.getWorldPosition(camera.position.clone());
                 const normal=obj.getWorldDirection(camera.position.clone());
-                __entryFrames.push({phase:state.phase,distance:camera.position.clone().sub(centre).dot(normal),veil:Number(getComputedStyle(document.getElementById('travelVeil')).opacity)});
-                if(state.phase==='diving')requestAnimationFrame(sample);
+                const opacity=Number(getComputedStyle(document.getElementById('ecosystem-modal')).opacity);
+                __entryFrames.push({phase:state.phase,distance:camera.position.clone().sub(centre).dot(normal),veil:Number(getComputedStyle(document.getElementById('travelVeil')).opacity),opacity});
+                if(state.phase==='diving'||(state.phase==='section'&&opacity<1))requestAnimationFrame(sample);
             };
             __MB.startDive();sample();
         }""")
         page.wait_for_function("__MB.state.phase==='section'")
         page.wait_for_timeout(1000)
+        page.wait_for_function('__entryFrames.at(-1).phase==="section" && __entryFrames.at(-1).opacity===1')
         frames=page.evaluate('__entryFrames')
+        revealed=[f['opacity'] for f in frames if f['phase']=='section']
+        assert revealed[0]<.1 and any(.1<v<.9 for v in revealed),'Section must reveal gradually from black'
+        assert all(a<=b for a,b in zip(revealed,revealed[1:])),'Reveal must not flash backwards'
+        assert page.locator('.section-intro').evaluate('(e)=>getComputedStyle(e).animationName')=='none','No text fly-in'
+
         assert min(f['distance'] for f in frames)>1.5,'Camera must stay in front of the glass'
         assert any(f['phase']=='diving' and f['veil']==1 for f in frames),'Full black must precede section reveal'
         assert page.locator('#travelVeil').evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgb(0, 0, 0)'
