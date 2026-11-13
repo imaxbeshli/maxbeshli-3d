@@ -889,8 +889,8 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
 #infoDialog.is-closing::backdrop{animation:contactBackdropOut .35s ease both}
 .contact-wrap{min-height:100%;display:grid;place-items:center;padding:24px max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));perspective:1400px}
 .contact-panel{position:relative;width:min(540px,100%);padding:42px 34px 32px;background:linear-gradient(135deg,#d1e2ef18,#101923bf 65%);border:1px solid #d2e5ed70;border-radius:20px;box-shadow:inset 0 0 0 1px #effaff36,inset 0 1px 2px #effaff55,inset 0 -1px 2px #9db6c633,0 0 0 1px #9aaeb733,0 24px 70px #0006;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);isolation:isolate}
-#infoDialog[open] .contact-panel{animation:contactPanelIn .7s cubic-bezier(.22,.61,.36,1) .14s both,contactFloat 7s ease-in-out infinite}
-#infoDialog.is-closing .contact-panel{animation:contactPanelOut .35s ease both,contactFloat 7s ease-in-out infinite}
+#infoDialog[open] .contact-panel{animation:contactPanelIn .7s cubic-bezier(.22,.61,.36,1) .14s both,contactFloat 6s ease-in-out infinite}
+#infoDialog.is-closing .contact-panel{animation:contactPanelOut .35s ease both,contactFloat 6s ease-in-out infinite}
 #infoDialog.is-closing{pointer-events:none}
 #infoClose{float:none;position:absolute;right:14px;top:12px;width:40px;height:40px;display:grid;place-items:center;padding:0;border:0;border-radius:0;background:transparent;color:#e8edef;font:300 27px/1 Arial;transition:color .2s,text-shadow .2s}
 #infoClose:hover,#infoClose:focus-visible{color:#fff;text-shadow:0 0 10px #ffffff80}
@@ -909,7 +909,7 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
 body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contact-open .hero-left *,body.contact-open .bottom-wrap *{animation-play-state:paused!important}
 @keyframes contactBackdropIn{from{background:rgba(3,7,12,0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0)}to{background:rgba(3,7,12,.62);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}}
 @keyframes contactBackdropOut{from{background:rgba(3,7,12,.62);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}to{background:rgba(3,7,12,0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0)}}
-@keyframes contactFloat{0%,100%{translate:0 0}50%{translate:0 -4px}}
+@keyframes contactFloat{0%,100%{translate:0 0}50%{translate:0 -14px}}
 @keyframes contactPanelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes contactPanelOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(3px)}}
 @media(max-width:540px){.contact-wrap{padding:18px max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))}.contact-panel{padding:38px 20px 24px;border-radius:18px}.contact-panel h2{font-size:27px;margin-right:0}.contact-lead{font-size:13px;margin-bottom:22px}.contact-link{padding:16px 14px;gap:13px;min-height:80px}.contact-link strong{font-size:17px}.contact-link small{font-size:12px}}
@@ -1421,6 +1421,8 @@ window.createTelegramGlass=function(root){
 
 </script>
 <!-- SECTIONS_END -->
+
+
 
 
 
