@@ -22,7 +22,7 @@
       // Keep the shooting screen composed while its shared video is in the editor.
       $('sectionVideoSlot').style.backgroundImage=`url("${window.MB_SECTION_IMAGES['film-0']}")`;
     }else if(scene===1){
-      ['webDesign','webMotion','webResponsive','webProcess'].forEach((id,n)=>container.append(chapter(scene,n,$(id))));
+      // The web studio supplies its own full-width editorial chapters.
     }else{
       ['telegramApp','telegramBot','telegramCRM'].forEach((id,n)=>{const el=$(id);el.hidden=false;container.append(chapter(scene,n,el))});
     }

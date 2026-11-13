@@ -1,54 +1,46 @@
-<section id="webScene" class="section-content" aria-label="Создание сайтов" hidden>
-  <div id="webDesign">
-    <div class="section-float web-float"><div class="web-browser">
-      <div class="web-browser-bar" aria-hidden="true"><span class="web-browser-dots"><i></i><i></i><i></i></span><span>FORMA / архитектура</span><span class="web-browser-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M7 6h11v11"/></svg></span></div>
-      <div class="web-example" data-web-site="desktop"></div>
-    </div></div>
-    <div class="web-example-caption"><span>FORMA — концепция архитектурного сайта</span><span>Попробуйте открыть интерьер</span></div>
-  </div>
-  <div id="webMotion">
-    <div class="section-float web-float"><div class="web-browser web-motion-frame">
-      <div id="architectureSlot" aria-label="Анимация строительства дома"></div>
-      <div class="web-motion-controls">
-        <div class="web-motion-top"><span id="webMotionStage">От идеи к пространству</span><button type="button" id="webMotionPause" aria-label="Приостановить строительство">Пауза</button></div>
-        <label class="sr-only" for="webMotionSeek">Этап строительства</label><input id="webMotionSeek" type="range" min="0" max="27.5" step="0.1" value="0">
-        <div class="web-motion-stages"><button type="button" data-web-seek="2">Основание</button><button type="button" data-web-seek="11">Архитектура</button><button type="button" data-web-seek="21">Свет</button><button type="button" id="webMotionRestart">Сначала</button></div>
+<section id="webScene" class="section-content web-editorial" aria-label="Создание сайтов" data-direction="space" data-device="desktop" data-mode="design" hidden>
+  <section class="scroll-chapter web-hero" id="story-1-0" data-chapter="0" aria-labelledby="webHeroTitle">
+    <div class="scroll-media">
+      <div class="web-hero-visual" aria-hidden="true"><img data-section-image="web-hero" alt=""></div>
+      <div class="web-hero-copy"><p class="web-eyebrow">Дизайн · 3D · Разработка</p><h1 id="webHeroTitle">Ваш бизнес.<br>В новом<br><em>измерении.</em></h1><p class="web-hero-lead">Создаю сайты, которые передают характер компании и помогают человеку разобраться в вашем предложении.</p><div class="web-hero-actions"><button type="button" class="web-primary" data-web-contact>Обсудить сайт</button><button type="button" class="web-text-link" id="webExplore">Посмотреть подход</button></div></div>
+      <div class="web-hero-bottom"><span>Авторский дизайн</span><span>Живое взаимодействие</span><span>От идеи до запуска</span></div>
+    </div>
+  </section>
+  <section class="scroll-chapter web-showcase" id="story-1-1" data-chapter="1" aria-labelledby="webShowcaseTitle">
+    <div class="scroll-media">
+      <div class="web-section-heading"><div><p class="web-eyebrow">Визуальные направления</p><h2 id="webShowcaseTitle">Дизайн следует<br>задаче.</h2></div><p>Архитектура требует пространства.<br>Предмет — внимания к деталям.<br>Сайт получает собственный визуальный язык.</p></div>
+      <div class="web-showcase-toolbar">
+        <div class="web-directions" role="group" aria-label="Визуальное направление"><button type="button" data-web-direction="space" aria-pressed="true">Пространство</button><button type="button" data-web-direction="object" aria-pressed="false">Предмет</button></div>
+        <div class="web-display-controls"><div role="group" aria-label="Размер макета" class="web-device-controls"><button type="button" data-web-device="desktop" aria-pressed="true" aria-label="Макет на компьютере"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 21h8m-4-5v5"/></svg></button><button type="button" data-web-device="mobile" aria-pressed="false" aria-label="Макет на телефоне"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></svg></button></div><button type="button" id="webMode3D" aria-pressed="false">3D-сцена</button></div>
       </div>
-    </div></div>
-    <p class="web-small-note">Перемещайте ползунок: дом строится, меняются свет и ракурс.</p>
-  </div>
-  <div id="webResponsive" class="web-responsive-layout">
-    <div class="section-float web-phone-float"><div class="web-device"><div class="web-device-status" aria-hidden="true"><span>9:41</span><i></i><span>● ▰</span></div><div class="web-example" data-web-site="mobile"></div><div class="web-device-home" aria-hidden="true"></div></div></div>
-    <div class="web-mobile-points">
-      <article><span class="web-point-icon" aria-hidden="true">Aa</span><h3>Легко прочитать</h3><p>Текст и композиция подстраиваются под экран.</p></article>
-      <article><span class="web-point-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></span><h3>Удобно выбрать</h3><p>Понятная навигация и кнопки, в которые легко попасть.</p></article>
-      <article><span class="web-point-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M7 6h11v11"/></svg></span><h3>Просто связаться</h3><p>От знакомства с проектом — к разговору в один шаг.</p></article>
+      <div class="web-preview-stage">
+        <div class="web-preview-shell" id="webViewport">
+          <article class="web-concept web-space-concept" id="webSpaceConcept" aria-label="Концепция сайта архитектурного бюро FORMA" data-page="exterior">
+            <div class="web-case-images"><img data-section-image="villa" alt="Современный дом среди сосен" class="web-case-exterior"><img data-section-image="web-interior" alt="Светлая гостиная с панорамными окнами" class="web-case-interior" hidden></div>
+            <header class="web-case-header"><span class="web-case-brand">FORMA<span>АРХИТЕКТУРА</span></span><nav aria-label="Страницы концепции FORMA"><button type="button" data-space-page="exterior" aria-pressed="true">Дом</button><button type="button" data-space-page="interior" aria-pressed="false">Интерьер</button></nav></header>
+            <div class="web-case-copy"><p>Частная архитектура</p><h3 id="webSpaceTitle">Пространство<br>для жизни.</h3><button type="button" id="webSpaceNext">Открыть интерьер<span aria-hidden="true"></span></button></div>
+            <div class="web-case-foot"><span>HOUSE 01</span><span>Бетон. Стекло. Дерево.</span></div>
+          </article>
+          <article class="web-concept web-object-concept" id="webObjectConcept" aria-label="Концепция сайта предметного бренда ARC" data-detail="false" hidden>
+            <div class="web-case-images"><img data-section-image="web-object" alt="Скульптурный светильник из шлифованного алюминия"></div>
+            <header class="web-case-header"><span class="web-case-brand">ARC<span>OBJECT DESIGN</span></span><span class="web-object-edition">Свет как искусство</span></header>
+            <div class="web-case-copy"><p>Коллекция света</p><h3 id="webObjectTitle">Форма.<br>Свет.<br>Ничего лишнего.</h3><button type="button" id="webObjectDetail" aria-pressed="false">Рассмотреть детали<span aria-hidden="true"></span></button></div>
+            <div class="web-case-foot"><span>ARC / 01</span><span>Металл. Свет. Геометрия.</span></div>
+          </article>
+          <div id="webMotion" hidden>
+            <div id="architectureSlot" aria-label="Управляемая 3D-сцена строительства дома"></div>
+            <div class="web-motion-controls"><div class="web-motion-top"><span id="webMotionStage">От идеи к пространству</span><button type="button" id="webMotionPause" aria-label="Приостановить строительство">Пауза</button></div><label class="sr-only" for="webMotionSeek">Этап строительства</label><input id="webMotionSeek" type="range" min="0" max="27.5" step="0.1" value="0"><div class="web-motion-stages"><button type="button" data-web-seek="2">Основание</button><button type="button" data-web-seek="11">Архитектура</button><button type="button" data-web-seek="21">Свет</button><button type="button" id="webMotionRestart">Сначала</button></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="web-showcase-caption"><p id="webCaseCaption">FORMA — концепция архитектурного сайта</p><p id="webCaseHint">Откройте интерьер или исследуйте 3D-сцену.</p></div>
     </div>
-  </div>
-  <div id="webProcess" class="web-process section-float web-float">
-    <div class="web-process-steps">
-      <article><span>01</span><h3>Смысл</h3><p>Разбираемся в задаче и аудитории. Собираем структуру и содержание.</p></article>
-      <article><span>02</span><h3>Образ</h3><p>Создаём дизайн, подбираем визуал и добавляем движение там, где оно помогает.</p></article>
-      <article><span>03</span><h3>Запуск</h3><p>Проверяем сайт на разных экранах, подключаем контакты и готовим к публикации.</p></article>
+  </section>
+  <section class="scroll-chapter web-delivery" id="story-1-2" data-chapter="2" aria-labelledby="webDeliveryTitle">
+    <div class="scroll-media">
+      <div class="web-section-heading"><div><p class="web-eyebrow">Работа над проектом</p><h2 id="webDeliveryTitle">Цельная идея.<br>Точная реализация.</h2></div><p>Я веду проект от первого разговора до публикации. Содержание, визуал и разработка складываются в одну систему.</p></div>
+      <div class="web-delivery-grid"><article><span class="web-delivery-line"></span><h3>Содержание</h3><p>Разбираюсь в задаче, выстраиваю структуру и путь посетителя. Определяем, что важно рассказать и какое действие предложить.</p></article><article><span class="web-delivery-line"></span><h3>Визуальный язык</h3><p>Собираю композицию, типографику и изображения. Добавляю объём и движение там, где они раскрывают смысл.</p></article><article><span class="web-delivery-line"></span><h3>Работающий сайт</h3><p>Адаптирую интерфейс под разные экраны, проверяю взаимодействие и загрузку. Подключаю контакты и готовлю сайт к запуску.</p></article></div>
+      <div class="web-closing"><p class="web-eyebrow">Следующий шаг</p><h2>Начнём с вашей задачи.</h2><p>Расскажите о компании и о том, каким должен стать её сайт.</p><button type="button" class="web-primary" data-web-contact>Обсудить проект</button></div>
     </div>
-    <div class="web-questions">
-      <details><summary>Обязательно ли использовать 3D?</summary><p>Нет. Сначала задача, потом инструменты. Иногда сильная типографика, фотографии и точное движение дают нужный результат без сложной сцены.</p></details>
-      <details><summary>Что нужно, чтобы начать?</summary><p>Расскажите о компании, продукте и цели сайта. Если тексты, фото или структура ещё не готовы — обсудим, как собрать материал.</p></details>
-    </div>
-    <button type="button" class="section-button" data-web-contact><span class="status-dot"></span>Обсудить мой сайт</button>
-  </div>
+  </section>
 </section>
-<template id="webSiteTemplate">
-  <header class="ws-header"><span class="ws-logo">FORMA<span>ARCHITECTURE</span></span><nav aria-label="Страницы концепции FORMA"><button type="button" data-web-page="0" aria-pressed="true">Проект</button><button type="button" data-web-page="1" aria-pressed="false">Интерьер</button></nav></header>
-  <div class="ws-pages">
-    <section class="ws-page" data-web-page-panel="0">
-      <div class="ws-copy"><span class="ws-eyebrow">ЧАСТНАЯ АРХИТЕКТУРА</span><h3>Пространство<br>для жизни.</h3><p>Природа снаружи.<br>Спокойствие внутри.</p><button type="button" data-web-page="1">Смотреть интерьер <span aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M7 6h11v11"/></svg></span></button></div>
-      <div class="ws-image"><img data-section-image="villa" alt="Современный дом из бетона, дерева и стекла среди сосен"></div>
-    </section>
-    <section class="ws-page" data-web-page-panel="1" hidden>
-      <div class="ws-copy"><span class="ws-eyebrow">ИНТЕРЬЕР</span><h3>Свет.<br>Тишина. Дом.</h3><p>Тёплое дерево, природный камень<br>и место для вашего ритма.</p><button type="button" data-web-page="0">Вернуться к дому <span aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M7 6h11v11"/></svg></span></button></div>
-      <div class="ws-image"><img data-section-image="web-interior" alt="Светлая гостиная с панорамными окнами и деревянными деталями"></div>
-    </section>
-  </div>
-  <footer class="ws-footer"><span>HOUSE 01</span><span>Бетон · Стекло · Дерево</span></footer>
-</template>

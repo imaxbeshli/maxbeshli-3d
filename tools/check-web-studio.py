@@ -25,23 +25,33 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
   page.wait_for_timeout(250)
  def click(selector):
   el=page.locator(selector);el.focus();page.wait_for_timeout(100);el.click()
- assert page.locator('#webScene .scroll-chapter').count()==4
+ page.wait_for_timeout(900)
+ assert page.locator('#webScene .scroll-chapter').count()==3
  assert page.locator('#sectionOptions').is_hidden()
+ assert page.locator('.web-browser,.web-device,.web-questions').count()==0
  assert page.evaluate('MBWebStudio.state.time')==0
- go(0)
- click('[data-web-site="desktop"] nav [data-web-page="1"]')
- assert page.locator('[data-web-site="desktop"] [data-web-page-panel="1"]').is_visible()
- assert page.locator('[data-web-site="desktop"] [data-web-page-panel="0"]').is_hidden()
- page.wait_for_timeout(500);page.locator('[data-web-site="desktop"] nav [data-web-page="1"]').evaluate('e=>e.blur()')
- page.screenshot(path='/tmp/web-studio-interior.png')
- click('[data-web-site="desktop"] nav [data-web-page="0"]')
- print('PASS independent working FORMA pages and generated image loaded offline',flush=True)
- go(1);page.wait_for_timeout(650)
- t=page.evaluate('MBWebStudio.state.time');assert t>0
- click('#webMotionPause');t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(350)
+ page.screenshot(path='/tmp/web-editorial-hero.png')
+ click('#webExplore')
+ page.wait_for_function('MBSections.state.tab===1 && !document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
+ click('[data-space-page="interior"]');page.wait_for_timeout(500)
+ assert page.locator('.web-case-interior').is_visible() and page.locator('.web-case-exterior').is_hidden()
+ page.screenshot(path='/tmp/web-editorial-interior.png')
+ click('[data-web-device="mobile"]')
+ assert page.locator('#webViewport').bounding_box()['width']<=375
+ click('[data-web-direction="object"]');page.wait_for_timeout(500)
+ assert page.locator('#webObjectConcept').is_visible() and page.locator('#webSpaceConcept').is_hidden()
+ assert page.locator('#webMode3D').is_hidden()
+ click('#webObjectDetail');assert page.evaluate('MBWebStudio.state.detail')
+ page.locator('#webObjectDetail').focus();page.keyboard.press('Enter');assert not page.evaluate('MBWebStudio.state.detail')
+ click('[data-web-device="desktop"]');page.wait_for_timeout(500)
+ page.screenshot(path='/tmp/web-editorial-object.png')
+ print('PASS editorial hero, concept switching, image detail, keyboard and responsive viewport',flush=True)
+ click('[data-web-direction="space"]');click('#webMode3D');page.wait_for_timeout(600)
+ assert page.locator('#webMotion').is_visible() and page.locator('#webSpaceConcept').is_hidden()
+ assert page.evaluate('MBWebStudio.state.time')>0
+ click('#webMotionPause');t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(300)
  assert page.evaluate('MBWebStudio.state.time')==t
- click('[data-web-seek="21"]')
- assert page.evaluate('Math.abs(MBWebStudio.state.time-21)<.01 && MBWebStudio.state.paused')
+ click('[data-web-seek="21"]');assert page.evaluate('Math.abs(MBWebStudio.state.time-21)<.01 && MBWebStudio.state.paused')
  page.locator('#webMotionSeek').focus();page.keyboard.press('Home');page.keyboard.press('ArrowRight')
  assert abs(page.evaluate('MBWebStudio.state.time')-.1)<.01
  click('#webMotionRestart');page.wait_for_timeout(300)
@@ -50,33 +60,31 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
  assert page.evaluate('MBWebStudio.state.time')==t
  page.keyboard.press('Escape');page.wait_for_function('!infoDialog.open');page.wait_for_timeout(250)
  assert page.evaluate('MBWebStudio.state.time')>t
- go(2);t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(400)
+ go(2);t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(300)
  assert page.evaluate('MBWebStudio.state.time')==t
- click('[data-web-site="mobile"] nav [data-web-page="1"]')
- assert page.locator('[data-web-site="mobile"]').get_attribute('data-page')=='1'
- assert page.locator('[data-web-site="desktop"]').get_attribute('data-page')=='0'
- go(3)
- click('.web-questions details:first-child summary')
- assert page.locator('.web-questions details').first.evaluate('e=>e.open')
- click('[data-web-contact]');assert page.locator('#infoDialog').is_visible()
+ click('.web-closing [data-web-contact]');assert page.locator('#infoDialog').is_visible()
  assert page.locator('#contactTelegram').get_attribute('href')=='https://t.me/IMAXBESHLI'
  page.keyboard.press('Escape');page.wait_for_function('!infoDialog.open')
- print('PASS 3D play/pause, seeking, keyboard, restart, offscreen/contact pause and contact CTA',flush=True)
+ print('PASS real 3D play/pause, seek, restart, offscreen/contact pause and direct contact',flush=True)
+ go(1);click('#webMode3D');click('[data-space-page="exterior"]')
  for width,height in [(1440,960),(1024,768),(768,1024),(390,844),(360,740)]:
   page.set_viewport_size({'width':width,'height':height})
-  for n in range(4):
-   go(n)
+  for n in range(3):
+   if n==0:page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop=0');page.wait_for_timeout(300)
+   else:go(n)
    dims=page.locator('#ecosystem-modal').evaluate('e=>[e.clientWidth,e.scrollWidth]');assert dims[1]<=dims[0]+1,(width,n,dims)
-   if width in [1440,390]:
-    if n==1:click('[data-web-seek="11"]')
-    page.screenshot(path=f'/tmp/web-studio-{width}-{n}.png')
- page.emulate_media(reduced_motion='reduce');go(1)
+   if width in [1440,390]:page.screenshot(path=f'/tmp/web-editorial-{width}-{n}.png')
+  go(1);click('[data-web-direction="object"]');page.wait_for_timeout(500)
+  assert page.locator('#ecosystem-modal').evaluate('e=>e.scrollWidth<=e.clientWidth+1')
+  if width==390:page.screenshot(path='/tmp/web-editorial-object-mobile.png')
+  click('[data-web-direction="space"]')
+ page.emulate_media(reduced_motion='reduce');go(1);click('#webMode3D')
  assert page.evaluate('MBWebStudio.state.paused')
  t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(300);assert page.evaluate('MBWebStudio.state.time')==t
  page.evaluate('MBSections.close();MBSections.open(1)')
- assert page.locator('#webScene .scroll-chapter').count()==4
+ assert page.locator('#webScene .scroll-chapter').count()==3
  assert page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop')==0
- assert page.evaluate('MBWebStudio.state.paused')
+ assert page.evaluate('MBWebStudio.state.paused && MBWebStudio.state.direction==="space" && MBWebStudio.state.mode==="design"')
  assert not errors,errors
  print('PASS desktop/tablet/mobile widths, reduced motion, reentry and no JavaScript errors',flush=True)
  browser.close();server.shutdown()

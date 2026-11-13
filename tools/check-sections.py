@@ -110,13 +110,15 @@ with sync_playwright() as p:
 
     enter(1);screenshot('web')
     page.evaluate('MBSections.selectTab(1)')
+    click_floating('#webMode3D')
     page.wait_for_timeout(500)
     t=page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')
     page.wait_for_timeout(500)
     assert page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')>t
     assert page.locator('#architectureSlot canvas').is_visible()
-    page.evaluate('MBSections.selectTab(2)')
-    assert page.locator('[data-web-site="mobile"]').is_visible()
+    click_floating('#webMode3D')
+    click_floating('[data-web-device="mobile"]')
+    assert page.locator('#webScene').get_attribute('data-device')=='mobile'
     page.evaluate('MBSections.selectTab(0)');mobile('web');leave()
     print('PASS website overview, live architecture and mobile composition',flush=True)
 
