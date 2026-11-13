@@ -36,7 +36,9 @@ with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() 
         page.evaluate('''([n,t])=>{const s=MBFilmStudio.state,key=n===1?'editingTime':'aiTime',duration=n===1?22:18;MBFilmStudio.update(performance.now()+40,(t-s[key]+duration)%duration)}''',[n,t])
         page.wait_for_timeout(100)
     assert page.locator('#editChapters,#aiChapters,.edit-preview-title,.edit-title-clip').count()==0
-    assert page.locator('#filmScene .section-note').count()==0
+    assert page.locator('#filmScene .section-note,#filmChapters span,.ai-topline>span').count()==0
+    assert 'Sequence 01' not in page.locator('#filmEditing').text_content()
+    assert page.locator('.edit-timeline .edit-audio').count()==1
     original=page.evaluate('__MB.slateObjects[0].video.currentTime')
     page.wait_for_timeout(300)
     assert page.evaluate('__MB.slateObjects[0].video.currentTime')>original
@@ -97,6 +99,11 @@ with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() 
                 for selector in ['.section-intro','#filmScene','.section-footer']:
                     rect=page.locator(selector).bounding_box()
                     assert rect['y']>=0 and rect['y']+rect['height']<=height,(width,height,n,selector,rect)
+            if n==1:
+                label=page.locator('#editTarget3>span').bounding_box();wave=page.locator('#editTarget3 svg').bounding_box()
+                assert wave['y']>=label['y']+label['height'],(width,'Audio wave overlaps filename',label,wave)
+                icon=page.locator('#editSource3>i').bounding_box();name=page.locator('#editSource3>span').bounding_box()
+                assert icon['x']+icon['width']<=name['x'],(width,'Source wave overlaps filename')
             if width==1440 or width==390:
                 if n>0:advance(n,14);page.wait_for_timeout(100)
                 page.screenshot(path=f'/tmp/film-studio-{width}-{n}.png')

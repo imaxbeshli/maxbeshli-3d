@@ -931,10 +931,9 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 .film-playback{margin-left:auto;min-height:28px;padding:5px 9px;border:1px solid #ffffff30;border-radius:7px;background:#10121665;color:#e8e8ea;font-size:10px}
 .film-playback:hover{background:#ffffff18}
 #filmScene[data-film-view="1"] .film-viewport{aspect-ratio:16/10}
-.edit-workspace{display:grid;grid-template-rows:8% 44% 43% 5%;background:#17181d;font:10px/1.3 Inter,Arial,sans-serif;--edit-color:0;--edit-head:0;--edit-audio:0;--edit-ambience:0;--edit-reset:0}
+.edit-workspace{display:grid;grid-template-rows:8% 44% 43% 5%;background:#17181d;font:10px/1.3 Inter,Arial,sans-serif;--edit-color:0;--edit-head:0;--edit-audio:0;--edit-reset:0}
 .edit-toolbar{display:flex;align-items:center;gap:9px;padding:0 1.6%;background:#25262c;color:#ececf0;border-bottom:1px solid #ffffff12}
 .edit-mark{display:grid;place-items:center;width:19px;height:19px;border:1px solid #bc94fc66;border-radius:4px;background:#211b35;color:#c8b3f4;font-size:10px;font-weight:600}
-.edit-toolbar small,.ai-topline small{color:#a1a2ae;font-size:inherit;font-weight:400}
 .edit-workspaces{display:flex;gap:14px;margin:auto;color:#a6a8b2;font-size:9px}
 .edit-workspaces span{padding:5px 0;border-bottom:1px solid transparent}
 .edit-workspaces span.is-current{color:#e8def5;border-color:#b8a1dc}
@@ -946,7 +945,7 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 .edit-source.is-current{border-color:#b4a0dd80;background:#53456940}
 .edit-source img,.edit-source>i{width:32%;aspect-ratio:16/9;object-fit:cover;border-radius:1px;flex-shrink:0}
 .edit-source>span{min-width:0;overflow:hidden;white-space:nowrap}.edit-source small{display:block;font-size:6px;color:#9497a5;margin-top:3px}
-.edit-source>i{display:grid;place-items:center;background:#28483f;color:#addac3;font:9px monospace;letter-spacing:1px}
+.edit-source>i{display:block;background:#28483f;padding:3px;overflow:hidden}.edit-source>i svg{display:block;width:100%;height:100%;fill:none;stroke:#addac3;stroke-width:2}
 .edit-bin-count{font-size:7px;color:#878a98;margin-top:auto}
 .edit-preview{position:relative;min-width:0;background:#08090c;overflow:hidden}
 .edit-preview-heading{position:absolute;top:0;left:0;right:0;padding:6px 9px;display:flex;justify-content:space-between;background:#202127;color:#cccdd7;font-size:8px}
@@ -969,10 +968,10 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 .edit-meter-pair>div{position:relative;width:18%;background:#101716;border:1px solid #ffffff0a;overflow:hidden}
 .edit-meter-pair i{position:absolute;bottom:0;left:0;right:0;height:var(--level,0%);background:repeating-linear-gradient(to top,transparent 0 3px,#18231d 3px 4px),linear-gradient(to top,#54836b 0%,#a3c69a 65%,#e6c989 90%,#da857e)}
 .edit-meter-pair small{display:flex;flex-direction:column;justify-content:space-between;font:6px/1 monospace;color:#828694;white-space:nowrap}
-.edit-timeline{position:relative;display:grid;grid-template-rows:13% 12% 15% 23% 20% 17%;gap:0;padding:0 1.6% 7px;background:#1b1c22;overflow:hidden}
+.edit-timeline{position:relative;display:grid;grid-template-rows:13% 12% 18% 27% 30%;gap:0;padding:0 1.6% 7px;background:#1b1c22;overflow:hidden}
 .edit-sequence-bar{display:flex;align-items:center;gap:18px;font-size:8px;color:#b4bacf;border-bottom:1px solid #ffffff0d}
 .edit-tools-icons{width:64px;height:12px;fill:none;stroke:#9da4b9;stroke-width:1.2}
-.edit-sequence-bar>span:first-child{color:#dbd5ed;border-bottom:1px solid #b29ccf;padding:3px 0}.edit-sequence-bar small{margin-left:auto;font:7px monospace;color:#8c8e9b}
+.edit-sequence-bar small{margin-left:auto;font:7px monospace;color:#8c8e9b}
 .edit-ruler{margin-left:6%;display:flex;align-items:center;justify-content:space-between;color:#9295a5;font:7px/1.2 monospace;background:repeating-linear-gradient(90deg,transparent 0 calc(5% - 1px),#ffffff12 calc(5% - 1px) 5%) left bottom/100% 3px no-repeat;border-bottom:1px solid #ffffff18}
 .edit-track{position:relative;display:flex;gap:6px;min-height:0;border-bottom:1px solid #ffffff05;padding:2px 0}
 .edit-track>b{width:5%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:400;color:#aab1c9;background:#252832}
@@ -982,11 +981,9 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 .edit-shot{background:#536c8e;border:1px solid #8a9fc269;color:#eef1f7;opacity:var(--clip-visible,0)}
 .edit-shot img{height:100%;aspect-ratio:1.4;object-fit:cover;border-radius:1px;opacity:.7}
 .shot-one{left:0;width:33%}.shot-two{left:33%;width:34%;background:#676486}.shot-three{left:67%;width:33%;background:#506880}
-.edit-audio{position:absolute;inset:1px 0;background:#2d5048;border:1px solid #81c1a633;border-radius:2px;overflow:hidden;opacity:var(--edit-audio)}
-.edit-audio>span{position:absolute;left:5px;top:1px;font-size:6px;color:#c7dece;z-index:1}
-.edit-audio svg{width:100%;height:80%;margin-top:5px;fill:none;stroke:#aad2b9;stroke-width:1;opacity:.8}
-.edit-ambience{inset:1px 0 1px 16%;background:#24453f;opacity:var(--edit-ambience)}
-.edit-ambience svg{opacity:.55;transform:scaleY(.6)}
+.edit-audio{position:absolute;inset:1px 0;background:#2d5048;border:1px solid #81c1a633;border-radius:2px;overflow:hidden;opacity:var(--edit-audio);display:grid;grid-template-rows:auto minmax(0,1fr);padding:3px 5px;gap:2px}
+.edit-audio>span{display:block;font-size:7px;line-height:1.2;color:#c7dece;white-space:nowrap}
+.edit-audio svg{display:block;width:100%;height:100%;min-height:0;overflow:hidden;fill:none;stroke:#aad2b9;stroke-width:1;opacity:.8}
 .edit-playhead{position:absolute;top:15%;bottom:7px;left:calc(7.5% + var(--edit-head)*90%);width:1px;background:#c3a1d9;box-shadow:0 0 5px #b384e033}
 .edit-playhead i{position:absolute;top:-1px;left:-3px;width:7px;height:7px;background:#c6a1df;clip-path:polygon(0 0,100% 0,100% 45%,50% 100%,0 45%)}
 .edit-status{display:flex;align-items:center;justify-content:space-between;padding:0 1.6%;font-size:7px;color:#a5a8b7;background:#24252c}
@@ -1006,7 +1003,6 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 .ai-concept .ai-guide{stroke:#a7998355;stroke-dasharray:8 8;stroke-width:1}
 .ai-brief{position:absolute;left:10%;top:42%;font-size:clamp(9px,1vw,13px);line-height:1.8;letter-spacing:.02em;color:#b0a694}
 .ai-topline{position:absolute;inset:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 15px;font-size:11px;letter-spacing:.08em;background:linear-gradient(#08090ba3,transparent);z-index:2}
-.ai-topline small{letter-spacing:0;margin-left:5px}
 .ai-caption{position:absolute;inset:auto 0 0;padding:22px 15px 12px;background:linear-gradient(transparent,#08090bb5);display:flex;align-items:center;justify-content:space-between;gap:20px;font-size:10px;color:#e0d8cb;z-index:2}
 .ai-progress{width:23%;height:1px;background:#d3c2a638}
 .ai-progress i{display:block;height:1px;background:#dfc7a2;transform:scaleX(var(--ai-progress));transform-origin:left}
@@ -1064,24 +1060,23 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
       <button class="film-start" id="filmStart" aria-label="Воспроизвести showreel">Смотреть showreel</button>
     </div>
     <div id="filmEditing" class="film-view edit-workspace" hidden aria-label="Анимированная монтажная сцена">
-      <header class="edit-toolbar"><span class="edit-mark">M</span><span>SHOWREEL <small>/ Sequence 01</small></span><div class="edit-workspaces" aria-hidden="true"><span>Монтаж</span><span>Цвет</span><span>Звук</span></div><button class="film-playback" id="editPlayback" aria-label="Приостановить монтажную сцену">Пауза</button></header>
+      <header class="edit-toolbar"><span class="edit-mark">M</span><span>SHOWREEL</span><div class="edit-workspaces" aria-hidden="true"><span>Монтаж</span><span>Цвет</span><span>Звук</span></div><button class="film-playback" id="editPlayback" aria-label="Приостановить монтажную сцену">Пауза</button></header>
       <div class="edit-monitors">
         <div class="edit-bin"><span class="edit-caption">Исходный материал</span><div class="edit-media-list">
           <div class="edit-source" id="editSource0"><img data-section-image="film-0" alt="Первый исходный кадр"><span>A001.mov<small>Видео · 00:12</small></span></div>
           <div class="edit-source" id="editSource1"><img data-section-image="film-1" alt="Второй исходный кадр"><span>A002.mov<small>Видео · 00:08</small></span></div>
           <div class="edit-source" id="editSource2"><img data-section-image="film-2" alt="Третий исходный кадр"><span>A003.mov<small>Видео · 00:16</small></span></div>
-          <div class="edit-source edit-source-audio" id="editSource3"><i aria-hidden="true">▂▅▇▃▆</i><span>Sound.wav<small>Аудио · Стерео</small></span></div>
+          <div class="edit-source edit-source-audio" id="editSource3"><i aria-hidden="true"><svg viewBox="0 0 60 24" preserveAspectRatio="none"><path d="M3 10V14M7 7V17M11 9V15M15 3V21M19 6V18M23 10V14M27 5V19M31 2V22M35 6V18M39 9V15M43 4V20M47 7V17M51 10V14M55 8V16"/></svg></i><span>Sound.wav<small>Аудио · Стерео</small></span></div>
         </div><small class="edit-bin-count">4 файла</small></div>
-        <div class="edit-preview"><div class="edit-preview-heading">Программа <span>Sequence 01</span></div><div id="editVideoSlot"></div><div class="edit-monitor-footer"><span id="editTimecode">00:00:00:00</span><span>◀ &nbsp; ▷ &nbsp; ▶</span><span>1/2</span></div></div>
+        <div class="edit-preview"><div class="edit-preview-heading">Программа</div><div id="editVideoSlot"></div><div class="edit-monitor-footer"><span id="editTimecode">00:00:00:00</span><span>◀ &nbsp; ▷ &nbsp; ▶</span><span>1/2</span></div></div>
         <aside class="edit-inspector"><div class="edit-color-panel"><span class="edit-caption">Цветокоррекция</span><div class="edit-color-wheel"><i></i></div><div class="edit-slider"><span>Экспозиция</span><i><b></b></i></div><div class="edit-slider"><span>Контраст</span><i><b></b></i></div><svg viewBox="0 0 100 40" aria-hidden="true"><path class="edit-grid" d="M0 10H100M0 20H100M0 30H100M25 0V40M50 0V40M75 0V40"/><path class="edit-curve" d="M0 40C32 40 25 14 50 20S75 0 100 0"/></svg></div><div class="edit-mixer"><span class="edit-caption">Аудио</span><div class="edit-meter-pair"><div><i></i></div><div><i></i></div><small><span>0</span><span>−6</span><span>−12</span><span>−24</span><span>−48</span></small></div><span>L &nbsp; R</span></div></aside>
       </div>
       <div class="edit-timeline">
-        <div class="edit-sequence-bar"><span>Sequence 01</span><svg class="edit-tools-icons" viewBox="0 0 80 16" aria-hidden="true"><path d="M2 2V13L6 10L10 13L12 11L8 7L12 5ZM25 3L36 13M25 13L36 3M48 3H60V13H48ZM67 9L70 6L73 10L77 5"/></svg><small>00:00:18:00</small></div>
+        <div class="edit-sequence-bar"><svg class="edit-tools-icons" viewBox="0 0 80 16" aria-hidden="true"><path d="M2 2V13L6 10L10 13L12 11L8 7L12 5ZM25 3L36 13M25 13L36 3M48 3H60V13H48ZM67 9L70 6L73 10L77 5"/></svg><small>00:00:18:00</small></div>
         <div class="edit-ruler"><span>00:00</span><span>00:05</span><span>00:10</span><span>00:15</span></div>
         <div class="edit-track"><b>V2</b><div class="edit-lane"><div class="edit-clip edit-grade-clip">Цветокоррекция</div></div></div>
         <div class="edit-track"><b>V1</b><div class="edit-lane"><div class="edit-clip edit-shot shot-one" id="editTarget0"><img data-section-image="film-0" alt="">A001.mov</div><div class="edit-clip edit-shot shot-two" id="editTarget1"><img data-section-image="film-1" alt="">A002.mov</div><div class="edit-clip edit-shot shot-three" id="editTarget2"><img data-section-image="film-2" alt="">A003.mov</div></div></div>
         <div class="edit-track"><b>A1</b><div class="edit-lane"><div class="edit-audio" id="editTarget3"><span>Sound.wav</span><svg viewBox="0 0 600 28" preserveAspectRatio="none" aria-label="Звуковая волна"><path id="editWaveform"/></svg></div></div></div>
-        <div class="edit-track"><b>A2</b><div class="edit-lane"><div class="edit-audio edit-ambience"><span>Атмосфера</span><svg viewBox="0 0 600 28" preserveAspectRatio="none" aria-hidden="true"><path id="editAmbienceWave"/></svg></div></div></div>
         <div class="edit-playhead" aria-hidden="true"><i></i></div>
       </div>
       <footer class="edit-status"><span><i></i><span id="editStageLabel">Перенос исходного материала</span></span><span>1920 × 1080 &nbsp; / &nbsp; 25 fps</span></footer>
@@ -1093,15 +1088,15 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
       <div class="ai-light" aria-hidden="true"></div>
       <canvas id="aiAtmosphere" aria-hidden="true"></canvas>
       <div class="ai-concept" aria-hidden="true"><svg viewBox="0 0 1600 900"><g><path d="M674 185H923V278H674ZM730 278V324M867 278V324M643 340Q643 327 660 327H937Q954 327 954 344V738Q954 752 936 752H660Q643 752 643 734ZM658 352H937V707H658ZM670 718H927M691 498H906M691 510H855"/><path class="ai-guide" d="M615 185H560M615 752H560M575 185V752M643 788V814M954 788V814M643 800H954M799 140V810"/></g></svg><span class="ai-brief">Янтарное стекло<br>Мягкий свет<br>Атмосфера</span></div>
-      <header class="ai-topline"><span>NOIR <small>/ AI-концепция</small></span><button class="film-playback" id="aiPlayback" aria-label="Приостановить AI-сцену">Пауза</button></header>
+      <header class="ai-topline"><button class="film-playback" id="aiPlayback" aria-label="Приостановить AI-сцену">Пауза</button></header>
       <footer class="ai-caption"><span id="aiStageLabel">От замысла к кадру</span><span class="ai-progress"><i></i></span></footer>
     </div>
   </div>
 </div></div>
 <div id="filmChapters" class="film-chapters" aria-label="Фрагменты showreel">
-  <button data-film-time="1"><img data-section-image="film-0" alt="Кадр из showreel"><span>Начало</span></button>
-  <button data-film-time="16"><img data-section-image="film-1" alt="Кадр из showreel"><span>Кадр и свет</span></button>
-  <button data-film-time="34"><img data-section-image="film-2" alt="Кадр из showreel"><span>Ритм и монтаж</span></button>
+  <button data-film-time="1" aria-label="Смотреть фрагмент 1"><img data-section-image="film-0" alt="Кадр из showreel"></button>
+  <button data-film-time="16" aria-label="Смотреть фрагмент 2"><img data-section-image="film-1" alt="Кадр из showreel"></button>
+  <button data-film-time="34" aria-label="Смотреть фрагмент 3"><img data-section-image="film-2" alt="Кадр из showreel"></button>
 </div>
 
       </section>
@@ -1510,7 +1505,6 @@ window.createTelegramGlass=function(root){
     const t=clocks[1],stage=t<7?0:t<10?1:t<14?2:3,color=smooth(10,13.8,t);
     edit.style.setProperty('--edit-color',color);
     edit.style.setProperty('--edit-audio',smooth(8.23,8.6,t));
-    edit.style.setProperty('--edit-ambience',smooth(8.9,9.7,t));
     edit.style.setProperty('--edit-head',clamp((t-2.1)/18.5));
     edit.style.setProperty('--edit-reset',Math.max(1-smooth(.02,.6,t),smooth(21,22,t)));
     $('editStageLabel').textContent=editStages[stage];
@@ -1556,7 +1550,7 @@ window.createTelegramGlass=function(root){
   ['edit','ai'].forEach((type,i)=>{
     const n=i+1;$(type+'Playback').addEventListener('click',()=>{paused[n]=!paused[n];playbackButton(type,n);if(n===1){if(paused[n])video?.pause();else resume()}});
   });
-  let wave='';for(let x=0;x<600;x+=3){const a=2+Math.abs(Math.sin(x*.13)*Math.sin(x*.035))*10;wave+=`M${x} ${14-a}V${14+a}`}$('editWaveform').setAttribute('d',wave);$('editAmbienceWave').setAttribute('d',wave);
+  let wave='';for(let x=0;x<600;x+=3){const a=2+Math.abs(Math.sin(x*.13)*Math.sin(x*.035))*10;wave+=`M${x} ${14-a}V${14+a}`}$('editWaveform').setAttribute('d',wave);
   function motionPreference(){if(reduced.matches){clocks[1]=16;clocks[2]=14;paused[1]=paused[2]=true;playbackButton('edit',1);playbackButton('ai',2);if(view===1)video?.pause()}render()}
   reduced.addEventListener('change',motionPreference);motionPreference();
   const resize=new ResizeObserver(()=>{if(view===1)measureDrags();if(view>0)render()});resize.observe(ai);resize.observe(edit);
@@ -1701,6 +1695,8 @@ window.createTelegramGlass=function(root){
 
 </script>
 <!-- SECTIONS_END -->
+
+
 
 
 

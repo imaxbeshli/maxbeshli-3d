@@ -54,7 +54,6 @@
     const t=clocks[1],stage=t<7?0:t<10?1:t<14?2:3,color=smooth(10,13.8,t);
     edit.style.setProperty('--edit-color',color);
     edit.style.setProperty('--edit-audio',smooth(8.23,8.6,t));
-    edit.style.setProperty('--edit-ambience',smooth(8.9,9.7,t));
     edit.style.setProperty('--edit-head',clamp((t-2.1)/18.5));
     edit.style.setProperty('--edit-reset',Math.max(1-smooth(.02,.6,t),smooth(21,22,t)));
     $('editStageLabel').textContent=editStages[stage];
@@ -100,7 +99,7 @@
   ['edit','ai'].forEach((type,i)=>{
     const n=i+1;$(type+'Playback').addEventListener('click',()=>{paused[n]=!paused[n];playbackButton(type,n);if(n===1){if(paused[n])video?.pause();else resume()}});
   });
-  let wave='';for(let x=0;x<600;x+=3){const a=2+Math.abs(Math.sin(x*.13)*Math.sin(x*.035))*10;wave+=`M${x} ${14-a}V${14+a}`}$('editWaveform').setAttribute('d',wave);$('editAmbienceWave').setAttribute('d',wave);
+  let wave='';for(let x=0;x<600;x+=3){const a=2+Math.abs(Math.sin(x*.13)*Math.sin(x*.035))*10;wave+=`M${x} ${14-a}V${14+a}`}$('editWaveform').setAttribute('d',wave);
   function motionPreference(){if(reduced.matches){clocks[1]=16;clocks[2]=14;paused[1]=paused[2]=true;playbackButton('edit',1);playbackButton('ai',2);if(view===1)video?.pause()}render()}
   reduced.addEventListener('change',motionPreference);motionPreference();
   const resize=new ResizeObserver(()=>{if(view===1)measureDrags();if(view>0)render()});resize.observe(ai);resize.observe(edit);
