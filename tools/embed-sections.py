@@ -1,6 +1,7 @@
 """Embed the section UI and optimized artwork for standalone index.html use."""
 from pathlib import Path
 import base64, json
+from inline_assets import optimize_inline_png
 root = Path(__file__).resolve().parents[1]
 page = root / 'index.html'
 html = page.read_text()
@@ -18,4 +19,4 @@ if start in html:
 else:
     a,b=html.index('  <div id="ecosystem-modal"'),html.index('<!-- ABOUT_START -->')
     html=html.replace('  <dialog id="infoDialog"><button id="infoClose" aria-label="Закрыть">×</button><h2 id="infoTitle"></h2><p id="infoText"></p></dialog>','')
-page.write_text(html[:a]+block+'\n\n'+html[b:])
+page.write_text(optimize_inline_png(html[:a]+block+'\n\n'+html[b:]))

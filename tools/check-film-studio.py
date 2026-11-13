@@ -83,12 +83,13 @@ with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() 
     assert float(page.locator('.ai-image').evaluate('e=>getComputedStyle(e).opacity'))==0
     page.screenshot(path='/tmp/film-studio-ai-typing.png')
     advance(2,4.9)
-    full=page.locator('#aiPromptText').inner_text();assert len(full)>len(early) and full.endswith('туман.')
+    full=page.locator('#aiPromptText').inner_text();assert len(full)>len(early) and full.endswith('свет.')
     assert float(page.locator('.ai-image').evaluate('e=>getComputedStyle(e).opacity'))==0,'Image must wait until the prompt is complete'
     page.screenshot(path='/tmp/film-studio-ai-prompt.png')
     advance(2,7.7)
     assert float(page.locator('.ai-image').evaluate('e=>getComputedStyle(e).opacity'))>.99
     assert float(page.locator('#filmAI').evaluate('e=>getComputedStyle(e).getPropertyValue("--ai-scale")'))==1,'Hold the generated image before animating it'
+    assert page.locator('#aiAtmosphere').evaluate('e=>!e.getContext("2d").getImageData(0,0,e.width,e.height).data.some((v,i)=>i%4===3&&v>0)'), 'Fog must be absent in the still image stage'
     page.screenshot(path='/tmp/film-studio-ai-result.png')
     advance(2,10);page.wait_for_timeout(100)
     scale_before=float(page.locator('#filmAI').evaluate('e=>getComputedStyle(e).getPropertyValue("--ai-scale")'))

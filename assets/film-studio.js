@@ -7,7 +7,7 @@
   const editStages=['Перенос исходного материала','Добавление звука','Цветокоррекция','Предпросмотр секвенции'];
   const arrivals=[2.1,4.2,6.3,8.4],duration=[0,22,18];
   const editStart=arrivals[0]+.2;
-  const prompt='Стеклянный флакон духов на тёмном фоне. Янтарное свечение, мягкий свет и лёгкий туман.';
+  const prompt='Стеклянный флакон духов на тёмном фоне. Янтарное свечение и мягкий студийный свет.';
   const aiStages=['Ввод запроса','Изображение готово','Изображение оживает'];
   function playbackButton(type,n){const b=$(type+'Playback');b.textContent=paused[n]?'Продолжить':'Пауза';b.setAttribute('aria-label',(paused[n]?'Продолжить':'Приостановить')+(n===1?' монтажную сцену':' AI-сцену'))}
   function rewindEdit(){editingStarted=false;if(video){video.pause();video.currentTime=0}}
