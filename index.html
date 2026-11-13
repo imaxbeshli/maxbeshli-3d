@@ -2602,33 +2602,6 @@ window.MBEnvironment={
       geo.addGroup(0,capCount,0);geo.addGroup(capCount,positions.length/3-capCount,1);return geo;
     }
 
-    // Static material maps: scratches affect reflected light, not the screen artwork.
-    function createGlassWear(w,h,seed){
-      let state=seed+73;const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296};
-      const width=Math.round(1024*w/Math.max(w,h)),height=Math.round(1024*h/Math.max(w,h));
-      const rough=document.createElement('canvas'),bump=document.createElement('canvas');
-      for(const c of [rough,bump]){c.width=width;c.height=height;}
-      const r=rough.getContext('2d'),b=bump.getContext('2d');
-      r.fillStyle='#b4b4b4';r.fillRect(0,0,width,height);
-      b.fillStyle='#808080';b.fillRect(0,0,width,height);
-      for(let i=0;i<64;i++){
-        const edge=i%4,along=.06+random()*.88,inset=.018+random()*.065;
-        const x=(edge===0?inset:edge===1?1-inset:along)*width;
-        const y=(edge===2?inset:edge===3?1-inset:along)*height;
-        const angle=(edge<2?Math.PI/2:0)+(random()-.5)*1.1;
-        const length=(.012+random()*.075)*Math.min(width,height);
-        const dx=Math.cos(angle)*length,dy=Math.sin(angle)*length;
-        for(const [ctx,color] of [[r,'rgba(250,250,250,.75)'],[b,'rgba(55,55,55,.6)']]){
-          ctx.lineWidth=.8+random()*.75;ctx.lineCap='round';ctx.strokeStyle=color;
-          ctx.beginPath();ctx.moveTo(x-dx*.5,y-dy*.5);
-          ctx.quadraticCurveTo(x+dy*.04,y-dx*.04,x+dx*.5,y+dy*.5);ctx.stroke();
-        }
-      }
-      const roughnessMap=new THREE.CanvasTexture(rough),bumpMap=new THREE.CanvasTexture(bump);
-      for(const texture of [roughnessMap,bumpMap])texture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
-      return {roughnessMap,bumpMap};
-    }
-
     SLATES_DATA.forEach((item, index) => {
       const [w, h] = item.size;
       const depth = 0.36;
@@ -2639,15 +2612,12 @@ window.MBEnvironment={
 
       const glassGeo=roundedGlassGeometry(w,h,depth);
       const roundedEdgeGeo=glassEdgeGeometry(w-.20,h-.20,.14,depth);
-      const wear=createGlassWear(w,h,index);
       const glassMat = new THREE.MeshPhysicalMaterial({
         color: 0xffffff,
         transparent: true,
         opacity: 0.48,
-        roughness: 0.26,
-        roughnessMap: wear.roughnessMap,
-        bumpMap: wear.bumpMap,
-        bumpScale: .008,
+        // Preserve the former uniform finish (0.26 × 180/255), without wear.
+        roughness: 0.184,
         metalness: 0,
         transmission: 0.80,
         envMap: glassEnvironment,
@@ -2658,7 +2628,6 @@ window.MBEnvironment={
         clearcoatRoughness: 0.06
       });
       const glassSideMat=glassMat.clone();
-      glassSideMat.roughnessMap=null;glassSideMat.bumpMap=null;
       glassSideMat.roughness=.10;glassSideMat.envMapIntensity=2.4;
       glassSideMat.transmission=.78;glassSideMat.color.set(0xb7c6cc);
       glassSideMat.opacity=.82;glassSideMat.clearcoat=1;glassSideMat.clearcoatRoughness=.08;
