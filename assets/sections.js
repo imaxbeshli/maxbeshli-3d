@@ -16,11 +16,11 @@
     ]},
     {title:'Бизнес внутри Telegram',description:'Мини-приложения, боты и автоматизация — в одной системе.',tabs:['Приложение','Бот','CRM'],details:[
       'Услуги, выбор и запись внутри привычного мессенджера. Показываю на примере приложения для студии детейлинга.',
-      'Бот знакомит клиента с услугами, отвечает на частые вопросы и собирает обращение. Попробуйте короткий сценарий справа.',
-      'Продумываю передачу контактов и заявок в вашу систему. Состав интеграции зависит от процессов и выбранной CRM.'
+      'От первого вопроса до записи: выбор услуги, ответы на вопросы и удобное время. Продолжите диалог с ассистентом.',
+      'Обращения из разных каналов, карточки клиентов и расписание — в одном рабочем пространстве. Всё нужное для следующего шага.'
     ]}
   ];
-  let index=-1,active=false,tab=0,webMode=0,raf=0,last=0,x=0,y=0,tx=0,ty=0,video=null,contactReturn=null,brief='',crmStage=0,botTimer=0,resumeVideo=false;
+  let index=-1,active=false,tab=0,webMode=0,raf=0,last=0,x=0,y=0,tx=0,ty=0,video=null,contactReturn=null,brief='',resumeVideo=false;
   document.querySelectorAll('[data-section-image]').forEach(img=>img.src=window.MB_SECTION_IMAGES[img.dataset.sectionImage]);
   function tiles(){return window.__MB?.slateObjects||[]}
   function stopMedia(){tiles().forEach(o=>o.setPlaybackActive(false));if(video)video.pause()}
@@ -28,7 +28,7 @@
     tab=n;const d=definitions[index];$('sectionDetail').textContent=d.details[n];
     [...$('sectionOptions').children].forEach((b,i)=>{b.setAttribute('aria-selected',String(i===n));b.tabIndex=i===n?0:-1;if(focus&&i===n)b.focus()});
     if(index===1)setWebMode(n,false);
-    if(index===2){['telegramApp','telegramBot','telegramCRM'].forEach((id,i)=>$(id).hidden=i!==n);if(n!==0)tiles()[2]?.phoneDemo.update(false)}
+    if(index===2){['telegramApp','telegramBot','telegramCRM'].forEach((id,i)=>$(id).hidden=i!==n);if(n!==0)tiles()[2]?.phoneDemo.update(false);window.MBTelegramStudio.setView(n)}
   }
   function setWebMode(n,sync=true){
     webMode=n;$('formaSite').hidden=n===1;$('architectureSlot').hidden=n!==1;$('webFrame').classList.toggle('is-mobile',n===2);
@@ -49,7 +49,7 @@
       $('filmStart').hidden=false;video.play().catch(()=>{$('filmStart').hidden=false});
     }
     if(n===1){const c=tiles()[1].screenMat.map.image;c.setAttribute('aria-label','Строительство дома в 3D');$('architectureSlot').append(c)}
-    if(n===2){const c=tiles()[2].screenMat.map.image;c.setAttribute('aria-label','Демонстрация мини-приложения AVTOLAB77');$('phoneSlot').append(c)}
+    if(n===2){const c=tiles()[2].screenMat.map.image;c.setAttribute('aria-label','Мини-приложение AVTOLAB77');$('phoneSlot').append(c)}
     setTab(0);last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
   }
   function close(){
@@ -59,10 +59,11 @@
   function tick(now){
     if(!active)return;raf=requestAnimationFrame(tick);
     const dt=last?Math.min((now-last)/1000,.05):0;last=now;
-    if(document.hidden||contact.open||$('aboutDialog').open){stopMedia();return}
+    if(document.hidden||contact.open||$('aboutDialog').open){stopMedia();window.MBTelegramStudio.pauseClock();return}
     const ease=1-Math.exp(-4*dt);x+=(tx-x)*ease;y+=(ty-y)*ease;
     root.style.setProperty('--sx',x.toFixed(3)+'px');root.style.setProperty('--sy',y.toFixed(3)+'px');
     if(index===1&&webMode===1)tiles()[1].architectureDemo.update(true,now);
+    if(index===2)window.MBTelegramStudio.update(now,dt);
     if(index===2&&tab===0){
       const demo=tiles()[2].phoneDemo;demo.update(true,now);
       const time=demo.state.time,stage=time<7.2?0:time<14.2?1:2;
@@ -73,7 +74,7 @@
   root.addEventListener('pointerleave',()=>{tx=ty=0});
   root.addEventListener('keydown',e=>{
     if(e.key==='Tab'){
-      const all=[...root.querySelectorAll('button,a,input,textarea,video[controls]')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.getClientRects().length);
+      const all=[...root.querySelectorAll('button,a,input,select,textarea,video[controls]')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.getClientRects().length);
       const first=all[0],end=all.at(-1);
       if(e.shiftKey&&document.activeElement===first){e.preventDefault();end.focus()}else if(!e.shiftKey&&document.activeElement===end){e.preventDefault();first.focus()}
     }
@@ -87,14 +88,6 @@
   $('filmStart').addEventListener('click',()=>video?.play().catch(()=>{}));
   document.querySelectorAll('[data-film-time]').forEach(b=>b.addEventListener('click',()=>{if(!video)return;video.currentTime=Math.min(+b.dataset.filmTime,Number.isFinite(video.duration)?video.duration-.1:Infinity);video.play().catch(()=>{})}));
   document.querySelectorAll('[data-web-mode]').forEach(b=>b.addEventListener('click',()=>setWebMode(+b.dataset.webMode)));
-  function bubble(text,user=false){const p=document.createElement('p');p.className='bot-bubble'+(user?' user':'');p.textContent=text;$('botMessages').append(p);p.scrollIntoView({block:'nearest',behavior:reduced.matches?'instant':'smooth'})}
-  const answers={services:['Услуги','Полировка, защитные покрытия и уход за салоном. Помогу собрать заявку — специалист уточнит объём работ и стоимость.'],booking:['Хочу записаться','Для записи нужны услуга, модель автомобиля и удобное время. В рабочем боте эти данные передаются специалисту или в CRM. Здесь показан пример диалога.'],hours:['Когда вы работаете?','Студия работает ежедневно с 10:00 до 19:00. Могу помочь выбрать услугу и подготовить обращение.']};
-  document.querySelectorAll('[data-bot]').forEach(b=>b.addEventListener('click',()=>{
-    if(botTimer)return;const [q,a]=answers[b.dataset.bot];bubble(q,true);document.querySelectorAll('[data-bot]').forEach(el=>el.disabled=true);
-    botTimer=setTimeout(()=>{bubble(a);botTimer=0;document.querySelectorAll('[data-bot]').forEach(el=>el.disabled=false)},650);
-  }));
-  $('botReset').addEventListener('click',()=>{clearTimeout(botTimer);botTimer=0;$('botMessages').replaceChildren();bubble('Здравствуйте! Помогу выбрать услугу или оставить заявку. Что вас интересует?');document.querySelectorAll('[data-bot]').forEach(el=>el.disabled=false)});
-  $('crmNext').addEventListener('click',()=>{crmStage=(crmStage+1)%3;document.querySelectorAll('.crm-track span').forEach((el,i)=>el.classList.toggle('current',i===crmStage));$('crmStatus').textContent=['Новая заявка','В работе','Запись подтверждена'][crmStage];$('crmNext').textContent=['Взять в работу','Подтвердить запись','Повторить демонстрацию'][crmStage]});
   function openContact(direction){
     if(contact.open)return;contactReturn=document.activeElement;resumeVideo=Boolean(active&&index===0&&video&&!video.paused);stopMedia();document.body.classList.add('contact-open');
     const value=direction||'Пока не решил';[...$('projectForm').elements.direction].forEach(r=>r.checked=r.value===value);
@@ -125,5 +118,5 @@
     catch(e){$('briefFallback').hidden=false;$('briefFallback').focus();$('briefFallback').select();$('copyBrief').textContent='Выделите и скопируйте текст'}
   });
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMedia();else if(active&&index===0&&!contact.open&&!$('aboutDialog').open)video?.play().catch(()=>{})});
-  window.MBSections={open,close,openContact,closeContact,get state(){return {active,index,tab,webMode,contactOpen:contact.open}}};
+  window.MBSections={open,close,openContact,closeContact,selectTab:setTab,get state(){return {active,index,tab,webMode,contactOpen:contact.open}}};
 })();

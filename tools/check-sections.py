@@ -89,12 +89,13 @@ with sync_playwright() as p:
     enter(2);screenshot('telegram')
     assert page.evaluate('__MB.slateObjects[2].phoneDemo.state.active')
     page.locator('#sectionOptions button').nth(1).click()
-    click_floating('[data-bot="services"]')
+    click_floating('[data-bot-command="price"]')
     page.wait_for_timeout(850)
-    assert page.locator('.bot-bubble').count()==3
+    assert page.locator('.tg-message').count()==3
     page.locator('#sectionOptions button').nth(2).click()
-    click_floating('#crmNext');assert page.locator('#crmStatus').inner_text()=='В работе'
-    page.locator('#crmNext').click();assert page.locator('#crmStatus').inner_text()=='Запись подтверждена'
+    click_floating('[data-lead="seed-wa"]')
+    click_floating('#crmTake')
+    assert page.evaluate('MBTelegramStudio.state.leads.find(l=>l.id==="seed-wa").status')=='working'
     page.locator('#sectionOptions button').nth(0).click();mobile('telegram')
     print('PASS mini-app playback, bot answers and CRM demonstration',flush=True)
 

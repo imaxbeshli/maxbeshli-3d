@@ -1,0 +1,44 @@
+<section id="telegramScene" class="section-content" aria-label="Telegram-решения" hidden>
+  <div class="telegram-demo" id="telegramApp">
+    <svg id="telegramConnections" aria-hidden="true"><path id="flowTrunk"/><g class="connection"><path/><path class="pulse-route"/><circle r="2.5"/></g><g class="connection"><path/><path class="pulse-route"/><circle r="2.5"/></g><g class="connection"><path/><path class="pulse-route"/><circle r="2.5"/></g></svg>
+    <div class="section-float phone-float"><div class="section-phone"><div id="phoneSlot"></div><span class="phone-port" data-port="0"></span><span class="phone-port" data-port="1"></span><span class="phone-port" data-port="2"></span><span class="phone-bottom-port"></span></div></div>
+    <div class="automation-flow" aria-label="Путь заявки">
+      <div class="tg-glass-host tg-float"><canvas class="tg-glass-canvas" aria-hidden="true"></canvas><article class="tg-glass-panel flow-step"><span class="flow-port"></span><span class="flow-check">✓</span><div><h3>Услуга выбрана</h3><p>Защита автомобиля</p></div></article></div>
+      <div class="tg-glass-host tg-float"><canvas class="tg-glass-canvas" aria-hidden="true"></canvas><article class="tg-glass-panel flow-step"><span class="flow-port"></span><span class="flow-check">✓</span><div><h3>Запись подтверждена</h3><p>Удобные дата и время</p></div></article></div>
+      <div class="tg-glass-host tg-float"><canvas class="tg-glass-canvas" aria-hidden="true"></canvas><article class="tg-glass-panel flow-step"><span class="flow-port"></span><span class="flow-check">✓</span><div><h3>Заявка в CRM</h3><p>Всё готово к следующему шагу</p></div></article></div>
+    </div>
+  </div>
+  <div class="tg-glass-host tg-workspace-host" id="telegramBot" hidden>
+    <canvas class="tg-glass-canvas" aria-hidden="true"></canvas>
+    <div class="tg-glass-panel tg-chat">
+      <header class="tg-chat-header"><span class="tg-avatar">A</span><div><h3>Ассистент студии</h3><p id="botPresence">бот</p></div><button id="botReset" class="tg-icon-button" aria-label="Начать диалог заново">↺</button></header>
+      <div class="tg-chat-history" id="botMessages" role="log" aria-live="polite" aria-label="Переписка с ботом"></div>
+      <div class="tg-chat-bottom">
+        <div id="botActions" class="tg-replies" aria-label="Варианты ответа"></div>
+        <form id="botComposer" class="tg-composer"><label class="sr-only" for="botInput">Сообщение боту</label><input id="botInput" autocomplete="off" maxlength="80" placeholder="Написать сообщение"><button type="submit" aria-label="Отправить сообщение">↑</button></form>
+        <div class="tg-chat-tools"><button data-bot-command="menu">Меню</button><button data-bot-command="price">Стоимость</button><button data-bot-command="address">Адрес и время</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="tg-glass-host tg-workspace-host" id="telegramCRM" hidden>
+    <canvas class="tg-glass-canvas" aria-hidden="true"></canvas>
+    <div class="tg-glass-panel crm-app">
+      <header class="crm-header"><div><span class="crm-wordmark">AVTOLAB77</span><span class="crm-submark">Рабочее пространство</span></div><button class="crm-stream-button" id="crmStream" aria-pressed="true" title="Приостановить появление новых заявок"><span class="crm-stream-dot"></span><span id="crmStreamLabel">Поток заявок</span><span id="crmStreamIcon">Ⅱ</span></button></header>
+      <nav class="crm-nav" aria-label="Разделы CRM" role="tablist"><button data-crm-view="leads" role="tab" aria-selected="true">Заявки <span id="crmCount"></span></button><button data-crm-view="calendar" role="tab" aria-selected="false">Записи</button><button data-crm-view="rules" role="tab" aria-selected="false">Автоматизация</button></nav>
+      <div id="crmLeadsView" class="crm-view">
+        <div class="crm-toolbar"><label class="sr-only" for="crmSearch">Поиск клиента</label><input id="crmSearch" type="search" placeholder="Клиент или автомобиль" autocomplete="off"><label class="sr-only" for="crmSource">Источник заявки</label><select id="crmSource"><option value="all">Все источники</option><option>Telegram</option><option>WhatsApp</option><option>Instagram</option></select></div>
+        <div class="crm-columns"><div id="crmLeadList" class="crm-lead-list" aria-label="Заявки"></div><section id="crmLeadDetail" class="crm-lead-detail" aria-label="Карточка клиента"></section></div>
+      </div>
+      <div id="crmCalendarView" class="crm-view" hidden><div class="crm-calendar-toolbar"><div><h3>Расписание студии</h3><p>Записи и свободное время</p></div><label><span class="sr-only">Дата расписания</span><input id="crmCalendarDay" type="date"></label></div><div id="crmSchedule" class="crm-schedule"></div></div>
+      <div id="crmRulesView" class="crm-view" hidden>
+        <h3 class="crm-view-title">Рутинные шаги — автоматически</h3>
+        <div class="crm-rule fixed"><span class="crm-rule-symbol">↳</span><div><h4>Обращение → карточка клиента</h4><p>Имя, услуга и история в одном месте.</p></div><span class="crm-always">Всегда</span></div>
+        <label class="crm-rule"><span class="crm-rule-symbol">◎</span><div><h4>Назначить администратора</h4><p>Для новых обращений.</p></div><input type="checkbox" data-crm-rule="assign" checked><span class="crm-switch"></span></label>
+        <label class="crm-rule"><span class="crm-rule-symbol">▦</span><div><h4>Добавить запись в расписание</h4><p>После подтверждения даты и времени.</p></div><input type="checkbox" data-crm-rule="calendar" checked><span class="crm-switch"></span></label>
+        <label class="crm-rule"><span class="crm-rule-symbol">◷</span><div><h4>Подготовить напоминание</h4><p>Текст сообщения за день до визита.</p></div><input type="checkbox" data-crm-rule="reminder" checked><span class="crm-switch"></span></label>
+        <h4 class="crm-log-heading">Последние действия</h4><ol id="crmActivity" class="crm-activity"></ol>
+      </div>
+      <div id="crmToast" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
