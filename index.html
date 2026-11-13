@@ -930,57 +930,76 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 #filmScene .film-chapters button[aria-pressed="true"]{border-color:#e7c4a7b3}
 .film-playback{margin-left:auto;min-height:28px;padding:5px 9px;border:1px solid #ffffff30;border-radius:7px;background:#10121665;color:#e8e8ea;font-size:10px}
 .film-playback:hover{background:#ffffff18}
-.edit-workspace{display:grid;grid-template-rows:9% 44% 40% 7%;background:#151619;font:11px/1.3 Inter,Arial,sans-serif;--edit-cut:0;--edit-color:0;--edit-title:0;--edit-head:0}
-.edit-toolbar{display:flex;align-items:center;gap:9px;padding:0 2%;background:#24252a;color:#f3f0f1;border-bottom:1px solid #ffffff10}
-.edit-mark{display:grid;place-items:center;width:20px;height:20px;border:1px solid #bc94fc88;border-radius:4px;background:#211b35;color:#c8b3f4;font-size:11px;font-weight:600}
-.edit-toolbar small,.ai-topline small{color:#b6b5bb;font-size:inherit;font-weight:400}
-.edit-monitors{display:grid;grid-template-columns:21% 58% 21%;min-height:0;border-bottom:1px solid #ffffff14}
-.edit-bin,.edit-tools{padding:9px 10px;overflow:hidden;display:flex;flex-direction:column;gap:8px}
-.edit-bin{border-right:1px solid #ffffff10}
-.edit-caption{font-size:9px;color:#bebdc7}
-.edit-bin>div{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.edit-bin img{width:100%;aspect-ratio:16/9;object-fit:cover;border:1px solid #ffffff22;border-radius:2px}
-.edit-bin small,.edit-tools small{font-size:8px;color:#a4a4b1}
-.edit-preview{position:relative;min-width:0;background:#07080a;overflow:hidden}
-#editVideoSlot{position:absolute;inset:0 0 18px;filter:saturate(calc(.35 + var(--edit-color)*.85)) contrast(calc(.95 + var(--edit-color)*.13))}
-.edit-preview-title{position:absolute;inset:58% 0 auto;text-align:center;font-size:clamp(7px,1vw,13px);letter-spacing:.12em;opacity:var(--edit-title);text-shadow:0 2px 8px #000}
-.edit-monitor-footer{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;padding:3px 9px;background:#101115;font-size:8px;color:#b6bac8}
-.edit-tools{border-left:1px solid #ffffff10;justify-content:space-between}
-.edit-tools svg{height:42%;width:100%;overflow:visible}
-.edit-grid{fill:none;stroke:#ffffff15;stroke-width:.5}
-.edit-curve{fill:none;stroke:#c4afdb;stroke-width:1.6;stroke-dasharray:150;stroke-dashoffset:calc(150 - var(--edit-color)*150)}
-.edit-level{height:25%;display:flex;align-items:flex-end;gap:4px}
-.edit-level i{flex:1;height:var(--level,25%);background:linear-gradient(#ddd5a3,#8cbba5);border-radius:1px;opacity:.8}
-.edit-timeline{position:relative;display:grid;grid-template-rows:18% repeat(3,1fr);gap:4px;padding:6px 2% 7px;background:#1a1b20;overflow:hidden}
-.edit-ruler{margin-left:6%;display:flex;justify-content:space-between;color:#8b8d9c;font:8px/1.2 monospace;border-bottom:1px solid #ffffff15}
-.edit-track{display:flex;gap:6px;min-height:0}
-.edit-track>b{width:5%;display:flex;align-items:center;font-size:9px;font-weight:400;color:#a7a8b8}
-.edit-lane{position:relative;flex:1;background:#0b0c1140;border-radius:2px;overflow:hidden}
-.edit-clip{position:absolute;top:1px;bottom:1px;border-radius:3px;font-size:9px;display:flex;align-items:center;gap:5px;padding:3px 6px;white-space:nowrap;overflow:hidden}
-.edit-title-clip{left:35%;width:32%;background:#79618c;color:#f1e8fb;opacity:var(--edit-title);transform:translateY(calc((1 - var(--edit-title))*-8px))}
-.edit-shot{background:#596a92;border:1px solid #8a9fc269;color:#f2f4f9}
+#filmScene[data-film-view="1"] .film-viewport{aspect-ratio:16/10}
+.edit-workspace{display:grid;grid-template-rows:8% 44% 43% 5%;background:#17181d;font:10px/1.3 Inter,Arial,sans-serif;--edit-color:0;--edit-head:0;--edit-audio:0;--edit-ambience:0;--edit-reset:0}
+.edit-toolbar{display:flex;align-items:center;gap:9px;padding:0 1.6%;background:#25262c;color:#ececf0;border-bottom:1px solid #ffffff12}
+.edit-mark{display:grid;place-items:center;width:19px;height:19px;border:1px solid #bc94fc66;border-radius:4px;background:#211b35;color:#c8b3f4;font-size:10px;font-weight:600}
+.edit-toolbar small,.ai-topline small{color:#a1a2ae;font-size:inherit;font-weight:400}
+.edit-workspaces{display:flex;gap:14px;margin:auto;color:#a6a8b2;font-size:9px}
+.edit-workspaces span{padding:5px 0;border-bottom:1px solid transparent}
+.edit-workspaces span.is-current{color:#e8def5;border-color:#b8a1dc}
+.edit-monitors{display:grid;grid-template-columns:23% 54% 23%;min-height:0;border-bottom:1px solid #ffffff14}
+.edit-bin{position:relative;padding:9px 8px;overflow:hidden;display:flex;flex-direction:column;gap:7px;border-right:1px solid #ffffff10;background:#1d1e24}
+.edit-caption{font-size:9px;color:#cbcbd5;white-space:nowrap}
+.edit-media-list{display:grid;gap:5px;min-height:0}
+.edit-source{position:relative;display:flex;align-items:center;gap:6px;padding:3px;border:1px solid transparent;border-radius:3px;font-size:8px;min-width:0;background:#22232a;transition:background .3s,border-color .3s}
+.edit-source.is-current{border-color:#b4a0dd80;background:#53456940}
+.edit-source img,.edit-source>i{width:32%;aspect-ratio:16/9;object-fit:cover;border-radius:1px;flex-shrink:0}
+.edit-source>span{min-width:0;overflow:hidden;white-space:nowrap}.edit-source small{display:block;font-size:6px;color:#9497a5;margin-top:3px}
+.edit-source>i{display:grid;place-items:center;background:#28483f;color:#addac3;font:9px monospace;letter-spacing:1px}
+.edit-bin-count{font-size:7px;color:#878a98;margin-top:auto}
+.edit-preview{position:relative;min-width:0;background:#08090c;overflow:hidden}
+.edit-preview-heading{position:absolute;top:0;left:0;right:0;padding:6px 9px;display:flex;justify-content:space-between;background:#202127;color:#cccdd7;font-size:8px}
+.edit-preview-heading span{color:#8e909f}
+#editVideoSlot{position:absolute;inset:25px 0 22px;filter:saturate(calc(.45 + var(--edit-color)*.65)) contrast(calc(.95 + var(--edit-color)*.12))}
+.edit-monitor-footer{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;padding:5px 9px;background:#202127;font:8px/1.2 monospace;color:#aeb8d2}
+.edit-inspector{display:grid;grid-template-columns:1fr 39%;border-left:1px solid #ffffff10;min-width:0;background:#1e1f25}
+.edit-color-panel{padding:8px 7px;display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;gap:5px;min-width:0;opacity:calc(.5 + var(--edit-color)*.5)}
+.edit-color-panel .edit-caption{font-size:7px}
+.edit-color-wheel{position:relative;width:50%;aspect-ratio:1;margin:0 auto;border-radius:50%;background:conic-gradient(#c5997b,#a47491,#6d86ae,#82a393,#c5997b);box-shadow:inset 0 0 9px 3px #262830}
+.edit-color-wheel i{position:absolute;left:calc(45% + var(--edit-color)*10%);top:calc(45% - var(--edit-color)*9%);width:6px;height:6px;border:1px solid #f5f3e8;border-radius:50%}
+.edit-slider{font-size:6px;color:#a7a9b4}
+.edit-slider>i{position:relative;display:block;background:#363944;height:2px;margin:5px 0 1px}
+.edit-slider b{position:absolute;top:-2px;left:calc(42% + var(--edit-color)*22%);width:5px;height:6px;background:#afb2c1;border-radius:1px}
+.edit-color-panel svg{height:23%;width:100%;overflow:visible}
+.edit-grid{fill:none;stroke:#ffffff14;stroke-width:.5}
+.edit-curve{fill:none;stroke:#baacd5;stroke-width:1.3;stroke-dasharray:130;stroke-dashoffset:calc(130 - var(--edit-color)*130)}
+.edit-mixer{display:flex;flex-direction:column;align-items:center;gap:7px;padding:8px 3px 7px;border-left:1px solid #ffffff10;font-size:7px;color:#9d9fac}
+.edit-mixer .edit-caption{font-size:7px}.edit-meter-pair{display:flex;gap:3px;flex:1;min-height:0;width:100%;justify-content:center}
+.edit-meter-pair>div{position:relative;width:18%;background:#101716;border:1px solid #ffffff0a;overflow:hidden}
+.edit-meter-pair i{position:absolute;bottom:0;left:0;right:0;height:var(--level,0%);background:repeating-linear-gradient(to top,transparent 0 3px,#18231d 3px 4px),linear-gradient(to top,#54836b 0%,#a3c69a 65%,#e6c989 90%,#da857e)}
+.edit-meter-pair small{display:flex;flex-direction:column;justify-content:space-between;font:6px/1 monospace;color:#828694;white-space:nowrap}
+.edit-timeline{position:relative;display:grid;grid-template-rows:13% 12% 15% 23% 20% 17%;gap:0;padding:0 1.6% 7px;background:#1b1c22;overflow:hidden}
+.edit-sequence-bar{display:flex;align-items:center;gap:18px;font-size:8px;color:#b4bacf;border-bottom:1px solid #ffffff0d}
+.edit-tools-icons{width:64px;height:12px;fill:none;stroke:#9da4b9;stroke-width:1.2}
+.edit-sequence-bar>span:first-child{color:#dbd5ed;border-bottom:1px solid #b29ccf;padding:3px 0}.edit-sequence-bar small{margin-left:auto;font:7px monospace;color:#8c8e9b}
+.edit-ruler{margin-left:6%;display:flex;align-items:center;justify-content:space-between;color:#9295a5;font:7px/1.2 monospace;background:repeating-linear-gradient(90deg,transparent 0 calc(5% - 1px),#ffffff12 calc(5% - 1px) 5%) left bottom/100% 3px no-repeat;border-bottom:1px solid #ffffff18}
+.edit-track{position:relative;display:flex;gap:6px;min-height:0;border-bottom:1px solid #ffffff05;padding:2px 0}
+.edit-track>b{width:5%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:400;color:#aab1c9;background:#252832}
+.edit-lane{position:relative;flex:1;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),#ffffff04 calc(10% - 1px) 10%),#121319;overflow:hidden}
+.edit-clip{position:absolute;top:1px;bottom:1px;border-radius:2px;font-size:8px;display:flex;align-items:center;gap:5px;padding:3px 6px;white-space:nowrap;overflow:hidden}
+.edit-grade-clip{left:0;right:0;background:#7e618f;border:1px solid #a085bc55;color:#ebe1f3;opacity:var(--edit-color);transform:scaleX(var(--edit-color));transform-origin:left}
+.edit-shot{background:#536c8e;border:1px solid #8a9fc269;color:#eef1f7;opacity:var(--clip-visible,0)}
 .edit-shot img{height:100%;aspect-ratio:1.4;object-fit:cover;border-radius:1px;opacity:.7}
-.shot-one{left:0;width:calc(38% - var(--edit-cut)*5%)}
-.shot-two{left:calc(44% - var(--edit-cut)*11%);width:34%;background:#6e668f}
-.shot-three{left:calc(80% - var(--edit-cut)*13%);width:33%;background:#576e8f}
-.edit-audio{position:absolute;inset:1px 0;background:#315b52;border:1px solid #81c1a644;border-radius:3px;overflow:hidden}
-.edit-audio svg{width:100%;height:100%;fill:none;stroke:#a6d6ba;stroke-width:1.1;opacity:.8}
-.edit-playhead{position:absolute;top:8px;bottom:4px;left:calc(7.5% + var(--edit-head)*90%);width:1px;background:#f0b4c2;box-shadow:0 0 6px #eb698a33}
-.edit-playhead i{position:absolute;top:-1px;left:-3px;width:7px;height:7px;background:#eb7190;clip-path:polygon(0 0,100% 0,100% 45%,50% 100%,0 45%)}
-.edit-status{display:flex;align-items:center;justify-content:space-between;padding:0 2%;font-size:8px;color:#c0c0cd;background:#222329}
-.edit-status>span:first-child{display:flex;align-items:center;gap:6px}
-.edit-status i{height:4px;width:4px;background:#e49cae;border-radius:50%}
-.film-stages button>span:last-of-type{z-index:2}
-.film-stages button>i{position:absolute;inset:auto 0 0;height:2px;background:#d1b49d;transform:scaleX(0);transform-origin:left;transition:transform .5s}
-.film-stages button[aria-pressed="true"]>i{transform:scaleX(1)}
-#filmScene .stage-symbol{position:absolute;inset:8% 0 auto;height:45%;display:flex;align-items:center;justify-content:center;background:none;padding:0;color:#b9b9cd;font:18px/1 monospace;text-align:center}
-#filmScene .stage-color{inset:12% auto auto 43%;width:32px;height:32px;border-radius:50%;background:conic-gradient(#e4b891,#bd7991,#8195d0,#97bca0,#e4b891);box-shadow:inset 0 0 0 9px #1f202aad}
-#filmScene .stage-wave{font-size:19px;letter-spacing:3px;color:#a8cbbd}
-#filmScene .stage-idea{font-size:35px;color:#dab789}
+.shot-one{left:0;width:33%}.shot-two{left:33%;width:34%;background:#676486}.shot-three{left:67%;width:33%;background:#506880}
+.edit-audio{position:absolute;inset:1px 0;background:#2d5048;border:1px solid #81c1a633;border-radius:2px;overflow:hidden;opacity:var(--edit-audio)}
+.edit-audio>span{position:absolute;left:5px;top:1px;font-size:6px;color:#c7dece;z-index:1}
+.edit-audio svg{width:100%;height:80%;margin-top:5px;fill:none;stroke:#aad2b9;stroke-width:1;opacity:.8}
+.edit-ambience{inset:1px 0 1px 16%;background:#24453f;opacity:var(--edit-ambience)}
+.edit-ambience svg{opacity:.55;transform:scaleY(.6)}
+.edit-playhead{position:absolute;top:15%;bottom:7px;left:calc(7.5% + var(--edit-head)*90%);width:1px;background:#c3a1d9;box-shadow:0 0 5px #b384e033}
+.edit-playhead i{position:absolute;top:-1px;left:-3px;width:7px;height:7px;background:#c6a1df;clip-path:polygon(0 0,100% 0,100% 45%,50% 100%,0 45%)}
+.edit-status{display:flex;align-items:center;justify-content:space-between;padding:0 1.6%;font-size:7px;color:#a5a8b7;background:#24252c}
+.edit-status>span:first-child{display:flex;align-items:center;gap:6px}.edit-status i{height:4px;width:4px;background:#a69bc5;border-radius:50%}
+.edit-drag{position:absolute;z-index:5;display:flex;align-items:center;gap:7px;padding:4px;border:1px solid #d2baf1;border-radius:3px;background:#6a5b8ee8;box-shadow:0 7px 18px #0008;opacity:0;pointer-events:none;font-size:8px;will-change:transform;transform-origin:0 0}
+.edit-drag img{height:100%;width:35%;object-fit:cover}.edit-drag>span{white-space:nowrap;overflow:hidden}
+.edit-drag>svg{position:absolute;right:2px;bottom:-16px;width:17px;height:21px;fill:#f0edf5;stroke:#15151e;stroke-width:1.1;filter:drop-shadow(1px 2px 2px #0008)}
+.edit-drag.is-audio{background:#356c57eb;border-color:#b1d9be}.edit-drag.is-audio img{display:none}
+.edit-cycle-veil{position:absolute;inset:8% 0 0;background:#17181d;opacity:var(--edit-reset);pointer-events:none;z-index:6}
 .ai-workspace{background:#0d0c0c;--ai-reveal:0;--ai-concept:1;--ai-scale:1;--ai-shift:0px;--ai-glow:0;--ai-progress:0}
 .ai-image{position:absolute;inset:0;opacity:var(--ai-reveal);transform:translateX(var(--ai-shift)) scale(var(--ai-scale));transform-origin:50% 60%;will-change:transform}
 .ai-image img{width:100%;height:100%;object-fit:cover;display:block}
-.ai-light{position:absolute;inset:-20%;background:linear-gradient(110deg,transparent 38%,#f6dfb41c 50%,transparent 62%);transform:translateX(var(--ai-shift));opacity:var(--ai-glow);mix-blend-mode:screen;pointer-events:none}
+.ai-light{position:absolute;inset:-20%;background:linear-gradient(110deg,transparent 38%,#f6dfb42b 50%,transparent 62%);transform:translateX(var(--ai-light-shift,0%));opacity:var(--ai-glow);mix-blend-mode:screen;pointer-events:none}
 #aiAtmosphere{position:absolute;inset:0;width:100%;height:100%;opacity:var(--ai-reveal);pointer-events:none}
 .ai-concept{position:absolute;inset:0;opacity:var(--ai-concept);background:radial-gradient(ellipse at 50% 60%,#a3896524,transparent 60%);pointer-events:none}
 .ai-concept svg{width:100%;height:100%;fill:none;stroke:#c7b69b;stroke-width:1.4}
@@ -1009,16 +1028,20 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
   #filmScene .film-chapters{margin-top:15px;gap:9px}
   #filmScene .film-chapters button{aspect-ratio:1.65}
   #filmScene .film-chapters span{font-size:10px}
-  .edit-workspace{grid-template-rows:13% 40% 40% 7%}
-  .edit-toolbar{font-size:8px;gap:5px}.edit-mark{width:14px;height:14px;font-size:8px}
+  #filmScene[data-film-view="1"] .film-viewport{aspect-ratio:4/3}
+  .edit-workspace{grid-template-rows:11% 43% 40% 6%;font-size:7px}
+  .edit-toolbar{gap:4px}.edit-mark{width:14px;height:14px;font-size:8px}.edit-workspaces{display:none}
   .film-playback{font-size:9px;min-height:25px;padding:3px 7px}
-  .edit-bin,.edit-tools{padding:5px;gap:4px}.edit-caption{font-size:6px}.edit-bin small,.edit-tools small{font-size:6px}
-  .edit-bin>div{gap:3px}.edit-monitor-footer{font-size:5px;padding:2px 4px}#editVideoSlot{bottom:11px}
-  .edit-timeline{padding:3px 2%;gap:2px}.edit-ruler{font-size:5px}.edit-track>b{font-size:6px}.edit-clip{font-size:6px;padding:1px 3px;gap:2px}
-  .edit-playhead{top:4px}.edit-status{font-size:5px}.edit-status i{width:3px;height:3px}
+  .edit-monitors{grid-template-columns:24% 53% 23%}
+  .edit-bin{padding:5px 3px;gap:4px}.edit-caption{font-size:6px}.edit-media-list{gap:4px}.edit-source{font-size:6px;padding:2px;gap:3px}.edit-source small{display:none}.edit-bin-count{font-size:5px}
+  .edit-preview-heading{padding:4px;font-size:5px}.edit-monitor-footer{font-size:5px;padding:4px}#editVideoSlot{inset:17px 0 15px}
+  .edit-color-panel{padding:5px 3px;gap:3px}.edit-color-panel .edit-caption{font-size:4px}.edit-slider{font-size:4px}.edit-slider b{width:3px;height:4px;top:-1px}
+  .edit-color-wheel{width:70%}.edit-color-wheel i{width:4px;height:4px}.edit-mixer{padding:5px 1px;gap:4px;font-size:5px}.edit-mixer .edit-caption{font-size:5px}.edit-meter-pair{gap:1px}.edit-meter-pair small{font-size:4px;line-height:1}
+  .edit-tools-icons{width:40px;height:8px}.edit-sequence-bar{font-size:5px;gap:10px}.edit-sequence-bar small,.edit-ruler{font-size:5px}
+  .edit-timeline{padding-bottom:3px}.edit-track{gap:3px;padding:1px 0}.edit-track>b{font-size:5px}.edit-clip{font-size:5px;padding:1px 3px;gap:2px}.edit-audio>span{font-size:4px}
+  .edit-playhead{bottom:3px}.edit-status{font-size:5px}.edit-status i{width:3px;height:3px}.edit-drag{font-size:5px;gap:3px;padding:2px}.edit-drag>svg{width:11px;height:14px;bottom:-10px}.edit-cycle-veil{top:11%}
   .ai-topline{padding:7px 9px;font-size:9px}.ai-caption{padding:15px 9px 8px;font-size:8px}
   .ai-brief{left:7%;font-size:8px}.ai-concept svg{stroke-width:2}
-  #filmScene .stage-symbol{font-size:14px}#filmScene .stage-color{width:23px;height:23px;box-shadow:inset 0 0 0 6px #1f202aad}#filmScene .stage-idea{font-size:28px}
 }
 @media(prefers-reduced-motion:reduce){.ai-image{will-change:auto}}
 
@@ -1041,20 +1064,29 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
       <button class="film-start" id="filmStart" aria-label="Воспроизвести showreel">Смотреть showreel</button>
     </div>
     <div id="filmEditing" class="film-view edit-workspace" hidden aria-label="Анимированная монтажная сцена">
-      <header class="edit-toolbar"><span class="edit-mark">M</span><span>SHOWREEL <small>/ Монтаж</small></span><button class="film-playback" id="editPlayback" aria-label="Приостановить монтажную сцену">Пауза</button></header>
+      <header class="edit-toolbar"><span class="edit-mark">M</span><span>SHOWREEL <small>/ Sequence 01</small></span><div class="edit-workspaces" aria-hidden="true"><span>Монтаж</span><span>Цвет</span><span>Звук</span></div><button class="film-playback" id="editPlayback" aria-label="Приостановить монтажную сцену">Пауза</button></header>
       <div class="edit-monitors">
-        <div class="edit-bin"><span class="edit-caption">Исходный материал</span><div><img data-section-image="film-0" alt="Исходный кадр"><img data-section-image="film-1" alt="Исходный кадр"><img data-section-image="film-2" alt="Исходный кадр"></div><small>SHOWREEL / 3 фрагмента</small></div>
-        <div class="edit-preview"><div id="editVideoSlot"></div><span class="edit-preview-title">ИСТОРИИ В ДВИЖЕНИИ</span><div class="edit-monitor-footer"><span id="editTimecode">00:00:00:00</span><span>ПРЕДПРОСМОТР</span></div></div>
-        <div class="edit-tools"><span class="edit-caption" id="editToolTitle">Сборка</span><div class="edit-level"><i></i><i></i><i></i><i></i><i></i></div><svg viewBox="0 0 100 65" aria-hidden="true"><path class="edit-grid" d="M0 16H100M0 32H100M0 48H100M25 0V65M50 0V65M75 0V65"/><path class="edit-curve" d="M0 64C28 64 25 15 50 26S75 0 100 0"/></svg><small id="editToolDetail">Точная склейка</small></div>
+        <div class="edit-bin"><span class="edit-caption">Исходный материал</span><div class="edit-media-list">
+          <div class="edit-source" id="editSource0"><img data-section-image="film-0" alt="Первый исходный кадр"><span>A001.mov<small>Видео · 00:12</small></span></div>
+          <div class="edit-source" id="editSource1"><img data-section-image="film-1" alt="Второй исходный кадр"><span>A002.mov<small>Видео · 00:08</small></span></div>
+          <div class="edit-source" id="editSource2"><img data-section-image="film-2" alt="Третий исходный кадр"><span>A003.mov<small>Видео · 00:16</small></span></div>
+          <div class="edit-source edit-source-audio" id="editSource3"><i aria-hidden="true">▂▅▇▃▆</i><span>Sound.wav<small>Аудио · Стерео</small></span></div>
+        </div><small class="edit-bin-count">4 файла</small></div>
+        <div class="edit-preview"><div class="edit-preview-heading">Программа <span>Sequence 01</span></div><div id="editVideoSlot"></div><div class="edit-monitor-footer"><span id="editTimecode">00:00:00:00</span><span>◀ &nbsp; ▷ &nbsp; ▶</span><span>1/2</span></div></div>
+        <aside class="edit-inspector"><div class="edit-color-panel"><span class="edit-caption">Цветокоррекция</span><div class="edit-color-wheel"><i></i></div><div class="edit-slider"><span>Экспозиция</span><i><b></b></i></div><div class="edit-slider"><span>Контраст</span><i><b></b></i></div><svg viewBox="0 0 100 40" aria-hidden="true"><path class="edit-grid" d="M0 10H100M0 20H100M0 30H100M25 0V40M50 0V40M75 0V40"/><path class="edit-curve" d="M0 40C32 40 25 14 50 20S75 0 100 0"/></svg></div><div class="edit-mixer"><span class="edit-caption">Аудио</span><div class="edit-meter-pair"><div><i></i></div><div><i></i></div><small><span>0</span><span>−6</span><span>−12</span><span>−24</span><span>−48</span></small></div><span>L &nbsp; R</span></div></aside>
       </div>
       <div class="edit-timeline">
+        <div class="edit-sequence-bar"><span>Sequence 01</span><svg class="edit-tools-icons" viewBox="0 0 80 16" aria-hidden="true"><path d="M2 2V13L6 10L10 13L12 11L8 7L12 5ZM25 3L36 13M25 13L36 3M48 3H60V13H48ZM67 9L70 6L73 10L77 5"/></svg><small>00:00:18:00</small></div>
         <div class="edit-ruler"><span>00:00</span><span>00:05</span><span>00:10</span><span>00:15</span></div>
-        <div class="edit-track"><b>V2</b><div class="edit-lane"><div class="edit-clip edit-title-clip">Истории в движении</div></div></div>
-        <div class="edit-track"><b>V1</b><div class="edit-lane"><div class="edit-clip edit-shot shot-one"><img data-section-image="film-0" alt="">Кадр 01</div><div class="edit-clip edit-shot shot-two"><img data-section-image="film-1" alt="">Кадр 02</div><div class="edit-clip edit-shot shot-three"><img data-section-image="film-2" alt="">Кадр 03</div></div></div>
-        <div class="edit-track"><b>A1</b><div class="edit-lane"><div class="edit-audio"><svg viewBox="0 0 600 28" preserveAspectRatio="none" aria-label="Звуковая волна"><path id="editWaveform"/></svg></div></div></div>
+        <div class="edit-track"><b>V2</b><div class="edit-lane"><div class="edit-clip edit-grade-clip">Цветокоррекция</div></div></div>
+        <div class="edit-track"><b>V1</b><div class="edit-lane"><div class="edit-clip edit-shot shot-one" id="editTarget0"><img data-section-image="film-0" alt="">A001.mov</div><div class="edit-clip edit-shot shot-two" id="editTarget1"><img data-section-image="film-1" alt="">A002.mov</div><div class="edit-clip edit-shot shot-three" id="editTarget2"><img data-section-image="film-2" alt="">A003.mov</div></div></div>
+        <div class="edit-track"><b>A1</b><div class="edit-lane"><div class="edit-audio" id="editTarget3"><span>Sound.wav</span><svg viewBox="0 0 600 28" preserveAspectRatio="none" aria-label="Звуковая волна"><path id="editWaveform"/></svg></div></div></div>
+        <div class="edit-track"><b>A2</b><div class="edit-lane"><div class="edit-audio edit-ambience"><span>Атмосфера</span><svg viewBox="0 0 600 28" preserveAspectRatio="none" aria-hidden="true"><path id="editAmbienceWave"/></svg></div></div></div>
         <div class="edit-playhead" aria-hidden="true"><i></i></div>
       </div>
-      <footer class="edit-status"><span><i></i><span id="editStageLabel">Сборка истории</span></span><span>ВИДЕО · ЦВЕТ · ЗВУК</span></footer>
+      <footer class="edit-status"><span><i></i><span id="editStageLabel">Перенос исходного материала</span></span><span>1920 × 1080 &nbsp; / &nbsp; 25 fps</span></footer>
+      <div class="edit-drag" aria-hidden="true"><img id="editDragImage" data-section-image="film-0" alt=""><span id="editDragName">A001.mov</span><svg viewBox="0 0 20 24"><path d="M2 1V19L7 15L11 23L15 21L11 13H18Z"/></svg></div>
+      <div class="edit-cycle-veil" aria-hidden="true"></div>
     </div>
     <div id="filmAI" class="film-view ai-workspace" hidden aria-label="AI-концепция рекламы парфюма">
       <div class="ai-image"><img data-section-image="perfume" alt="Концепция рекламы: янтарный флакон NOIR на тёмном фоне"></div>
@@ -1070,16 +1102,6 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
   <button data-film-time="1"><img data-section-image="film-0" alt="Кадр из showreel"><span>Начало</span></button>
   <button data-film-time="16"><img data-section-image="film-1" alt="Кадр из showreel"><span>Кадр и свет</span></button>
   <button data-film-time="34"><img data-section-image="film-2" alt="Кадр из showreel"><span>Ритм и монтаж</span></button>
-</div>
-<div id="editChapters" class="film-chapters film-stages" aria-label="Этапы монтажа" hidden>
-  <button data-edit-stage="0" aria-pressed="true"><span class="stage-symbol stage-cut" aria-hidden="true">▰ / ▰</span><span>Сборка</span><i></i></button>
-  <button data-edit-stage="1" aria-pressed="false"><span class="stage-symbol stage-color" aria-hidden="true"></span><span>Цвет</span><i></i></button>
-  <button data-edit-stage="2" aria-pressed="false"><span class="stage-symbol stage-wave" aria-hidden="true">▂▅▃▇▅▂▆▃</span><span>Звук</span><i></i></button>
-</div>
-<div id="aiChapters" class="film-chapters film-stages" aria-label="Этапы AI-сцены" hidden>
-  <button data-ai-stage="0" aria-pressed="true"><span class="stage-symbol stage-idea" aria-hidden="true">✧</span><span>Идея</span><i></i></button>
-  <button data-ai-stage="1" aria-pressed="false"><img data-section-image="perfume" alt=""><span>Изображение</span><i></i></button>
-  <button data-ai-stage="2" aria-pressed="false"><img data-section-image="perfume" alt=""><span>Движение</span><i></i></button>
 </div>
 
       </section>
@@ -1436,17 +1458,18 @@ window.createTelegramGlass=function(root){
 (()=>{
   const $=id=>document.getElementById(id), reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const edit=$('filmEditing'),ai=$('filmAI'),canvas=$('aiAtmosphere'),ctx=canvas.getContext('2d');
-  const clocks=[0,0,0],paused=[false,false,false];let view=-1,video=null,frame=0,texture=null;
+  const clocks=[0,0,0],paused=[false,false,false];let view=-1,video=null,frame=0,texture=null,dragBounds=[];
   const clamp=x=>Math.max(0,Math.min(1,x)),smooth=(a,b,t)=>{const x=clamp((t-a)/(b-a));return x*x*(3-2*x)};
-  const editStages=['Сборка истории','Работа с цветом','Звук и финальные акценты'];
+  const editStages=['Перенос исходного материала','Добавление звука','Цветокоррекция','Предпросмотр секвенции'];
+  const arrivals=[2.1,4.2,6.3,8.4],duration=[0,22,18];
   const aiStages=['От замысла к кадру','Стекло. Свет. Фактура.','Изображение оживает'];
-  function setButtons(type,stage){document.querySelectorAll(`[data-${type}-stage]`).forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset[type+'Stage']===stage)))}
   function playbackButton(type,n){const b=$(type+'Playback');b.textContent=paused[n]?'Продолжить':'Пауза';b.setAttribute('aria-label',(paused[n]?'Продолжить':'Приостановить')+(n===1?' монтажную сцену':' AI-сцену'))}
   function resume(){if(video&&(view===0||view===1&&!paused[1]))video.play().catch(()=>{})}
   function setView(n,v){
     view=n;if(v)video=v;frame=0;
     ['filmShooting','filmEditing','filmAI'].forEach((id,i)=>$(id).hidden=i!==n);
-    ['filmChapters','editChapters','aiChapters'].forEach((id,i)=>$(id).hidden=i!==n);
+    $('filmChapters').hidden=n!==0;$('filmScene').dataset.filmView=String(n);
+    if(n===1)measureDrags();
     if(video){video.pause();if(n===0||n===1){$(n===0?'sectionVideoSlot':'editVideoSlot').append(video);video.controls=n===0;resume()}}
     render();
   }
@@ -1470,49 +1493,73 @@ window.createTelegramGlass=function(root){
     ctx.clearRect(0,0,w,h);if(strength<.001)return;
     const tex=smokeTexture(),phase=t/18*Math.PI*2;
     ctx.globalCompositeOperation='screen';
-    for(let i=0;i<3;i++){
-      ctx.globalAlpha=strength*(.22-i*.035);
-      const drift=Math.sin(phase+i*2)*w*.055,lift=Math.cos(phase+i)*h*.025;
-      ctx.drawImage(tex,-w*.25+drift+i*w*.1,h*.59+lift,w*1.35,h*.5);
+    for(let i=0;i<4;i++){
+      ctx.globalAlpha=strength*(.59-i*.075);
+      const drift=Math.sin(phase*1.3+i*1.8)*w*.16,lift=Math.cos(phase*1.1+i)*h*.055;
+      ctx.save();ctx.translate(w*.5+drift,h*.78+lift);ctx.rotate(Math.sin(phase+i)*.035);
+      ctx.drawImage(tex,-w*(.72-i*.035),-h*.23,w*(1.44-i*.07),h*.57);ctx.restore();
     }
     ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
   }
+  function localBox(el){
+    let x=0,y=0,node=el;while(node&&node!==edit){x+=node.offsetLeft;y+=node.offsetTop;node=node.offsetParent}
+    return {x,y,w:el.offsetWidth,h:el.offsetHeight};
+  }
+  function measureDrags(){dragBounds=arrivals.map((_,i)=>({from:localBox($('editSource'+i)),to:localBox($('editTarget'+i))}))}
   function renderEdit(){
-    const t=clocks[1],stage=t<6?0:t<12?1:2;
-    edit.style.setProperty('--edit-cut',smooth(.7,3.2,t));
-    edit.style.setProperty('--edit-color',smooth(6.1,9.8,t));
-    edit.style.setProperty('--edit-title',smooth(11.5,13.3,t)*(1-smooth(17,18,t)));
-    edit.style.setProperty('--edit-head',t/18);
-    $('editStageLabel').textContent=editStages[stage];$('editToolTitle').textContent=['Сборка','Цвет','Звук'][stage];$('editToolDetail').textContent=['Точная склейка','Свет и оттенки','Баланс дорожек'][stage];
+    const t=clocks[1],stage=t<7?0:t<10?1:t<14?2:3,color=smooth(10,13.8,t);
+    edit.style.setProperty('--edit-color',color);
+    edit.style.setProperty('--edit-audio',smooth(8.23,8.6,t));
+    edit.style.setProperty('--edit-ambience',smooth(8.9,9.7,t));
+    edit.style.setProperty('--edit-head',clamp((t-2.1)/18.5));
+    edit.style.setProperty('--edit-reset',Math.max(1-smooth(.02,.6,t),smooth(21,22,t)));
+    $('editStageLabel').textContent=editStages[stage];
+    edit.querySelectorAll('.edit-workspaces span').forEach((el,i)=>el.classList.toggle('is-current',i===(stage===1?2:stage===2?1:0)));
+    for(let i=0;i<3;i++)$('editTarget'+i).style.setProperty('--clip-visible',smooth(arrivals[i]-.16,arrivals[i]+.2,t));
+    const ghost=edit.querySelector('.edit-drag');let moving=-1;
+    arrivals.forEach((end,i)=>{if(t>=end-1.55&&t<end+.18)moving=i;$('editSource'+i).classList.toggle('is-current',t>=end-1.55&&t<end+.3)});
+    if(moving<0)ghost.style.opacity='0';
+    else{
+      const end=arrivals[moving],u=smooth(end-1.4,end,t),bound=dragBounds[moving];
+      if(bound){
+        const {from,to}=bound,mix=(a,b)=>a+(b-a)*u;
+        ghost.style.left='0';ghost.style.top='0';ghost.style.width=mix(from.w,to.w)+'px';ghost.style.height=mix(from.h,to.h)+'px';
+        ghost.style.transform=`translate(${mix(from.x,to.x)}px,${mix(from.y,to.y)-Math.sin(u*Math.PI)*edit.clientHeight*.06}px)`;
+        ghost.style.opacity=String(smooth(end-1.55,end-1.35,t)*(1-smooth(end-.05,end+.18,t)));
+        ghost.classList.toggle('is-audio',moving===3);
+        if(ghost.dataset.source!==String(moving)){
+          ghost.dataset.source=String(moving);$('editDragName').textContent=moving===3?'Sound.wav':`A00${moving+1}.mov`;
+          if(moving<3)$('editDragImage').src=window.MB_SECTION_IMAGES['film-'+moving];
+        }
+      }
+    }
     const current=Number.isFinite(video?.currentTime)?video.currentTime:t,seconds=Math.floor(current);
     $('editTimecode').textContent=`00:${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}:${String(Math.floor(current%1*25)).padStart(2,'0')}`;
-    edit.querySelectorAll('.edit-level i').forEach((el,i)=>el.style.setProperty('--level',(22+Math.abs(Math.sin(t*3.4+i*1.7))*60)+'%'));
-    setButtons('edit',stage);
+    edit.querySelectorAll('.edit-meter-pair i').forEach((el,i)=>el.style.setProperty('--level',(smooth(8.4,9,t)*(30+Math.abs(Math.sin(t*3.4+i*.7))*52))+'%'));
   }
   function renderAI(){
-    const t=clocks[2],reveal=smooth(2.2,6,t)*(1-smooth(16.3,18,t)),motion=smooth(8,11,t)*(1-smooth(16,18,t)),stage=t<5?0:t<10?1:2;
+    const t=clocks[2],reveal=smooth(1.7,4.8,t)*(1-smooth(17,18,t)),motion=smooth(5.8,9,t)*(1-smooth(17,18,t)),stage=t<5?0:t<10?1:2;
     ai.style.setProperty('--ai-reveal',reveal);ai.style.setProperty('--ai-concept',1-reveal);
-    ai.style.setProperty('--ai-scale',1+motion*.045);
-    ai.style.setProperty('--ai-shift',(Math.sin((t-8)*.26)*motion*7).toFixed(2)+'px');
+    ai.style.setProperty('--ai-scale',1+smooth(6,17.4,t)*.17);
+    ai.style.setProperty('--ai-shift',(Math.sin((t-7)*.25)*motion*1.2).toFixed(3)+'%');
+    ai.style.setProperty('--ai-light-shift',(-30+smooth(6,17,t)*60)+'%');
     ai.style.setProperty('--ai-glow',motion*(.45+Math.sin(t*.65)*.25));ai.style.setProperty('--ai-progress',t/18);
-    $('aiStageLabel').textContent=aiStages[stage];setButtons('ai',stage);atmosphere(t,motion);
+    $('aiStageLabel').textContent=aiStages[stage];atmosphere(t,motion);
   }
   function render(){if(view===1)renderEdit();else if(view===2)renderAI()}
   function update(now,dt){
     if(view<1||document.hidden||$('infoDialog').open)return;
     if(paused[view])return;
-    clocks[view]=(clocks[view]+dt)%18;
+    clocks[view]=(clocks[view]+dt)%duration[view];
     if(now-frame<1000/30)return;frame=now;render();
   }
-  function seek(n,stage){clocks[n]=[.4,6.5,12.4][stage];render()}
   ['edit','ai'].forEach((type,i)=>{
     const n=i+1;$(type+'Playback').addEventListener('click',()=>{paused[n]=!paused[n];playbackButton(type,n);if(n===1){if(paused[n])video?.pause();else resume()}});
-    document.querySelectorAll(`[data-${type}-stage]`).forEach(b=>b.addEventListener('click',()=>seek(n,+b.dataset[type+'Stage'])));
   });
-  let wave='';for(let x=0;x<600;x+=3){const a=2+Math.abs(Math.sin(x*.13)*Math.sin(x*.035))*10;wave+=`M${x} ${14-a}V${14+a}`}$('editWaveform').setAttribute('d',wave);
-  function motionPreference(){if(reduced.matches){clocks[1]=9;clocks[2]=12;paused[1]=paused[2]=true;playbackButton('edit',1);playbackButton('ai',2);if(view===1)video?.pause()}render()}
+  let wave='';for(let x=0;x<600;x+=3){const a=2+Math.abs(Math.sin(x*.13)*Math.sin(x*.035))*10;wave+=`M${x} ${14-a}V${14+a}`}$('editWaveform').setAttribute('d',wave);$('editAmbienceWave').setAttribute('d',wave);
+  function motionPreference(){if(reduced.matches){clocks[1]=16;clocks[2]=14;paused[1]=paused[2]=true;playbackButton('edit',1);playbackButton('ai',2);if(view===1)video?.pause()}render()}
   reduced.addEventListener('change',motionPreference);motionPreference();
-  new ResizeObserver(()=>{if(view===2)renderAI()}).observe(ai);
+  const resize=new ResizeObserver(()=>{if(view===1)measureDrags();if(view>0)render()});resize.observe(ai);resize.observe(edit);
   window.MBFilmStudio={setView,update,resume,get state(){return {view,editingTime:clocks[1],aiTime:clocks[2],paused:[...paused]}}};
 })();
 
@@ -1654,6 +1701,12 @@ window.createTelegramGlass=function(root){
 
 </script>
 <!-- SECTIONS_END -->
+
+
+
+
+
+
 
 
 

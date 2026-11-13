@@ -32,6 +32,10 @@ with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() 
     def stationary_click(selector):
         # Real pointer click in the center avoids Playwright waiting for a floating card to stop.
         r=page.locator(selector).bounding_box();page.mouse.click(r['x']+r['width']/2,r['y']+r['height']/2)
+    def advance(n,t):
+        page.evaluate('''([n,t])=>{const s=MBFilmStudio.state,key=n===1?'editingTime':'aiTime',duration=n===1?22:18;MBFilmStudio.update(performance.now()+40,(t-s[key]+duration)%duration)}''',[n,t])
+        page.wait_for_timeout(100)
+    assert page.locator('#editChapters,#aiChapters,.edit-preview-title,.edit-title-clip').count()==0
     assert page.locator('#filmScene .section-note').count()==0
     original=page.evaluate('__MB.slateObjects[0].video.currentTime')
     page.wait_for_timeout(300)
@@ -39,19 +43,35 @@ with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() 
     tab(1)
     assert page.locator('#editVideoSlot video').is_visible()
     assert page.locator('#editVideoSlot video').evaluate('v=>v.muted && !v.controls')
+    assert page.locator('.edit-source').count()==4
+    advance(1,1.2)
+    assert float(page.locator('.edit-drag').evaluate('e=>getComputedStyle(e).opacity'))>.9
+    source=page.locator('#editSource0').bounding_box();ghost=page.locator('.edit-drag').bounding_box();target=page.locator('#editTarget0').bounding_box()
+    assert source['y']<ghost['y']<target['y'],'Clip must visibly travel from source bin toward the timeline'
+    page.screenshot(path='/tmp/film-studio-transfer.png')
+    advance(1,2.6)
+    assert float(page.locator('#editTarget0').evaluate('e=>getComputedStyle(e).opacity'))>.99
+    assert float(page.locator('#editTarget1').evaluate('e=>getComputedStyle(e).opacity'))==0
     before=page.evaluate('MBFilmStudio.state.editingTime');page.wait_for_timeout(350)
     assert page.evaluate('MBFilmStudio.state.editingTime')>before
     stationary_click('#editPlayback');page.wait_for_timeout(80)
     frozen=page.evaluate('MBFilmStudio.state.editingTime');page.wait_for_timeout(300)
     assert page.evaluate('MBFilmStudio.state.editingTime')==frozen
     assert page.evaluate('__MB.slateObjects[0].video.paused')
-    stationary_click('[data-edit-stage="1"]');page.wait_for_timeout(50)
-    assert page.locator('#editToolTitle').inner_text()=='Цвет'
-    stationary_click('#editPlayback')
+    stationary_click('#editPlayback');advance(1,14.5)
+    assert float(page.locator('.edit-grade-clip').evaluate('e=>getComputedStyle(e).opacity'))>.99
+    assert float(page.locator('#editTarget3').evaluate('e=>getComputedStyle(e).opacity'))>.99
     tab(2)
     assert page.evaluate('__MB.slateObjects[0].video.paused')
     edit_time=page.evaluate('MBFilmStudio.state.editingTime')
-    stationary_click('[data-ai-stage="2"]');page.wait_for_timeout(300)
+    advance(2,10);page.wait_for_timeout(100)
+    scale_before=float(page.locator('#filmAI').evaluate('e=>getComputedStyle(e).getPropertyValue("--ai-scale")'))
+    advance(2,15);page.wait_for_timeout(100)
+    scale_after=float(page.locator('#filmAI').evaluate('e=>getComputedStyle(e).getPropertyValue("--ai-scale")'))
+    assert scale_after-scale_before>.06,'AI camera must keep pushing in throughout the final scene'
+    advance(2,17.6)
+    assert float(page.locator('#filmAI').evaluate('e=>getComputedStyle(e).getPropertyValue("--ai-scale")'))>=scale_after,'No visible reverse zoom before the loop'
+    advance(2,15)
     assert float(page.locator('.ai-image').evaluate('e=>getComputedStyle(e).opacity'))>.99
     first=page.locator('#aiAtmosphere').evaluate('e=>e.toDataURL()');page.wait_for_timeout(350)
     assert first!=page.locator('#aiAtmosphere').evaluate('e=>e.toDataURL()'),'Atmosphere must visibly animate'
@@ -78,7 +98,7 @@ with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() 
                     rect=page.locator(selector).bounding_box()
                     assert rect['y']>=0 and rect['y']+rect['height']<=height,(width,height,n,selector,rect)
             if width==1440 or width==390:
-                if n==2:stationary_click('[data-ai-stage="2"]');page.wait_for_timeout(150)
+                if n>0:advance(n,14);page.wait_for_timeout(100)
                 page.screenshot(path=f'/tmp/film-studio-{width}-{n}.png')
         if width>900:
             assert max(r['y'] for r in positions)-min(r['y'] for r in positions)<1,(width,positions)

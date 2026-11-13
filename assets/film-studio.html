@@ -5,20 +5,29 @@
       <button class="film-start" id="filmStart" aria-label="Воспроизвести showreel">Смотреть showreel</button>
     </div>
     <div id="filmEditing" class="film-view edit-workspace" hidden aria-label="Анимированная монтажная сцена">
-      <header class="edit-toolbar"><span class="edit-mark">M</span><span>SHOWREEL <small>/ Монтаж</small></span><button class="film-playback" id="editPlayback" aria-label="Приостановить монтажную сцену">Пауза</button></header>
+      <header class="edit-toolbar"><span class="edit-mark">M</span><span>SHOWREEL <small>/ Sequence 01</small></span><div class="edit-workspaces" aria-hidden="true"><span>Монтаж</span><span>Цвет</span><span>Звук</span></div><button class="film-playback" id="editPlayback" aria-label="Приостановить монтажную сцену">Пауза</button></header>
       <div class="edit-monitors">
-        <div class="edit-bin"><span class="edit-caption">Исходный материал</span><div><img data-section-image="film-0" alt="Исходный кадр"><img data-section-image="film-1" alt="Исходный кадр"><img data-section-image="film-2" alt="Исходный кадр"></div><small>SHOWREEL / 3 фрагмента</small></div>
-        <div class="edit-preview"><div id="editVideoSlot"></div><span class="edit-preview-title">ИСТОРИИ В ДВИЖЕНИИ</span><div class="edit-monitor-footer"><span id="editTimecode">00:00:00:00</span><span>ПРЕДПРОСМОТР</span></div></div>
-        <div class="edit-tools"><span class="edit-caption" id="editToolTitle">Сборка</span><div class="edit-level"><i></i><i></i><i></i><i></i><i></i></div><svg viewBox="0 0 100 65" aria-hidden="true"><path class="edit-grid" d="M0 16H100M0 32H100M0 48H100M25 0V65M50 0V65M75 0V65"/><path class="edit-curve" d="M0 64C28 64 25 15 50 26S75 0 100 0"/></svg><small id="editToolDetail">Точная склейка</small></div>
+        <div class="edit-bin"><span class="edit-caption">Исходный материал</span><div class="edit-media-list">
+          <div class="edit-source" id="editSource0"><img data-section-image="film-0" alt="Первый исходный кадр"><span>A001.mov<small>Видео · 00:12</small></span></div>
+          <div class="edit-source" id="editSource1"><img data-section-image="film-1" alt="Второй исходный кадр"><span>A002.mov<small>Видео · 00:08</small></span></div>
+          <div class="edit-source" id="editSource2"><img data-section-image="film-2" alt="Третий исходный кадр"><span>A003.mov<small>Видео · 00:16</small></span></div>
+          <div class="edit-source edit-source-audio" id="editSource3"><i aria-hidden="true">▂▅▇▃▆</i><span>Sound.wav<small>Аудио · Стерео</small></span></div>
+        </div><small class="edit-bin-count">4 файла</small></div>
+        <div class="edit-preview"><div class="edit-preview-heading">Программа <span>Sequence 01</span></div><div id="editVideoSlot"></div><div class="edit-monitor-footer"><span id="editTimecode">00:00:00:00</span><span>◀ &nbsp; ▷ &nbsp; ▶</span><span>1/2</span></div></div>
+        <aside class="edit-inspector"><div class="edit-color-panel"><span class="edit-caption">Цветокоррекция</span><div class="edit-color-wheel"><i></i></div><div class="edit-slider"><span>Экспозиция</span><i><b></b></i></div><div class="edit-slider"><span>Контраст</span><i><b></b></i></div><svg viewBox="0 0 100 40" aria-hidden="true"><path class="edit-grid" d="M0 10H100M0 20H100M0 30H100M25 0V40M50 0V40M75 0V40"/><path class="edit-curve" d="M0 40C32 40 25 14 50 20S75 0 100 0"/></svg></div><div class="edit-mixer"><span class="edit-caption">Аудио</span><div class="edit-meter-pair"><div><i></i></div><div><i></i></div><small><span>0</span><span>−6</span><span>−12</span><span>−24</span><span>−48</span></small></div><span>L &nbsp; R</span></div></aside>
       </div>
       <div class="edit-timeline">
+        <div class="edit-sequence-bar"><span>Sequence 01</span><svg class="edit-tools-icons" viewBox="0 0 80 16" aria-hidden="true"><path d="M2 2V13L6 10L10 13L12 11L8 7L12 5ZM25 3L36 13M25 13L36 3M48 3H60V13H48ZM67 9L70 6L73 10L77 5"/></svg><small>00:00:18:00</small></div>
         <div class="edit-ruler"><span>00:00</span><span>00:05</span><span>00:10</span><span>00:15</span></div>
-        <div class="edit-track"><b>V2</b><div class="edit-lane"><div class="edit-clip edit-title-clip">Истории в движении</div></div></div>
-        <div class="edit-track"><b>V1</b><div class="edit-lane"><div class="edit-clip edit-shot shot-one"><img data-section-image="film-0" alt="">Кадр 01</div><div class="edit-clip edit-shot shot-two"><img data-section-image="film-1" alt="">Кадр 02</div><div class="edit-clip edit-shot shot-three"><img data-section-image="film-2" alt="">Кадр 03</div></div></div>
-        <div class="edit-track"><b>A1</b><div class="edit-lane"><div class="edit-audio"><svg viewBox="0 0 600 28" preserveAspectRatio="none" aria-label="Звуковая волна"><path id="editWaveform"/></svg></div></div></div>
+        <div class="edit-track"><b>V2</b><div class="edit-lane"><div class="edit-clip edit-grade-clip">Цветокоррекция</div></div></div>
+        <div class="edit-track"><b>V1</b><div class="edit-lane"><div class="edit-clip edit-shot shot-one" id="editTarget0"><img data-section-image="film-0" alt="">A001.mov</div><div class="edit-clip edit-shot shot-two" id="editTarget1"><img data-section-image="film-1" alt="">A002.mov</div><div class="edit-clip edit-shot shot-three" id="editTarget2"><img data-section-image="film-2" alt="">A003.mov</div></div></div>
+        <div class="edit-track"><b>A1</b><div class="edit-lane"><div class="edit-audio" id="editTarget3"><span>Sound.wav</span><svg viewBox="0 0 600 28" preserveAspectRatio="none" aria-label="Звуковая волна"><path id="editWaveform"/></svg></div></div></div>
+        <div class="edit-track"><b>A2</b><div class="edit-lane"><div class="edit-audio edit-ambience"><span>Атмосфера</span><svg viewBox="0 0 600 28" preserveAspectRatio="none" aria-hidden="true"><path id="editAmbienceWave"/></svg></div></div></div>
         <div class="edit-playhead" aria-hidden="true"><i></i></div>
       </div>
-      <footer class="edit-status"><span><i></i><span id="editStageLabel">Сборка истории</span></span><span>ВИДЕО · ЦВЕТ · ЗВУК</span></footer>
+      <footer class="edit-status"><span><i></i><span id="editStageLabel">Перенос исходного материала</span></span><span>1920 × 1080 &nbsp; / &nbsp; 25 fps</span></footer>
+      <div class="edit-drag" aria-hidden="true"><img id="editDragImage" data-section-image="film-0" alt=""><span id="editDragName">A001.mov</span><svg viewBox="0 0 20 24"><path d="M2 1V19L7 15L11 23L15 21L11 13H18Z"/></svg></div>
+      <div class="edit-cycle-veil" aria-hidden="true"></div>
     </div>
     <div id="filmAI" class="film-view ai-workspace" hidden aria-label="AI-концепция рекламы парфюма">
       <div class="ai-image"><img data-section-image="perfume" alt="Концепция рекламы: янтарный флакон NOIR на тёмном фоне"></div>
@@ -34,14 +43,4 @@
   <button data-film-time="1"><img data-section-image="film-0" alt="Кадр из showreel"><span>Начало</span></button>
   <button data-film-time="16"><img data-section-image="film-1" alt="Кадр из showreel"><span>Кадр и свет</span></button>
   <button data-film-time="34"><img data-section-image="film-2" alt="Кадр из showreel"><span>Ритм и монтаж</span></button>
-</div>
-<div id="editChapters" class="film-chapters film-stages" aria-label="Этапы монтажа" hidden>
-  <button data-edit-stage="0" aria-pressed="true"><span class="stage-symbol stage-cut" aria-hidden="true">▰ / ▰</span><span>Сборка</span><i></i></button>
-  <button data-edit-stage="1" aria-pressed="false"><span class="stage-symbol stage-color" aria-hidden="true"></span><span>Цвет</span><i></i></button>
-  <button data-edit-stage="2" aria-pressed="false"><span class="stage-symbol stage-wave" aria-hidden="true">▂▅▃▇▅▂▆▃</span><span>Звук</span><i></i></button>
-</div>
-<div id="aiChapters" class="film-chapters film-stages" aria-label="Этапы AI-сцены" hidden>
-  <button data-ai-stage="0" aria-pressed="true"><span class="stage-symbol stage-idea" aria-hidden="true">✧</span><span>Идея</span><i></i></button>
-  <button data-ai-stage="1" aria-pressed="false"><img data-section-image="perfume" alt=""><span>Изображение</span><i></i></button>
-  <button data-ai-stage="2" aria-pressed="false"><img data-section-image="perfume" alt=""><span>Движение</span><i></i></button>
 </div>
