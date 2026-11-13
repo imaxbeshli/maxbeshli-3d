@@ -5,7 +5,7 @@ root = Path(__file__).resolve().parents[1]
 page = root / 'index.html'
 html = page.read_text()
 assets = {p.stem.removeprefix('section-'): 'data:image/webp;base64,' + base64.b64encode(p.read_bytes()).decode() for p in (root/'assets').glob('section-*.webp')}
-css = (root/'assets/sections.css').read_text()+'\n'+(root/'assets/telegram-workspace.css').read_text()
+css = (root/'assets/sections.css').read_text()+'\n'+(root/'assets/telegram-workspace.css').read_text()+'\n'+(root/'assets/contact.css').read_text()
 for key in ['cinema', 'studio', 'digital', 'contact']:
     css = css.replace('ASSET_'+key.upper(), assets[key])
 markup=(root/'assets/sections.html').read_text().replace('<!-- TELEGRAM_WORKSPACE -->',(root/'assets/telegram-workspace.html').read_text())

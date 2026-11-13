@@ -1,7 +1,7 @@
-"""Browser integration checks for interior scenes and the Telegram draft form."""
+"""Browser integration checks for interior scenes and the direct contact overlay."""
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-import threading, http.server, functools, urllib.parse
+import threading, http.server, functools
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
     def log_message(self,*args): pass
@@ -92,6 +92,12 @@ with sync_playwright() as p:
     page.wait_for_timeout(600)
     assert page.evaluate('__MB.slateObjects[0].video.currentTime')>before
     assert page.locator('#sectionVideoSlot video').evaluate('(v)=>v.muted&&v.playsInline&&v.controls')
+    page.locator('#sectionContact').click();page.wait_for_timeout(400)
+    assert page.evaluate('__MB.slateObjects[0].video.paused')
+    contact_time=page.evaluate('__MB.slateObjects[0].video.currentTime');page.wait_for_timeout(300)
+    assert page.evaluate('__MB.slateObjects[0].video.currentTime')==contact_time
+    page.locator('#infoClose').click();page.wait_for_function('!infoDialog.open && !__MB.slateObjects[0].video.paused')
+
     page.locator('[data-film-time="16"]').click()
     assert page.evaluate('__MB.slateObjects[0].video.currentTime')>=16
     page.locator('#sectionOptions button').nth(1).click()
@@ -125,30 +131,40 @@ with sync_playwright() as p:
     page.locator('#sectionOptions button').nth(0).click();mobile('telegram')
     print('PASS mini-app playback, bot answers and CRM demonstration',flush=True)
 
-    page.locator('#sectionContact').click()
-    assert page.locator('input[name="direction"]:checked').input_value()=='Telegram'
-    page.wait_for_timeout(700)
+    before_contact=page.evaluate('({section:MBSections.state,crm:MBTelegramStudio.state.leads})')
+    page.locator('#sectionContact').click();page.wait_for_timeout(1000)
+    assert page.locator('#infoDialog form, #infoDialog input, #infoDialog textarea').count()==0
+    assert page.locator('#contactPhone').get_attribute('href')=='tel:+79116997363'
+    assert page.locator('#contactTelegram').get_attribute('href')=='https://t.me/IMAXBESHLI'
+    assert page.locator('#infoDialog').evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgba(0, 0, 0, 0)'
+    assert 'blur(8px)' in page.locator('#infoDialog').evaluate('(e)=>getComputedStyle(e,"::backdrop").backdropFilter')
+    assert page.locator('.tg-float').first.evaluate('(e)=>getComputedStyle(e).animationPlayState')=='paused'
+    t=page.evaluate('__MB.slateObjects[2].phoneDemo.state.time');page.wait_for_timeout(350)
+    assert page.evaluate('__MB.slateObjects[2].phoneDemo.state.time')==t
     page.screenshot(path='/tmp/sections-contact-mobile.png')
-    assert page.locator('#infoDialog').evaluate('(e)=>e.scrollWidth<=e.clientWidth+1')
+    assert page.locator('#infoDialog').evaluate('(e)=>e.scrollWidth<=e.clientWidth+1 && e.scrollHeight<=e.clientHeight+1')
     page.set_viewport_size({'width':1440,'height':960});page.wait_for_timeout(400)
     page.screenshot(path='/tmp/sections-contact-desktop.png')
-    page.locator('[name="name"]').fill('Тестовый клиент')
-    page.locator('[name="task"]').fill('Нужен сайт & Telegram. Тест — не отправлять.')
-    page.evaluate('window.open=(url)=>{window.__draftURL=url;return null}')
-    page.locator('#projectForm button[type="submit"]').click()
-    url=page.evaluate('window.__draftURL')
-    parsed=urllib.parse.urlparse(url)
-    assert parsed.netloc=='t.me' and parsed.path=='/IMAXBESHLI'
-    message=urllib.parse.parse_qs(parsed.query)['text'][0]
-    assert 'Тестовый клиент' in message and 'Нужен сайт & Telegram' in message and 'Направление: Telegram' in message
-    assert page.locator('#contactResult').is_visible()
+    page.evaluate("""()=>{window.__contactLinks=[];document.querySelectorAll('.contact-link').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();__contactLinks.push(a.href)}))}""")
+    page.locator('#contactPhone').click();page.locator('#contactTelegram').click()
+    assert page.evaluate('__contactLinks')==['tel:+79116997363','https://t.me/IMAXBESHLI']
     page.keyboard.press('Escape');page.wait_for_function('!infoDialog.open')
     assert page.evaluate('__MB.state.phase')=='section'
     assert page.evaluate('document.activeElement.id')=='sectionContact'
-    leave()
-    print('PASS Telegram draft URL and nested dialog Escape/focus restoration',flush=True)
-    page.evaluate('MBSections.openContact()');page.wait_for_timeout(650)
-    assert page.locator('input[name="direction"]:checked').input_value()=='Пока не решил'
+    assert page.evaluate('MBSections.state.tab')==before_contact['section']['tab']
+    assert page.evaluate('MBTelegramStudio.state.leads')==before_contact['crm']
+    page.wait_for_function('__MB.slateObjects[2].phoneDemo.state.active')
+    leave();page.wait_for_function('__MB.state.zoomFactor<.01')
+    print('PASS direct contacts, blurred current scene, paused animation and restored section state',flush=True)
+    page.set_viewport_size({'width':1440,'height':960})
+    page.locator('.cta-btn').first.click();page.wait_for_timeout(1000)
+    camera=page.evaluate('__MB.camera.position.toArray()');page.wait_for_timeout(300)
+    assert page.evaluate('__MB.camera.position.toArray()')==camera
+    page.screenshot(path='/tmp/sections-contact-home.png')
+    page.locator('.contact-wrap').click(position={'x':5,'y':5});page.wait_for_function('!infoDialog.open')
+    assert page.evaluate('__MB.state.phase')=='orbit'
+    page.emulate_media(reduced_motion='reduce');page.evaluate('MBSections.openContact()')
+    assert page.locator('.contact-panel').evaluate('(e)=>getComputedStyle(e).animationName')=='none'
     page.locator('#infoClose').click();page.wait_for_function('!infoDialog.open')
     assert not errors,errors
     print('PASS no JavaScript errors; all environments available offline',flush=True)

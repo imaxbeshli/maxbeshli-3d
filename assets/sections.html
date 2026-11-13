@@ -35,17 +35,20 @@
   </div>
   <footer class="section-footer"><button class="section-button section-cta" id="sectionContact"><span class="status-dot"></span>Обсудить проект</button></footer>
 </div>
-<dialog id="infoDialog" aria-labelledby="contactTitle">
-  <div class="contact-world" aria-hidden="true"></div>
-  <div class="section-brand contact-brand" aria-label="MAX BESHLI">MB<span></span></div>
-  <div class="contact-wrap"><form id="projectForm" class="section-glass contact-panel">
-    <button type="button" id="infoClose" aria-label="Закрыть">×</button>
-    <h2 id="contactTitle">Обсудим ваш проект</h2><p class="contact-lead">Расскажите, что хотите сделать. Я помогу определить следующий шаг.</p>
-    <fieldset><legend>Что планируете?</legend><div class="contact-choices"><label><input type="radio" name="direction" value="Видео"><span>Видео</span></label><label><input type="radio" name="direction" value="Сайт"><span>Сайт</span></label><label><input type="radio" name="direction" value="Telegram"><span>Telegram</span></label><label><input type="radio" name="direction" value="Пока не решил" checked><span>Пока не решил</span></label></div></fieldset>
-    <div class="contact-fields"><label>Ваше имя<input name="name" autocomplete="name" maxlength="80" placeholder="Как к вам обращаться" required></label><label>Telegram или почта <small>необязательно</small><input name="contact" autocomplete="off" maxlength="160" placeholder="@username или email"></label></div>
-    <label class="contact-task">Коротко о задаче<textarea name="task" rows="3" maxlength="1800" placeholder="Что нужно создать и для кого" required></textarea></label>
-    <div class="contact-actions"><button class="section-button primary" type="submit">Продолжить в Telegram</button><a class="section-button" href="https://t.me/IMAXBESHLI" target="_blank" rel="noopener noreferrer">Написать напрямую</a></div>
-    <p class="contact-hint">Откроется диалог с @IMAXBESHLI. Проверьте сообщение и отправьте его в Telegram.</p>
-    <div class="contact-result" id="contactResult" role="status" hidden><p>Черновик подготовлен. Если Telegram не открылся, скопируйте текст и напишите мне напрямую.</p><button type="button" class="text-button" id="copyBrief">Скопировать текст</button><textarea id="briefFallback" aria-label="Текст обращения для копирования" readonly hidden></textarea></div>
-  </form></div>
+<dialog id="infoDialog" aria-labelledby="contactTitle" aria-describedby="contactDescription">
+  <div class="contact-wrap"><section class="contact-panel">
+    <button type="button" id="infoClose" aria-label="Закрыть контакты" autofocus>×</button>
+    <h2 id="contactTitle">Обсудим проект</h2>
+    <p class="contact-lead" id="contactDescription">Позвоните или напишите в Telegram.</p>
+    <div class="contact-actions">
+      <a class="contact-link" id="contactPhone" href="tel:+79116997363">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3H4a1 1 0 0 0-1 1c0 9.4 7.6 17 17 17a1 1 0 0 0 1-1v-3l-5-2-2 2a14 14 0 0 1-7-7l2-2-2-5Z"/></svg>
+        <span><small>Позвонить</small><strong>+7 (911) 699-73-63</strong></span>
+      </a>
+      <a class="contact-link contact-telegram" id="contactTelegram" href="https://t.me/IMAXBESHLI" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 18-7-4 18-6-6-4 3 1-6 9-6-7 8"/></svg>
+        <span><strong>Написать в Telegram</strong><small>@IMAXBESHLI</small></span>
+      </a>
+    </div>
+  </section></div>
 </dialog>

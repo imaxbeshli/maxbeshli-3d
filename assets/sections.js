@@ -20,7 +20,7 @@
       'Здесь собраны заявки и расписание. Откройте карточку клиента, чтобы изменить или отменить запись.'
     ]}
   ];
-  let index=-1,active=false,tab=0,webMode=0,raf=0,last=0,x=0,y=0,tx=0,ty=0,video=null,contactReturn=null,brief='',resumeVideo=false;
+  let index=-1,active=false,tab=0,webMode=0,raf=0,last=0,x=0,y=0,tx=0,ty=0,video=null,contactReturn=null,resumeVideo=false;
   document.querySelectorAll('[data-section-image]').forEach(img=>img.src=window.MB_SECTION_IMAGES[img.dataset.sectionImage]);
   function tiles(){return window.__MB?.slateObjects||[]}
   function stopMedia(){tiles().forEach(o=>o.setPlaybackActive(false));if(video)video.pause()}
@@ -111,31 +111,22 @@
   $('filmStart').addEventListener('click',()=>video?.play().catch(()=>{}));
   document.querySelectorAll('[data-film-time]').forEach(b=>b.addEventListener('click',()=>{if(!video)return;video.currentTime=Math.min(+b.dataset.filmTime,Number.isFinite(video.duration)?video.duration-.1:Infinity);video.play().catch(()=>{})}));
   document.querySelectorAll('[data-web-mode]').forEach(b=>b.addEventListener('click',()=>setWebMode(+b.dataset.webMode)));
-  function openContact(direction){
-    if(contact.open)return;contactReturn=document.activeElement;resumeVideo=Boolean(active&&index===0&&video&&!video.paused);stopMedia();document.body.classList.add('contact-open');
-    const value=direction||'Пока не решил';[...$('projectForm').elements.direction].forEach(r=>r.checked=r.value===value);
-    $('contactResult').hidden=true;contact.classList.remove('is-closing');contact.showModal();contact.scrollTop=0;
+  function openContact(){
+    if(contact.open)return;
+    contactReturn=document.activeElement;resumeVideo=Boolean(active&&index===0&&video&&!video.paused);
+    stopMedia();document.body.classList.add('contact-open');
+    contact.classList.remove('is-closing');contact.showModal();contact.scrollTop=0;
   }
   let closingContact=false;
   function closeContact(){
     if(!contact.open||closingContact)return;closingContact=true;contact.classList.add('is-closing');
-    setTimeout(()=>{contact.close();contact.classList.remove('is-closing');document.body.classList.remove('contact-open');closingContact=false;contactReturn?.focus({preventScroll:true});if(resumeVideo)video?.play().catch(()=>{})},reduced.matches?0:430);
+    setTimeout(()=>{contact.close();contact.classList.remove('is-closing');document.body.classList.remove('contact-open');closingContact=false;contactReturn?.focus({preventScroll:true});if(resumeVideo)video?.play().catch(()=>{})},reduced.matches?0:350);
   }
-  $('sectionContact').addEventListener('click',()=>openContact(['Видео','Сайт','Telegram'][index]));
+  $('sectionContact').addEventListener('click',openContact);
   $('infoClose').addEventListener('click',closeContact);
+  contact.addEventListener('click',e=>{if(!e.target.closest('.contact-panel'))closeContact()});
   contact.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();closeContact()});
   contact.addEventListener('keydown',e=>{if(e.key==='Escape')e.stopPropagation()});
-  $('projectForm').addEventListener('submit',e=>{
-    e.preventDefault();const f=new FormData(e.currentTarget);
-    brief=`Здравствуйте, Макс!\n\nНаправление: ${f.get('direction')}\nИмя: ${String(f.get('name')).trim()}${String(f.get('contact')).trim()?'\nКонтакт: '+String(f.get('contact')).trim():''}\n\n${String(f.get('task')).trim()}`;
-    const link='https://t.me/IMAXBESHLI?text='+encodeURIComponent(brief);
-    $('contactResult').hidden=false;$('briefFallback').value=brief;$('copyBrief').textContent='Скопировать текст';
-    window.open(link,'_blank','noopener,noreferrer');
-  });
-  $('copyBrief').addEventListener('click',async()=>{
-    try{await navigator.clipboard.writeText(brief);$('copyBrief').textContent='Текст скопирован'}
-    catch(e){$('briefFallback').hidden=false;$('briefFallback').focus();$('briefFallback').select();$('copyBrief').textContent='Выделите и скопируйте текст'}
-  });
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMedia();else if(active&&index===0&&!contact.open&&!$('aboutDialog').open)video?.play().catch(()=>{})});
   window.MBSections={open,close,openContact,closeContact,selectTab:setTab,get state(){return {active,index,tab,webMode,contactOpen:contact.open}}};
 })();
