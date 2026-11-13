@@ -6043,34 +6043,62 @@ window.MBLanternBoat = (() => {
     function material(color,options={}) {
       const m=new T.MeshStandardMaterial({color,roughness:.72,metalness:.08,transparent:true,...options});materials.push(m);return m;
     }
-    const wood=material(0x241b13,{emissive:0x2b1607,emissiveIntensity:.22});
-    const edge=material(0x695039,{emissive:0x3d2109,emissiveIntensity:.26});
-    const metal=material(0x28231c,{metalness:.6,roughness:.38});
+    // Fine longitudinal grain and plank seams, generated once (no asset request).
+    const grainCanvas=document.createElement('canvas');grainCanvas.width=512;grainCanvas.height=128;
+    const gx=grainCanvas.getContext('2d'),pixels=gx.createImageData(512,128);
+    for(let y=0;y<128;y++)for(let x=0;x<512;x++){
+      const grain=Math.sin(y*2.8+Math.sin(x*.018)*1.8)+.45*Math.sin(y*7.3+x*.022);
+      const seam=Math.pow(Math.max(0,Math.cos(y/128*Math.PI*12)),28);
+      const tone=.86+grain*.09-seam*.28,k=(y*512+x)*4;
+      pixels.data[k]=112*tone;pixels.data[k+1]=70*tone;pixels.data[k+2]=37*tone;pixels.data[k+3]=255;
+    }
+    gx.putImageData(pixels,0,0);
+    const grain=new T.CanvasTexture(grainCanvas);grain.encoding=T.sRGBEncoding;grain.anisotropy=4;
+    const wood=material(0xb49a7d,{map:grain,roughness:.42,metalness:0,side:T.DoubleSide,emissive:0x291607,emissiveIntensity:.16});
+    const inside=material(0x947556,{map:grain,roughness:.68,metalness:0,side:T.DoubleSide});
+    const edge=material(0x795336,{roughness:.38,metalness:0,emissive:0x321b08,emissiveIntensity:.18});
+    const metal=material(0x4d3921,{metalness:.7,roughness:.32});
     function mesh(geo,mat,x=0,y=0,z=0,parent=root) {const m=new T.Mesh(geo,mat);m.position.set(x,y,z);parent.add(m);return m;}
-    // Open, double-sided clinker hull with pointed ends; no flat billboard.
-    const sections=[[-.86,.015,.24],[-.64,.16,.17],[-.3,.24,.145],[.2,.245,.145],[.6,.15,.19],[.88,.012,.29]];
-    const vertices=[],indices=[];
-    sections.forEach(([x,w,y])=>vertices.push(x,y,-w,x,-.035,-w*.42,x,-.035,w*.42,x,y,w));
-    for(let i=0;i<sections.length-1;i++)for(let j=0;j<3;j++){
-      const a=i*4+j,b=a+4;indices.push(a,b,a+1,b,b+1,a+1);
+    // Continuous rounded hull, lifted at the bow/stern, with a real hollow interior.
+    function hullPoint(u,v,inner=false) {
+      const s=u*2-1,theta=v*Math.PI,end=Math.pow(Math.abs(s),3.4);
+      const width=(.29*Math.pow(Math.max(0,1-s*s),.72)+.002)*(inner?.9:1);
+      const sheer=.175+.15*end+.018*s,keel=-.085+.30*end+(inner?.025:0);
+      return new T.Vector3(s*.93,sheer-(sheer-keel)*Math.pow(Math.sin(theta),.82)-(inner?.009:0),-width*Math.cos(theta));
     }
-    const hull=new T.BufferGeometry();hull.setAttribute('position',new T.Float32BufferAttribute(vertices,3));hull.setIndex(indices);hull.computeVertexNormals();wood.side=T.DoubleSide;mesh(hull,wood);
-    for(const side of [-1,1]){
-      const curve=new T.CatmullRomCurve3(sections.map(([x,w,y])=>new T.Vector3(x,y,side*w)));
-      mesh(new T.TubeGeometry(curve,24,.017,5,false),edge);
+    function hullGeometry(inner=false) {
+      const positions=[],uv=[],indices=[],longitudinal=96,radial=24;
+      for(let i=0;i<=longitudinal;i++)for(let j=0;j<=radial;j++){
+        positions.push(...hullPoint(i/longitudinal,j/radial,inner).toArray());uv.push(i/longitudinal,j/radial);
+        if(i<longitudinal&&j<radial){const a=i*(radial+1)+j,b=a+radial+1;indices.push(a,a+1,b,b,a+1,b+1);}
+      }
+      const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();return g;
     }
-    for(const x of [-.38,.32])mesh(new T.BoxGeometry(.12,.03,.35),edge,x,.125,0);
-    mesh(new T.BoxGeometry(1.16,.035,.19),wood,0,.005,0);
-    // A small brass lantern on a hanging bracket at the bow.
-    mesh(new T.CylinderGeometry(.012,.014,.58,6),metal,.40,.40,0);
-    mesh(new T.BoxGeometry(.21,.018,.018),metal,.31,.69,0);
-    const lamp=new T.Group();lamp.position.set(.22,.60,0);root.add(lamp);
+    const hull=mesh(hullGeometry(),wood);hull.name='Smooth planked wooden hull';
+    mesh(hullGeometry(true),inside).name='Hollow inner hull';
+    for(const side of [0,1]){
+      const curve=new T.CatmullRomCurve3(Array.from({length:49},(_,i)=>hullPoint(i/48,side)));
+      mesh(new T.TubeGeometry(curve,96,.014,10,false),edge);
+    }
+    // Fine strake edges follow the hull rather than straight box-shaped sides.
+    const strips=[];
+    for(const v of [.16,.31,.69,.84])for(let i=1;i<95;i++){
+      const a=hullPoint(i/96,v-.002),b=hullPoint(i/96,v+.002),c=hullPoint((i+1)/96,v-.002),d=hullPoint((i+1)/96,v+.002);
+      for(const p of [a,b,c,c,b,d]){p.z*=1.003;strips.push(...p.toArray());}
+    }
+    const seams=new T.BufferGeometry();seams.setAttribute('position',new T.Float32BufferAttribute(strips,3));seams.computeVertexNormals();mesh(seams,edge);
+    for(const x of [-.40,.28])mesh(new T.BoxGeometry(.14,.027,.44),edge,x,.105,0);
+    // Curved brass bracket, rounded chimney and a warm flame inside the lantern.
+    const bracket=new T.CatmullRomCurve3([new T.Vector3(.43,.12,0),new T.Vector3(.44,.58,0),new T.Vector3(.41,.72,0),new T.Vector3(.28,.74,0),new T.Vector3(.23,.66,0)]);
+    mesh(new T.TubeGeometry(bracket,32,.011,10,false),metal);
+    const lamp=new T.Group();lamp.position.set(.23,.62,0);root.add(lamp);
     const glass=new T.MeshBasicMaterial({color:0xffd383,transparent:true,depthWrite:false,fog:false,toneMapped:false});materials.push(glass);
     const flame=new T.MeshBasicMaterial({color:0xfff2bf,transparent:true,depthWrite:false,fog:false,toneMapped:false});materials.push(flame);
-    mesh(new T.BoxGeometry(.10,.145,.10),glass,0,-.055,0,lamp);
-    mesh(new T.SphereGeometry(.028,8,6),flame,0,-.055,0,lamp);
-    for(const y of [-.14,.025])mesh(new T.BoxGeometry(.14,.025,.14),metal,0,y,0,lamp);
-    for(const x of [-.053,.053])for(const z of [-.053,.053])mesh(new T.CylinderGeometry(.006,.006,.16,4),metal,x,-.055,z,lamp);
+    const chimney=[new T.Vector2(.038,-.14),new T.Vector2(.053,-.12),new T.Vector2(.061,-.06),new T.Vector2(.053,.005),new T.Vector2(.034,.025)];
+    mesh(new T.LatheGeometry(chimney,24),glass,0,0,0,lamp);
+    mesh(new T.SphereGeometry(.026,16,12),flame,0,-.055,0,lamp).scale.set(.65,1.5,.65);
+    for(const y of [-.15,.034])mesh(new T.CylinderGeometry(.042,.063,.025,24),metal,0,y,0,lamp);
+    for(let i=0;i<4;i++){const angle=i*Math.PI/2;mesh(new T.CylinderGeometry(.004,.004,.18,8),metal,Math.cos(angle)*.056,-.06,Math.sin(angle)*.056,lamp);}
     const c=document.createElement('canvas');c.width=c.height=64;
     const ctx=c.getContext('2d'),g=ctx.createRadialGradient(32,32,0,32,32,32);
     g.addColorStop(0,'rgba(255,235,170,.95)');g.addColorStop(.18,'rgba(255,190,80,.5)');g.addColorStop(.5,'rgba(255,146,35,.10)');g.addColorStop(1,'rgba(255,130,30,0)');ctx.fillStyle=g;ctx.fillRect(0,0,64,64);
@@ -6078,16 +6106,16 @@ window.MBLanternBoat = (() => {
     const halo=new T.Sprite(haloMaterial);halo.position.set(0,-.055,0);halo.scale.set(.9,.9,1);lamp.add(halo);
     let elapsed=0,last=null,state=sample(0);
     function update(now,active,backdrop) {
-      const dt=last===null?0:Math.min(.25,Math.max(0,(now-last)/1000));last=now;
+      const dt=last===null?0:Math.min(.05,Math.max(0,(now-last)/1000));last=now;
       if(active)elapsed+=dt;
       state=sample(elapsed);root.visible=state.visible;
       const source=water.material.uniforms.uFallSource.value;
-      root.position.set(source.x-3.5+state.progress*14.5,floor+.025+Math.sin(elapsed*1.7)*.012,-20.25+Math.sin(state.progress*Math.PI)*.25);
-      root.rotation.set(Math.sin(elapsed*1.1)*.014,-.06,Math.sin(elapsed*1.4)*.013);
-      lamp.rotation.z=Math.sin(elapsed*1.3+.5)*.045;
+      root.position.set(source.x-3.5+state.progress*14.5,floor+.025+Math.sin(elapsed*1.2)*.008,-20.25+Math.sin(state.progress*Math.PI)*.25);
+      root.rotation.set(Math.sin(elapsed*.85)*.009,-.18,Math.sin(elapsed*1.05)*.009);
+      lamp.rotation.z=Math.sin(elapsed*.95+.5)*.025;
       // Fade into distant haze at both shores rather than popping in/out.
       materials.forEach(m=>{m.opacity=state.opacity;});
-      const flicker=.94+.04*Math.sin(elapsed*3.1)+.02*Math.sin(elapsed*7.3);
+      const flicker=.96+.025*Math.sin(elapsed*1.7)+.015*Math.sin(elapsed*3.3);
       haloMaterial.opacity=state.opacity*.85*flicker;glass.color.setRGB(1,.79*flicker,.43*flicker);
       water.material.uniforms.uBoat.value.set(root.position.x,root.position.z,state.visible?state.opacity:0);
     }
@@ -6117,8 +6145,8 @@ window.MBEnvironment={
  },
  smoothRock(geo){const p=geo.attributes.position,n=geo.attributes.normal,sums=new Map();for(let i=0;i<p.count;i++){const key=[p.getX(i),p.getY(i),p.getZ(i)].map(v=>Math.round(v*10000)).join(',');const a=sums.get(key)||[0,0,0,[]];a[0]+=n.getX(i);a[1]+=n.getY(i);a[2]+=n.getZ(i);a[3].push(i);sums.set(key,a)}for(const [x,y,z,ids] of sums.values()){const l=Math.hypot(x,y,z)||1;ids.forEach(i=>n.setXYZ(i,x/l,y/l,z/l))}n.needsUpdate=true},
  water(T,scene,renderer,y){
-  const ripples=Array.from({length:12},()=>new T.Vector4(0,0,-100,0));let cursor=0,time=0,lastStamp=-10,lastPoint=null,frameCount=0;
-  const target=new T.WebGLRenderTarget(window.innerWidth<760?384:768,window.innerWidth<760?384:768,{minFilter:T.LinearFilter,magFilter:T.LinearFilter,format:T.RGBAFormat,depthBuffer:true});target.texture.generateMipmaps=false;
+  const ripples=Array.from({length:12},()=>new T.Vector4(0,0,-100,0));let cursor=0,time=0,lastStamp=-10,lastPoint=null;
+  const target=new T.WebGLRenderTarget(window.innerWidth<760?512:1024,512,{minFilter:T.LinearFilter,magFilter:T.LinearFilter,format:T.RGBAFormat,depthBuffer:true});target.texture.generateMipmaps=true;target.texture.minFilter=T.LinearMipmapLinearFilter;
   const mirror=new T.PerspectiveCamera(),textureMatrix=new T.Matrix4(),waterPlane=new T.Plane(new T.Vector3(0,1,0),-y),normal=new T.Vector3(0,1,0);
   const u={uTime:{value:0},uRipples:{value:ripples},uReflection:{value:target.texture},uMatrix:{value:textureMatrix},uReveal:{value:0},uEye:{value:new T.Vector3()},uFog:{value:new T.Color(0x0b1118)},uFallSource:{value:new T.Vector2(-8.8,-23.8)},uBoat:{value:new T.Vector3(0,0,0)}};
   const wave=`uniform float uTime; uniform vec4 uRipples[12]; uniform vec2 uFallSource; uniform vec3 uBoat;
@@ -6149,7 +6177,7 @@ window.MBEnvironment={
    textureMatrix.set(.5,0,0,.5,0,.5,0,.5,0,0,.5,.5,0,0,0,1);textureMatrix.multiply(mirror.projectionMatrix).multiply(mirror.matrixWorldInverse);
    const clip=waterPlane.clone().applyMatrix4(mirror.matrixWorldInverse),v=new T.Vector4(clip.normal.x,clip.normal.y,clip.normal.z,clip.constant),m=mirror.projectionMatrix.elements,q=new T.Vector4((Math.sign(v.x)+m[8])/m[0],(Math.sign(v.y)+m[9])/m[5],-1,(1+m[10])/m[14]);v.multiplyScalar(2/v.dot(q));m[2]=v.x;m[6]=v.y;m[10]=v.z+1-.003;m[14]=v.w;return true;
   }
-  return {mesh,material,ripples,mirror,prepare,stamp,interact,update(t,camera,reveal){time=t;u.uTime.value=t;u.uReveal.value=reveal;u.uEye.value.copy(camera.position);if(typeof renderer.getRenderTarget!=='function'||(++frameCount%2!==0&&reveal>.98)||!prepare(camera))return;const previous=renderer.getRenderTarget(),visible=mesh.visible;mesh.visible=false;try{renderer.setRenderTarget(target);renderer.clear();renderer.render(scene,mirror);}finally{renderer.setRenderTarget(previous);mesh.visible=visible;}}};
+  return {mesh,material,ripples,mirror,prepare,stamp,interact,update(t,camera,reveal){time=t;u.uTime.value=t;u.uReveal.value=reveal;u.uEye.value.copy(camera.position);if(typeof renderer.getRenderTarget!=='function'||!prepare(camera))return;const reflectionWidth=window.innerWidth<760?512:1024;if(target.width!==reflectionWidth)target.setSize(reflectionWidth,512);const previous=renderer.getRenderTarget(),visible=mesh.visible;mesh.visible=false;try{renderer.setRenderTarget(target);renderer.clear();renderer.render(scene,mirror);}finally{renderer.setRenderTarget(previous);mesh.visible=visible;}}};
  }
 };
 </script>
@@ -7362,7 +7390,7 @@ window.MBEnvironment={
       updateSpatialUI();
       fitBackdropToCamera();
       window.MBWaterfall.update(t);
-      lanternBoat.update(performance.now(),studioEntered&&phase==='orbit'&&!document.hidden,backdropMesh);
+      lanternBoat.update(t*1000,studioEntered&&phase==='orbit'&&!document.hidden,backdropMesh);
       water.update(t,camera,lightReveal);
       renderer.render(scene,camera);
       // Video loadeddata is not a prerequisite for entry: Safari can defer it

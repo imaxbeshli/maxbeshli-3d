@@ -22,10 +22,21 @@ with sync_playwright() as p:
  }''')
  page.locator('#loaderBtn').click();page.wait_for_function("__MB.state.phase==='orbit'")
  assert page.evaluate('__MB.lanternBoat.state.elapsed<10 && !__MB.lanternBoat.root.visible')
+ # A mirror render is required for EVERY visible frame, including steady state.
+ # This reproduces the former half-rate path without relying on wall-clock FPS.
+ assert page.evaluate("""()=>{
+   let renders=0;const T=THREE,scene=new T.Scene();
+   const renderer={getRenderTarget:()=>null,setRenderTarget:()=>{},clear:()=>{},render:()=>renders++};
+   const w=MBEnvironment.water(T,scene,renderer,-2.02);
+   for(let i=0;i<12;i++)w.update(i/60,__MB.camera,1);
+   const map=w.material.uniforms.uReflection.value;
+   return renders===12&&map.generateMipmaps&&map.minFilter===T.LinearMipmapLinearFilter;
+ }""")
+ print('PASS reflection refreshed on every frame with mip filtering',flush=True)
  # Advance the real update path deterministically; freeze only the boat for visual checks.
  page.evaluate('''()=>{
    const b=__MB.lanternBoat;window.boatUpdate=b.update;let now=performance.now();
-   for(let i=0;i<92;i++)b.update(now+i*200,true,__MB.backdrop);
+   for(let i=0;i<370;i++)b.update(now+i*50,true,__MB.backdrop);
    const before=b.state.elapsed;b.update(now+19000,false,__MB.backdrop);
    if(b.state.elapsed!==before)throw Error('Boat clock advances while paused');
    b.update=()=>{};
@@ -37,6 +48,23 @@ with sync_playwright() as p:
  page.wait_for_timeout(400);page.screenshot(path='/tmp/lantern-boat-desktop.png')
  print('PASS delayed passage, pause, fade and 65-second rest',flush=True)
  print('BOAT',page.evaluate('''()=>{const b=__MB.lanternBoat,v=b.root.position.clone().project(__MB.camera);return {state:b.state,position:b.root.position.toArray(),screen:[(v.x+1)*innerWidth/2,(1-v.y)*innerHeight/2]}}'''),flush=True)
+ # Observe actual main/mirror passes during motion, not just a still screenshot.
+ page.evaluate("""()=>{
+  const b=__MB.lanternBoat;b.update=boatUpdate;
+  window.boatPasses=[];
+  b.root.getObjectByName('Smooth planked wooden hull').onBeforeRender=(_,scene,camera)=>{
+   boatPasses.push({mirror:camera===__MB.water.mirror,time:__MB.water.material.uniforms.uTime.value,x:b.root.position.x});
+  };
+ }""")
+ page.wait_for_function('new Set(boatPasses.filter(p=>!p.mirror).map(p=>p.time)).size>=12')
+ assert page.evaluate("""()=>{
+   const main=boatPasses.filter(p=>!p.mirror),mirror=boatPasses.filter(p=>p.mirror);
+   const synchronous=main.every(p=>mirror.some(r=>r.time===p.time&&Math.abs(r.x-p.x)<1e-9));
+   const xs=main.map(p=>p.x);
+   return synchronous&&xs.at(-1)>xs[0]&&xs.every((x,i)=>i===0||Math.abs(x-xs[i-1])<.04);
+ }"""), 'Moving boat and mirror must share the same pose on every frame'
+ page.evaluate("__MB.lanternBoat.root.getObjectByName('Smooth planked wooden hull').onBeforeRender=()=>{}")
+ print('PASS moving hull and reflection remain synchronous across 12 frames',flush=True)
  before=page.evaluate('__MB.water.ripples.map(v=>v.z)')
  for x in range(200,620,35):page.mouse.move(x,770);page.wait_for_timeout(80)
  assert page.evaluate('__MB.water.ripples.map(v=>v.z)')!=before
