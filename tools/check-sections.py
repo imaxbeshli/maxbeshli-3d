@@ -26,9 +26,26 @@ with sync_playwright() as p:
         page.set_viewport_size({'width':700,'height':600})
         page.evaluate(f'__MB.focusTile({i})')
         page.wait_for_function("__MB.state.phase==='focused'")
-        page.evaluate('__MB.startDive()')
+        page.evaluate("""()=>{
+            window.__entryFrames=[];
+            const sample=()=>{
+                const {camera,slateObjects,state}=__MB,obj=slateObjects[state.selectedIndex].holder;
+                obj.updateWorldMatrix(true,false);
+                const centre=obj.getWorldPosition(camera.position.clone());
+                const normal=obj.getWorldDirection(camera.position.clone());
+                __entryFrames.push({phase:state.phase,distance:camera.position.clone().sub(centre).dot(normal),veil:Number(getComputedStyle(document.getElementById('travelVeil')).opacity)});
+                if(state.phase==='diving')requestAnimationFrame(sample);
+            };
+            __MB.startDive();sample();
+        }""")
         page.wait_for_function("__MB.state.phase==='section'")
         page.wait_for_timeout(1000)
+        frames=page.evaluate('__entryFrames')
+        assert min(f['distance'] for f in frames)>1.5,'Camera must stay in front of the glass'
+        assert any(f['phase']=='diving' and f['veil']==1 for f in frames),'Full black must precede section reveal'
+        assert page.locator('#travelVeil').evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgb(0, 0, 0)'
+        assert page.locator('#travelVeil').evaluate('(e)=>Number(getComputedStyle(e).opacity)')==1,'Keep black under the section fade'
+        print(f'PASS tile {i}: camera stays in front, black frame before section',flush=True)
         assert page.locator('#ecosystem-modal').get_attribute('data-scene')==str(i)
 
     def leave():

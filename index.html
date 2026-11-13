@@ -546,7 +546,7 @@
     #mainHeader{display:flex;justify-content:space-between;align-items:center;min-height:44px;pointer-events:none}
     .header-right{justify-self:end;align-items:center;pointer-events:auto}.logo{justify-self:start;align-items:center;min-height:44px}.cta-btn{justify-content:center;white-space:nowrap;min-height:40px}
     .bottom-wrap{will-change:opacity,transform,filter}.bottom-caption{background:linear-gradient(135deg,rgba(42,46,54,.76),rgba(13,16,23,.68));backdrop-filter:blur(24px) saturate(85%);-webkit-backdrop-filter:blur(24px) saturate(85%);border-color:rgba(232,237,245,.23);box-shadow:inset 0 1px 0 #ffffff15,0 12px 35px #0004}.caption-title{color:#ffca96;text-shadow:0 1px 3px #0008}.caption-text{color:rgba(248,249,252,.92);text-shadow:0 1px 3px #0009}
-    #travelVeil{position:fixed;inset:0;z-index:45;background:radial-gradient(circle at 70% 30%,#161822 0%,#06070a 100%);opacity:0;pointer-events:none}
+    #travelVeil{position:fixed;inset:0;z-index:45;background:#000;opacity:0;pointer-events:none}
     #ecosystem-modal{overflow:auto}#ecosystem-modal.active{transition:opacity .45s ease;opacity:1;visibility:visible}
     #infoDialog{margin:auto;width:min(620px,90vw);padding:40px;background:#10131b;color:#ddd;border:1px solid #ffffff30;border-radius:18px;line-height:1.7}
     #infoDialog::backdrop{background:#0009;backdrop-filter:blur(12px)}#infoTitle{margin-bottom:18px}#infoClose{float:right;background:none;border:0;color:#ddd;font-size:28px}
@@ -3586,12 +3586,15 @@ window.MBEnvironment={
       phase='diving';pendingDive=false;
       const obj=slateObjects[selectedIndex].holder;obj.updateWorldMatrix(true,false);
       const centre=obj.getWorldPosition(new THREE.Vector3()),normal=new THREE.Vector3(0,0,1).applyQuaternion(obj.getWorldQuaternion(new THREE.Quaternion()));
-      const end=centre.clone().addScaledVector(normal,-.85),aim=centre.clone().addScaledVector(normal,-3);
+      // Stop in front of the glass; the veil bridges the remaining distance.
+      const end=centre.clone().addScaledVector(normal,1.6),aim=centre.clone();
       const tmp=camera.clone();tmp.position.copy(end);tmp.lookAt(aim);
-      travel={...cameraJourney(end,tmp.quaternion.clone()),centre,normal,focusPosition:camera.position.clone(),focusQuaternion:camera.quaternion.clone()};
+      const journey=cameraJourney(end,tmp.quaternion.clone());
+      travel={...journey,duration:THREE.MathUtils.clamp(journey.duration,.95,1.35),centre,normal,focusPosition:camera.position.clone(),focusQuaternion:camera.quaternion.clone()};
+      veil.style.opacity='0';
       playWhooshSound(travel.duration);
     }
-    function openEcosystemModal(){fillSection(selectedIndex);phase='section';ecosystemModal.classList.add('active');ecosystemModal.style.opacity='1';ecosystemModal.inert=false;canvas.inert=true;document.getElementById('modalCloseBtn').focus({preventScroll:true});veil.style.opacity='0'}
+    function openEcosystemModal(){fillSection(selectedIndex);phase='section';ecosystemModal.classList.add('active');ecosystemModal.style.opacity='1';ecosystemModal.inert=false;canvas.inert=true;document.getElementById('modalCloseBtn').focus({preventScroll:true});veil.style.opacity='1'}
     function closeEcosystemModal(){
       if(phase!=='section')return;window.MBSections.close();veil.style.opacity='1';ecosystemModal.style.opacity='0';ecosystemModal.classList.remove('active');ecosystemModal.inert=true;canvas.inert=false;phase='returning';
       travel={...cameraJourney(travel.focusPosition.clone(),travel.focusQuaternion.clone()),centre:travel.centre,normal:travel.normal};
@@ -3818,11 +3821,9 @@ window.MBEnvironment={
         obj.glassSideMat.opacity=(.82+obj.hover*.025)*(1-defocus*.92);
         obj.backPlateMat.opacity = baseOp * .02 * (1 - defocus * .82);
         let insetFade=baseOp*Math.pow(1-defocus,3);
-        if(i===selectedIndex&&['diving','returning','section'].includes(phase)&&travel){const d=camera.position.clone().sub(travel.centre).dot(travel.normal);insetFade*=THREE.MathUtils.smoothstep(d,.12,1.35)}
         obj.inset.materials.forEach(m=>m.opacity=m.userData.baseOpacity*insetFade);
         obj.inset.light.intensity=.18*insetFade;
 
-        if(i===selectedIndex&&['diving','returning','section'].includes(phase)&&travel){const distance=camera.position.clone().sub(travel.centre).dot(travel.normal);const opacity=THREE.MathUtils.smoothstep(distance,.12,1.35);[obj.screenMat,obj.outerEdgesMat,obj.innerEdgesMat,obj.glassMat,obj.glassSideMat,obj.backPlateMat].forEach(m=>m.opacity*=opacity)}
 
         // ЕСТЕСТВЕННОЕ МЯГКОЕ ОТРАЖЕНИЕ внизу на мокром полу (без эффекта яркого зеркала)
         obj.reflHolder.position.copy(obj.holder.position);
@@ -3863,7 +3864,7 @@ window.MBEnvironment={
         camera.position.lerpVectors(travel.from,travel.to,ease);camera.quaternion.slerpQuaternions(travel.qFrom,travel.qTo,ease);
         currentLookAt.copy(camera.position).add(new THREE.Vector3(0,0,-3).applyQuaternion(camera.quaternion));
         if(phase==='focusing'){zoomFactor=THREE.MathUtils.lerp(travel.initialZoom,1,ease);if(p===1){currentProgress=targetProgress=travel.finalProgress;phase='focused';zoomFactor=1;if(pendingDive)startDive()}}
-        else if(phase==='diving'){veil.style.opacity=THREE.MathUtils.smoothstep(p,.68,.98).toFixed(4);if(p===1)openEcosystemModal()}
+        else if(phase==='diving'){veil.style.opacity=THREE.MathUtils.smoothstep(p,.2,.76).toFixed(4);if(p===1)openEcosystemModal()}
         else {veil.style.opacity=(1-THREE.MathUtils.smoothstep(p,.12,.8)).toFixed(4);if(p===1){travel=null;phase='focused';canvas.focus({preventScroll:true})}}
       }else if(phase==='orbit'){
         const targetCam=new THREE.Vector3(BASE_CAM_POS.x+mouseX*.22,BASE_CAM_POS.y-mouseY*.14,BASE_CAM_POS.z),targetLook=new THREE.Vector3(BASE_LOOK_AT.x+mouseX*.08,BASE_LOOK_AT.y-mouseY*.06,BASE_LOOK_AT.z);
