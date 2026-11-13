@@ -1,9 +1,9 @@
-/* AVTOLAB77: animated 30-second Mini App concept, entirely offline.
+/* AVTOLAB77: animated 24-second Mini App concept, entirely offline.
    Booking interactions are a presentation only; no requests are submitted. */
 window.MBPhoneDemo={
-  duration:30,
+  duration:24,
   create(canvas,sources,onFrame){
-    const x=canvas.getContext('2d'),W=600,H=1200;
+    const x=canvas.getContext('2d'),W=600,H=1200,DURATION=24;
     const red='#ff1734',white='#f5f5f3',muted='#a4a7ad',images={};
     let brandCrop=null;
     let time=0,active=false,last=0,lastPaint=-Infinity,renderedTime=0;
@@ -41,20 +41,21 @@ window.MBPhoneDemo={
       if(images.logo?.naturalWidth){
         const im=images.logo,b=brandCrop||[0,0,im.naturalWidth,im.naturalHeight];
         x.drawImage(im,...b,px,py,w,w*b[3]/b[2]);
-      }else text('AVTOLAB77',px,py+38,38,white,700);
+      }else text('AVTOLAB77',px+w/2,py+38,38,white,700,'center');
     }
     function home(t){
       base();brand(28,190,544);
-      photo('hero',26,310,548,440,22,1+.035*smooth(0,7,t));
+      photo('hero',26,310,548,440,22,1+.05*(1-Math.exp(-Math.max(0,t)*.9)));
       gradient(26,620,548,130);
-      text('Уход, который',28,824,43,white,700);
-      text('видно в деталях.',28,878,43,white,700);
-      text('Защита кузова и безупречный блеск.',28,932,23,muted);
-      text('Выберите услугу и удобное время.',28,970,23,muted);
-      button('Записаться в студию',t,6.35);
+      text('Уход, который',300,824,43,white,700,'center');
+      text('видно в деталях.',300,878,43,white,700,'center');
+      text('Защита кузова и безупречный блеск.',300,932,23,muted,400,'center');
+      text('Выберите услугу и удобное время.',300,970,23,muted,400,'center');
+      button('Записаться в студию',t,2.15);
     }
     const serviceInfo=[['Плёнка','Защита без компромиссов','Прозрачный слой защиты кузова','film'],['Полировка','Блеск в каждой линии','Глубина цвета и чистые отражения','polish'],['Керамика','Вода не задерживается','Гладкость и гидрофобный эффект','ceramic']];
     function services(t){
+      t*=6/4.4;
       base();heading('Забота о вашем авто','Выберите подходящую услугу');
       const selection=smooth(1.7,2.3,t)+smooth(3.7,4.3,t);
       serviceInfo.forEach((v,i)=>{
@@ -71,15 +72,43 @@ window.MBPhoneDemo={
       text('Индивидуальный подбор покрытия',28,1000,20,'#7f858e');
       button('Выбрать время',t,5.5);
     }
+    // Original illustrative city plan: river bend, urban blocks and a route.
+    // It is not a geocoded map or a Yandex basemap; no map service is requested.
+    function districtMap(t){
+      x.save();x.translate(26,620);x.beginPath();x.roundRect(0,0,548,367,22);x.clip();
+      box(0,0,548,367,'#101419',0);
+      // A broad river bend defines the district instead of a regular grid.
+      x.beginPath();x.moveTo(-40,286);x.bezierCurveTo(94,225,167,315,286,257);x.bezierCurveTo(399,202,397,111,590,126);
+      x.strokeStyle='#1b2b35';x.lineWidth=55;x.lineCap='round';x.stroke();
+      const streets=[[[12,69],[168,70],[257,18]],[[42,144],[221,145],[315,71],[548,72]],[[56,212],[263,211],[346,142],[548,170]],[[94,-10],[93,220]],[[191,18],[191,214]],[[315,-12],[322,107]],[[463,0],[448,168]],[[267,264],[307,367]],[[432,196],[478,367]],[[15,333],[244,327],[410,275],[562,310]]];
+      streets.forEach(points=>{line(points,'#303943',12);line(points,'#20272e',8)});
+      // Small building footprints and the tall cluster evoke Moscow's cityscape.
+      [[30,92,36,32],[112,91,58,29],[116,160,55,29],[214,87,28,36],[350,24,32,27],[393,25,35,26],[354,91,56,26],[482,94,35,38],[57,347,55,26],[148,345,62,28],[334,309,38,48]].forEach(b=>box(...b,'#232b33',4));
+      [[275,100,17,46],[296,85,16,53],[318,121,18,42],[340,141,17,37]].forEach(([a,b,w,h])=>{box(a+3,b+3,w,h,'#090c10',3);box(a,b,w,h,'#3b4651',3);line([[a+4,b+5],[a+4,b+h-6]],'#52606c',2)});
+      // Route crosses a bridge and draws continuously at a steady pace.
+      const route=[[113,328],[208,328],[263,302],[263,211],[235,145]],p=smooth(.1,2.25,t);
+      line(route,'#ff173424',13);
+      const lengths=route.slice(1).map((pt,i)=>Math.hypot(pt[0]-route[i][0],pt[1]-route[i][1]));
+      let remaining=lengths.reduce((a,b)=>a+b,0)*p,head=route[0];
+      x.beginPath();x.moveTo(...route[0]);
+      for(let i=0;i<lengths.length;i++){const f=Math.min(1,remaining/lengths[i]);if(f<=0)break;head=[route[i][0]+(route[i+1][0]-route[i][0])*f,route[i][1]+(route[i+1][1]-route[i][1])*f];x.lineTo(...head);remaining-=lengths[i];}
+      x.strokeStyle=red;x.lineWidth=4;x.lineCap='round';x.lineJoin='round';x.stroke();
+      circle(113,328,6,'#e9eef3');circle(...head,4,'#ffe5e8');
+      const reveal=smooth(1.8,2.35,t);x.save();x.globalAlpha*=reveal;
+      const pulse=(t*.45)%1;circle(235,145,17+pulse*14,`rgba(255,23,52,${.12*(1-pulse)})`);
+      circle(235,145,12,red);circle(235,145,4,white);
+      box(163,104,144,28,'#080b0fe8',8);text('AVTOLAB77',235,124,16,white,650,'center');x.restore();
+      text('МОСКВА',20,31,15,'#7b8792',600);text('РЕКА',409,232,12,'#647f8f');
+      box(327,325,204,27,'#101419dc',8);text('Схематичный маршрут',429,344,14,'#8c98a4',400,'center');
+      x.restore();
+    }
     function contacts(t){
       base();heading('До встречи в студии','Москва · AVTOLAB77');
       box(26,307,548,283,'#141b22',22);text('Ермакова роща,',49,365,31,white,600);text('7А, строение 2',49,410,31,white,600);
       text('Ежедневно 10:00–19:00',49,478,24,muted);text('+7 (926) 300-32-56',49,534,29,white,500);
-      x.save();x.beginPath();x.roundRect(26,620,548,367,22);x.clip();box(26,620,548,367,'#111820',0);
-      for(let i=0;i<6;i++)line([[30+i*100,620],[90+i*100,987]],'#293541',14);
-      for(let i=0;i<4;i++)line([[26,660+i*95],[574,630+i*95]],'#293541',12);
-      const path=smooth(.1,1.2,t);line([[90,920],[90+200*Math.min(path*2,1),920],[290,920-135*Math.max(0,path*2-1)]],red,5);
-      circle(290,785,19+Math.sin(t*4)*3,'#ff173433');circle(290,785,10,red);x.restore();button('Построить маршрут',t,1.6);
+      districtMap(t);
+      button('Построить маршрут',t,3.9);
+
     }
     function booking(t){
       t*=5/7;
@@ -103,13 +132,13 @@ window.MBPhoneDemo={
       box(26,894,548,126,'#12161beF',20,'#30353b');text('Керамика',48,943,28,white,600);text('14 ноября · 14:00',48,986,24,muted);
       box(26,1062,548,76,'#20252c',18);text('Моя запись',300,1110,27,white,600,'center');
     }
-    const sections=[{at:0,name:'home',draw:home},{at:7,name:'services',draw:services},{at:13,name:'booking',draw:booking},{at:20,name:'confirmation',draw:confirmation},{at:25,name:'contacts',draw:contacts}];
+    const sections=[{at:0,name:'home',draw:home},{at:2.8,name:'services',draw:services},{at:7.2,name:'booking',draw:booking},{at:14.2,name:'confirmation',draw:confirmation},{at:18.8,name:'contacts',draw:contacts}];
     function render(t){
-      t=((t%30)+30)%30;renderedTime=t;let i=sections.length-1;while(i>0&&t<sections[i].at)i--;const local=t-sections[i].at;
+      t=((t%DURATION)+DURATION)%DURATION;renderedTime=t;let i=sections.length-1;while(i>0&&t<sections[i].at)i--;const local=t-sections[i].at;
       x.clearRect(0,0,W,H);box(0,0,W,H,'#080a0c',0);
       x.save();x.beginPath();x.rect(0,164,W,996);x.clip();
       if(i>0&&local<.55){sections[i-1].draw(sections[i].at-sections[i-1].at);const p=smooth(0,.55,local);x.save();x.globalAlpha*=p;x.translate((1-p)*34,0);sections[i].draw(local);x.restore()}else sections[i].draw(local);
-      if(t>29.45){x.save();x.globalAlpha*=smooth(29.45,30,t);home(0);x.restore()}
+      if(t>DURATION-.55){x.save();x.globalAlpha*=smooth(DURATION-.55,DURATION,t);home(0);x.restore()}
       x.restore();chrome();onFrame();
     }
     const imagesReady=Promise.all(Object.entries({sheet:window.MB_PHONE_DETAILING_SHEET,hero:window.MB_PHONE_CAR_STUDIO,logo:window.MB_PHONE_BRAND}).filter(([,src])=>src).map(([key,src])=>new Promise(resolve=>{const im=new Image();images[key]=im;im.onload=resolve;im.onerror=()=>{console.warn('Phone demo image unavailable:',key);resolve()};im.src=src})));
@@ -130,8 +159,8 @@ window.MBPhoneDemo={
     });
     render(0);document.addEventListener('visibilitychange',()=>{if(document.hidden){active=false;last=performance.now()}});
     return {ready,render,update(running,now=performance.now()){
-      running=Boolean(running&&!document.hidden);if(running&&active)time=(time+Math.max(0,now-last)/1000)%30;last=now;active=running;
+      running=Boolean(running&&!document.hidden);if(running&&active)time=(time+Math.max(0,now-last)/1000)%DURATION;last=now;active=running;
       if(running&&now-lastPaint>=1000/30-.5){render(time);lastPaint=now}
-    },get state(){return {time,active,duration:30,renderedTime,car:{style:'studio-photo',wheelVisible:false},section:[...sections].reverse().find(s=>renderedTime>=s.at).name}}};
+    },get state(){return {time,active,duration:DURATION,renderedTime,car:{style:'studio-photo',wheelVisible:false},section:[...sections].reverse().find(s=>renderedTime>=s.at).name}}};
   }
 };
