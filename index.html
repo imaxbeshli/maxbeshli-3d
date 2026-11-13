@@ -726,7 +726,7 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
 .crm-record h3{font-size:16px;font-weight:500;margin:0 0 7px}.crm-record p{font-size:11px;color:#ccd3dc;margin:0}.crm-record strong{font-size:10px;font-weight:400;margin-left:auto;color:#f9aeb8}
 .crm-fields{margin:20px 0 25px}.crm-fields>div{display:flex;justify-content:space-between;gap:15px;padding:12px 0;border-bottom:1px solid #ffffff15;font-size:12px}.crm-fields dt{color:#a9b6c6}.crm-fields dd{margin:0;text-align:right}
 #ecosystem-modal.active .section-intro{animation:sectionEnter .8s .08s both}#ecosystem-modal.active .section-content:not([hidden]){animation:sectionEnter .9s .16s both}
-.section-footer{max-width:1600px;width:100%;margin:0 auto}.section-about{font-size:12px;color:#ddd;background:#14192133}
+.section-footer{max-width:1600px;width:100%;margin:0 auto}.section-footer{justify-content:flex-end}
 @keyframes sectionFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes sectionLight{from{transform:translate(-1%,0) rotate(-2deg);opacity:.12}to{transform:translate(2%,2%) rotate(2deg);opacity:.24}}
 @keyframes villaBreath{from{transform:scale(1)}to{transform:scale(1.035)}}
@@ -800,7 +800,6 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
 .crm-app{padding:22px;background:linear-gradient(135deg,#1c3045dc,#122132de)!important;color:#eaf0f4}
 .crm-header{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:2px 0 20px;border-bottom:1px solid #d4e6f319}
 .crm-wordmark{font-size:14px;font-weight:600;letter-spacing:.065em;display:block}.crm-submark{display:block;font-size:9px;color:#8da5b8;letter-spacing:.04em;margin-top:5px}
-.crm-stream-button{display:flex;align-items:center;gap:8px;border:1px solid #bad7ed25;background:#ffffff05;color:#b4cad9;border-radius:9px;padding:9px 11px;font-size:10px;white-space:nowrap}.crm-stream-dot{width:5px;height:5px;border-radius:50%;background:#80b2d0;box-shadow:0 0 8px #80b2d055}.crm-stream-button[aria-pressed="false"] .crm-stream-dot{background:#697c8b;box-shadow:none}
 .crm-nav{display:flex;gap:22px;border-bottom:1px solid #d4e6f319;margin-bottom:20px}
 .crm-nav button{color:#95aebf;font-size:12px;padding:17px 1px 13px;border:0;border-bottom:2px solid transparent;background:none;white-space:nowrap}.crm-nav button[aria-selected="true"]{color:#fff;border-bottom-color:#ed354e}
 #crmCount{font-size:9px;display:inline-grid;place-items:center;min-width:17px;height:17px;border-radius:5px;margin-left:4px;background:#a7c0d71a;color:#d6e3ed}
@@ -832,7 +831,7 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
 @keyframes tgFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}@keyframes tgMessage{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes tgTyping{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 @media(max-width:1150px) and (min-width:901px){.telegram-demo{gap:50px;grid-template-columns:minmax(180px,.85fr) minmax(230px,1fr)}.flow-step{padding:18px 14px;gap:10px}.flow-step h3{font-size:14px}.flow-step p{font-size:10px}.crm-app{padding:17px}.crm-columns{grid-template-columns:minmax(150px,.7fr) minmax(0,1.3fr);gap:10px}.crm-lead{padding:12px 8px;gap:7px}.crm-person{gap:7px}.crm-status{margin-left:0}.crm-person p{font-size:9px}}
 @media(max-width:900px){#ecosystem-modal[data-scene="2"][data-telegram-tab="2"] .section-layout{grid-template-columns:1fr;gap:24px}.telegram-demo{gap:55px}.tg-workspace-host .tg-glass-panel{transform:rotateY(-5deg)}.crm-columns{grid-template-columns:minmax(190px,.8fr) minmax(0,1.2fr)}#ecosystem-modal[data-scene="2"][data-telegram-tab="2"] .section-intro h2{font-size:38px}}
-@media(max-width:540px){#telegramScene{padding:0 8px 0 0}.telegram-demo{grid-template-columns:1fr;gap:52px;padding-right:0}.automation-flow{padding-left:32px;gap:19px}.flow-step{min-height:94px;padding:19px 18px;gap:14px}.flow-step h3{font-size:15px}.flow-step p{font-size:11px}.tg-glass-panel{transform:rotateY(-10deg)}.tg-workspace-host .tg-glass-panel{transform:rotateY(-2deg);border-radius:18px}.tg-chat{padding:6px}.tg-chat-header{padding:13px 12px}.tg-chat-header h3{font-size:14px}.tg-avatar{width:35px;height:35px;font-size:16px}.tg-chat-history{height:300px;padding:17px 10px}.tg-message p{font-size:12px}.tg-message{max-width:94%;padding:11px 12px 8px}.tg-chat-bottom{padding:12px 10px 8px}.tg-replies button{font-size:11px;padding:10px 11px}#ecosystem-modal .tg-composer input{font-size:16px}.tg-chat-tools button{font-size:10px}.crm-app{padding:14px}.crm-header{gap:8px;padding-bottom:15px}.crm-wordmark{font-size:12px}.crm-submark{font-size:8px}.crm-stream-button{font-size:9px;padding:8px;gap:6px}#crmStreamLabel{display:none}.crm-nav{gap:18px;margin-bottom:15px}.crm-nav button{font-size:11px}.crm-toolbar{gap:8px;flex-wrap:wrap}.crm-toolbar input{width:100%;flex-basis:100%}.crm-toolbar select{width:100%}#ecosystem-modal .crm-app input:not([type="checkbox"]),#ecosystem-modal .crm-app select{font-size:16px;padding:10px 8px}.crm-columns{grid-template-columns:1fr;gap:12px}.crm-lead-list{max-height:196px;padding:0 3px 0 0}.crm-lead{padding:12px 10px;margin-bottom:7px}.crm-lead-copy{flex:1}.crm-lead-copy strong{font-size:13px}.crm-lead-copy>span{font-size:11px}.crm-lead-copy small{font-size:10px}.crm-lead-detail{padding:14px}.crm-person h3{font-size:15px}.crm-status{font-size:9px}.crm-booking-fields{grid-template-columns:1fr}.crm-booking-fields label{font-size:11px}.crm-history{max-height:130px}.crm-primary,.crm-secondary{font-size:11px;padding:12px 9px}.crm-calendar-toolbar{flex-wrap:wrap;margin-top:15px}.crm-calendar-toolbar input{width:100%}.crm-calendar-toolbar label{width:100%}.crm-slot{gap:10px}.crm-slot button{padding:12px 9px;gap:8px}.crm-slot small{font-size:9px}.crm-slot-action{display:none}.crm-rule{padding:13px 10px;gap:9px}.crm-rule h4{font-size:12px;line-height:1.4}.crm-rule p{font-size:10px}.crm-rule-symbol{font-size:19px;width:19px}.crm-view-title{font-size:17px}.crm-switch{width:32px}.crm-always{font-size:9px}.crm-record-tools button{font-size:10px}.crm-reminder{font-size:12px}#ecosystem-modal[data-scene="2"][data-telegram-tab="2"] .section-intro h2{font-size:34px}}
+@media(max-width:540px){#telegramScene{padding:0 8px 0 0}.telegram-demo{grid-template-columns:1fr;gap:52px;padding-right:0}.automation-flow{padding-left:32px;gap:19px}.flow-step{min-height:94px;padding:19px 18px;gap:14px}.flow-step h3{font-size:15px}.flow-step p{font-size:11px}.tg-glass-panel{transform:rotateY(-10deg)}.tg-workspace-host .tg-glass-panel{transform:rotateY(-2deg);border-radius:18px}.tg-chat{padding:6px}.tg-chat-header{padding:13px 12px}.tg-chat-header h3{font-size:14px}.tg-avatar{width:35px;height:35px;font-size:16px}.tg-chat-history{height:300px;padding:17px 10px}.tg-message p{font-size:12px}.tg-message{max-width:94%;padding:11px 12px 8px}.tg-chat-bottom{padding:12px 10px 8px}.tg-replies button{font-size:11px;padding:10px 11px}#ecosystem-modal .tg-composer input{font-size:16px}.tg-chat-tools button{font-size:10px}.crm-app{padding:14px}.crm-header{gap:8px;padding-bottom:15px}.crm-wordmark{font-size:12px}.crm-submark{font-size:8px}.crm-nav{gap:18px;margin-bottom:15px}.crm-nav button{font-size:11px}.crm-toolbar{gap:8px;flex-wrap:wrap}.crm-toolbar input{width:100%;flex-basis:100%}.crm-toolbar select{width:100%}#ecosystem-modal .crm-app input:not([type="checkbox"]),#ecosystem-modal .crm-app select{font-size:16px;padding:10px 8px}.crm-columns{grid-template-columns:1fr;gap:12px}.crm-lead-list{max-height:196px;padding:0 3px 0 0}.crm-lead{padding:12px 10px;margin-bottom:7px}.crm-lead-copy{flex:1}.crm-lead-copy strong{font-size:13px}.crm-lead-copy>span{font-size:11px}.crm-lead-copy small{font-size:10px}.crm-lead-detail{padding:14px}.crm-person h3{font-size:15px}.crm-status{font-size:9px}.crm-booking-fields{grid-template-columns:1fr}.crm-booking-fields label{font-size:11px}.crm-history{max-height:130px}.crm-primary,.crm-secondary{font-size:11px;padding:12px 9px}.crm-calendar-toolbar{flex-wrap:wrap;margin-top:15px}.crm-calendar-toolbar input{width:100%}.crm-calendar-toolbar label{width:100%}.crm-slot{gap:10px}.crm-slot button{padding:12px 9px;gap:8px}.crm-slot small{font-size:9px}.crm-slot-action{display:none}.crm-rule{padding:13px 10px;gap:9px}.crm-rule h4{font-size:12px;line-height:1.4}.crm-rule p{font-size:10px}.crm-rule-symbol{font-size:19px;width:19px}.crm-view-title{font-size:17px}.crm-switch{width:32px}.crm-always{font-size:9px}.crm-record-tools button{font-size:10px}.crm-reminder{font-size:12px}#ecosystem-modal[data-scene="2"][data-telegram-tab="2"] .section-intro h2{font-size:34px}}
 @media(prefers-reduced-motion:reduce){.tg-float,.tg-workspace-host,.tg-message,.tg-typing i{animation:none!important}}
 /* Keep HTML fill inside the optical bevel, so it cannot cover its highlights. */
 .automation-flow{gap:62px}
@@ -843,6 +842,8 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
 .tg-chat{--glass-inset:12px;--glass-fill-radius:18px}.crm-app{--glass-inset:16px;--glass-fill-radius:24px}
 .tg-glass-host.glass-ready .tg-chat:before,.tg-glass-host.glass-ready .crm-app:before{background:linear-gradient(135deg,#1c3144b0,#102033c0)}
 @media(max-width:540px){.automation-flow{gap:21px}.automation-flow .tg-glass-panel{transform:rotateY(-10deg) rotateZ(-.5deg)}.tg-chat,.crm-app{--glass-inset:7px;--glass-fill-radius:12px}}
+.tg-booking-limit{font-size:11px;line-height:1.5;color:#b4c6d2;margin:10px 2px 12px}.tg-booking-limit:empty{display:none}
+#crmLeadDetail:focus{outline:none}#crmLeadDetail:focus-visible{box-shadow:0 0 0 1px #b7d7ed44}
 
 </style>
 <div id="ecosystem-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" inert>
@@ -894,6 +895,7 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
       <div class="tg-chat-history" id="botMessages" role="log" aria-live="polite" aria-label="Переписка с ботом"></div>
       <div class="tg-chat-bottom">
         <div id="botActions" class="tg-replies" aria-label="Варианты ответа"></div>
+        <p id="botBookingLimit" class="tg-booking-limit" role="status"></p>
         <form id="botComposer" class="tg-composer"><label class="sr-only" for="botInput">Сообщение боту</label><input id="botInput" autocomplete="off" maxlength="80" placeholder="Написать сообщение"><button type="submit" aria-label="Отправить сообщение">↑</button></form>
         <div class="tg-chat-tools"><button data-bot-command="menu">Меню</button><button data-bot-command="price">Стоимость</button><button data-bot-command="address">Адрес и время</button></div>
       </div>
@@ -902,8 +904,8 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
   <div class="tg-glass-host tg-workspace-host" id="telegramCRM" hidden>
     <canvas class="tg-glass-canvas" aria-hidden="true"></canvas>
     <div class="tg-glass-panel crm-app">
-      <header class="crm-header"><div><span class="crm-wordmark">AVTOLAB77</span><span class="crm-submark">Рабочее пространство</span></div><button class="crm-stream-button" id="crmStream" aria-pressed="true" title="Приостановить появление новых заявок"><span class="crm-stream-dot"></span><span id="crmStreamLabel">Поток заявок</span><span id="crmStreamIcon">Ⅱ</span></button></header>
-      <nav class="crm-nav" aria-label="Разделы CRM" role="tablist"><button data-crm-view="leads" role="tab" aria-selected="true">Заявки <span id="crmCount"></span></button><button data-crm-view="calendar" role="tab" aria-selected="false">Записи</button><button data-crm-view="rules" role="tab" aria-selected="false">Автоматизация</button></nav>
+      <header class="crm-header"><div><span class="crm-wordmark">AVTOLAB77</span><span class="crm-submark">Рабочее пространство</span></div></header>
+      <nav class="crm-nav" aria-label="Разделы CRM" role="tablist"><button data-crm-view="leads" role="tab" aria-selected="true">Заявки <span id="crmCount"></span></button><button data-crm-view="calendar" role="tab" aria-selected="false">Расписание</button><button data-crm-view="rules" role="tab" aria-selected="false">Автоматизация</button></nav>
       <div id="crmLeadsView" class="crm-view">
         <div class="crm-toolbar"><label class="sr-only" for="crmSearch">Поиск клиента</label><input id="crmSearch" type="search" placeholder="Клиент или автомобиль" autocomplete="off"><label class="sr-only" for="crmSource">Источник заявки</label><select id="crmSource"><option value="all">Все источники</option><option>Telegram</option><option>WhatsApp</option><option>Instagram</option></select></div>
         <div class="crm-columns"><div id="crmLeadList" class="crm-lead-list" aria-label="Заявки"></div><section id="crmLeadDetail" class="crm-lead-detail" aria-label="Карточка клиента"></section></div>
@@ -924,7 +926,7 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
 
     </div>
   </div>
-  <footer class="section-footer"><button class="section-button section-about" id="sectionAbout">Обо мне</button><button class="section-button section-cta" id="sectionContact"><span class="status-dot"></span>Обсудить проект</button></footer>
+  <footer class="section-footer"><button class="section-button section-cta" id="sectionContact"><span class="status-dot"></span>Обсудить проект</button></footer>
 </div>
 <dialog id="infoDialog" aria-labelledby="contactTitle">
   <div class="contact-world" aria-hidden="true"></div>
@@ -1011,7 +1013,7 @@ window.createTelegramGlass=function(root){
   }};
 };
 
-/* Local portfolio workspace. Seeded traffic and visitor bookings stay in this
+/* Local portfolio workspace. Initial examples and visitor bookings stay in this
    browser session. No messaging service, studio or external CRM is contacted. */
 (()=>{
   const $=id=>document.getElementById(id),root=$('telegramScene');
@@ -1036,7 +1038,7 @@ window.createTelegramGlass=function(root){
       saved.leads.every(l=>l&&services[l.service]&&statusNames[l.status]&&['Telegram','WhatsApp','Instagram'].includes(l.source)&&
         ['id','name','car','date','time'].every(k=>typeof l[k]==='string')&&Array.isArray(l.history)&&l.history.every(t=>typeof t==='string')))state=saved;
   }catch(e){}
-  let view=0,crmView='leads',selected=state.leads[0]?.id,source='all',query='',sequence=0,auto=true,autoElapsed=0,arrival=0,lastToast=0,lastUpdate=0;
+  let view=0,crmView='leads',selected=state.leads[0]?.id,source='all',query='',sequence=0,lastToast=0;
   let botStep='menu',draft={},replyTimer=0,replyToken=0,typing=false;
   function persist(){try{sessionStorage.setItem('mb-telegram-workspace',JSON.stringify(state))}catch(e){}}
   function log(text){state.activity.unshift({text,time:clockLabel()});state.activity=state.activity.slice(0,12);persist();renderActivity()}
@@ -1056,15 +1058,22 @@ window.createTelegramGlass=function(root){
     if(l.reminder)log(`${l.name}: подготовлен текст напоминания`);
     return true;
   }
+  const bookingLimit=3;
+  const visitorCount=()=>state.leads.filter(l=>l.origin==='visitor').length;
+  function updateBookingLimit(){
+    const used=visitorCount();$('botBookingLimit').textContent=used?`Создано записей: ${Math.min(used,bookingLimit)} из ${bookingLimit}.`:'Можно создать до 3 записей и посмотреть их в CRM.';
+  }
+  function limitReached(){
+    if(visitorCount()<bookingLimit)return false;
+    botStep='limit';updateBookingLimit();
+    reply('Вы создали три записи. Теперь их можно посмотреть, перенести или отменить в CRM.',()=>choices([['Посмотреть записи в CRM',()=>openCRM(state.leads.find(l=>l.origin==='visitor')?.id)]]));return true;
+  }
   function addLead(data){
+    if(data.origin==='visitor'&&visitorCount()>=bookingLimit)return null;
     const l={id:'lead-'+Date.now().toString(36)+'-'+(++sequence),status:'new',date:'',time:'',onCalendar:false,reminder:false,assignee:state.rules.assign?'Администратор':'Не назначен',history:[],...data};
     if(state.leads.length>=30){const i=state.leads.findIndex(x=>x.origin==='seed'&&x.status!=='confirmed');if(i>=0)state.leads.splice(i,1);else return null}
-    state.leads.unshift(l);log(`${l.source}: новое обращение · ${l.name}`);renderList();return l;
+    state.leads.unshift(l);updateBookingLimit();log(`${l.source}: новое обращение · ${l.name}`);renderList();return l;
   }
-  function setAuto(enabled){auto=enabled;autoElapsed=0;lastUpdate=0;$('crmStream').setAttribute('aria-pressed',String(auto));$('crmStream').title=auto?'Приостановить появление новых заявок':'Продолжить показ новых заявок';$('crmStreamIcon').textContent=auto?'Ⅱ':'▷';$('crmStreamLabel').textContent=auto?'Поток заявок':'Продолжить поток'}
-  $('crmStream').addEventListener('click',()=>setAuto(!auto));
-  for(const event of ['pointerdown','keydown','wheel'])root.addEventListener(event,e=>{if(!e.target.closest('#crmStream'))setAuto(false)},{passive:event==='wheel'});
-
   // Chat: choices branch into service information, booking and the shared CRM.
   function scrollChat(){const el=$('botMessages');el.scrollTo({top:el.scrollHeight,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}
   function bubble(text,user=false){
@@ -1082,10 +1091,10 @@ window.createTelegramGlass=function(root){
     replyTimer=setTimeout(()=>{if(token!==replyToken)return;cancelReply();bubble(text);next?.();scrollChat()},520);
   }
   function menu(){botStep='menu';$('botInput').placeholder='Написать сообщение';choices([['Подобрать услугу',()=>startServices()],['Записаться',()=>startServices()],['Стоимость',()=>command('price')],['Адрес и время',()=>command('address')]])}
-  function startServices(){bubble('Хочу подобрать услугу',true);reply('Что хотите сделать для автомобиля?',()=>{botStep='service';choices(Object.entries(services).map(([key,s])=>[s.name,()=>chooseService(key)]))})}
-  function chooseService(key){draft.service=key;delete draft.confirmedId;bubble(services[key].name,true);reply(services[key].info,()=>{botStep='service-info';choices([['Что входит?',()=>{bubble('Что входит в услугу?',true);reply(services[key].info+' Перед началом работ обсуждаем состояние автомобиля и согласуем состав услуги.',serviceNext)}],['Перейти к записи',askCar],['Выбрать другую услугу',startServices]])})}
+  function startServices(){if(limitReached())return;bubble('Хочу подобрать услугу',true);reply('Что хотите сделать для автомобиля?',()=>{botStep='service';choices(Object.entries(services).map(([key,s])=>[s.name,()=>chooseService(key)]))})}
+  function chooseService(key){if(limitReached())return;draft.service=key;delete draft.confirmedId;bubble(services[key].name,true);reply(services[key].info,()=>{botStep='service-info';choices([['Что входит?',()=>{bubble('Что входит в услугу?',true);reply(services[key].info+' Перед началом работ обсуждаем состояние автомобиля и согласуем состав услуги.',serviceNext)}],['Перейти к записи',askCar],['Выбрать другую услугу',startServices]])})}
   function serviceNext(){choices([['Перейти к записи',askCar],['Другие услуги',startServices],['Как определяется стоимость?',()=>command('price')]])}
-  function askCar(){reply('Какая у вас марка и модель автомобиля?',()=>{botStep='car';$('botInput').placeholder='Например, BMW X5';choices([['BMW X5',()=>acceptCar('BMW X5')],['Mercedes-Benz C',()=>acceptCar('Mercedes-Benz C')],['Porsche Macan',()=>acceptCar('Porsche Macan')]])})}
+  function askCar(){if(limitReached())return;reply('Какая у вас марка и модель автомобиля?',()=>{botStep='car';$('botInput').placeholder='Например, BMW X5';choices([['BMW X5',()=>acceptCar('BMW X5')],['Mercedes-Benz C',()=>acceptCar('Mercedes-Benz C')],['Porsche Macan',()=>acceptCar('Porsche Macan')]])})}
   function acceptCar(car){draft.car=car;bubble(car,true);reply('Как к вам обращаться?',()=>{botStep='name';$('botInput').placeholder='Ваше имя';choices([['Александр',()=>acceptName('Александр')],['Мария',()=>acceptName('Мария')]])})}
   function acceptName(name){draft.name=name;bubble(name,true);askDay()}
   function askDay(){reply(`${draft.name}, выберите день визита.`,()=>{botStep='date';$('botInput').placeholder='Например, завтра';choices([0,1,2,3].filter(n=>free(day(n)).length).map(n=>[n===0?'Сегодня':n===1?'Завтра':dateLabel(day(n)),()=>chooseDay(day(n))]));if(!$('botActions').children.length)choices([['Посмотреть следующие дни',()=>chooseDay(day(4))]])})}
@@ -1097,12 +1106,13 @@ window.createTelegramGlass=function(root){
   }
   function confirmBooking(){
     if(draft.confirmedId){openCRM(draft.confirmedId);return}
+    if(limitReached())return;
     if(!free(draft.date).includes(draft.time)){reply('Это время уже занято. Подберём другой свободный вариант.',askTime);return}
     bubble('Подтверждаю запись',true);
     const l=addLead({name:draft.name,car:draft.car,service:draft.service,source:'Telegram',origin:'visitor',history:[`Подобрали услугу: ${services[draft.service].name}.`,`Автомобиль: ${draft.car}.`]});
     if(!l){reply('Список заполнен. Вы можете посмотреть и изменить существующие записи.',()=>choices([['Открыть CRM',()=>openCRM()]]));return}
     applyConfirmation(l,draft.date,draft.time);draft.confirmedId=l.id;selected=l.id;source='all';query='';$('crmSource').value='all';$('crmSearch').value='';persist();renderList();renderDetail();
-    reply(`Готово, ${draft.name}!\n${services[draft.service].name} · ${dateLabel(draft.date)}, ${draft.time}.\n\nКарточка записи теперь доступна в CRM.`,()=>{botStep='done';choices([['Посмотреть запись в CRM',()=>openCRM(l.id)],['Новая запись',resetBot]])});
+    reply(`Готово, ${draft.name}!\n${services[draft.service].name} · ${dateLabel(draft.date)}, ${draft.time}.\n\nКарточка записи теперь доступна в CRM.`,()=>{botStep='done';choices([['Посмотреть запись в CRM',()=>openCRM(l.id)],...(visitorCount()<bookingLimit?[['Новая запись',resetBot]]:[])])});
   }
   function command(key){
     if(typing)return;
@@ -1111,7 +1121,7 @@ window.createTelegramGlass=function(root){
     if(key==='price'){bubble('Как определяется стоимость?',true);reply('Стоимость зависит от автомобиля, состояния поверхности и объёма работ. Сначала подберём услугу, затем специалист сможет уточнить расчёт.',()=>choices([['Подобрать услугу',startServices],...(draft.service?[['Продолжить запись',()=>draft.car&&draft.name?askDay():askCar()]]:[])]));return}
     bubble('Адрес и время работы',true);reply('Ермакова роща, 7А, строение 2.\nСтудия работает с 10:00 до 19:00.\nДля визита удобно заранее выбрать услугу и время.',()=>choices([['Записаться',()=>draft.service?askCar():startServices()],['Главное меню',()=>command('menu')]]));
   }
-  function resetBot(){cancelReply();draft={};$('botMessages').replaceChildren();$('botInput').value='';bubble('Здравствуйте! Помогу выбрать услугу и записаться в студию. С чего начнём?');menu()}
+  function resetBot(){cancelReply();draft={};$('botMessages').replaceChildren();$('botInput').value='';updateBookingLimit();if(limitReached())return;bubble('Здравствуйте! Помогу выбрать услугу и записаться в студию. С чего начнём?');menu()}
   $('botReset').addEventListener('click',resetBot);
   document.querySelectorAll('[data-bot-command]').forEach(b=>b.addEventListener('click',()=>command(b.dataset.botCommand)));
   $('botComposer').addEventListener('submit',e=>{
@@ -1132,7 +1142,16 @@ window.createTelegramGlass=function(root){
     document.querySelectorAll('[data-crm-view]').forEach(b=>{b.setAttribute('aria-selected',String(b.dataset.crmView===name));b.tabIndex=b.dataset.crmView===name?0:-1});
     if(name==='leads'){renderList();renderDetail()}if(name==='calendar')renderCalendar();if(name==='rules')renderActivity();
   }
-  function openCRM(id){if(id)selected=id;source='all';query='';$('crmSource').value='all';$('crmSearch').value='';setCRMView('leads');window.MBSections.selectTab(2)}
+  async function openCRM(id){
+    if(id)selected=id;source='all';query='';$('crmSource').value='all';$('crmSearch').value='';setCRMView('leads');
+    const opened=await window.MBSections.selectTab(2);
+    if(opened&&window.MBSections.state.active&&window.MBSections.state.tab===2){
+      const detail=$('crmLeadDetail');detail.tabIndex=-1;detail.focus({preventScroll:true});
+      const list=$('crmLeadList'),item=list.querySelector('.selected');
+      if(item)list.scrollTop+=item.getBoundingClientRect().top-list.getBoundingClientRect().top;
+      if(innerWidth<=900)detail.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+    }
+  }
   document.querySelectorAll('[data-crm-view]').forEach(b=>b.addEventListener('click',()=>setCRMView(b.dataset.crmView)));
   function matching(){return state.leads.filter(l=>(source==='all'||l.source===source)&&(`${l.name} ${l.car} ${services[l.service].name}`).toLowerCase().includes(query.toLowerCase()))}
   function renderList(){
@@ -1168,13 +1187,6 @@ window.createTelegramGlass=function(root){
   }
   function renderActivity(){if(!$('crmActivity'))return;$('crmActivity').innerHTML=state.activity.length?state.activity.map(a=>`<li><time>${esc(a.time)}</time><span>${esc(a.text)}</span></li>`).join(''):'<li><span>Здесь появятся действия по вашим заявкам.</span></li>'}
   document.querySelectorAll('[data-crm-rule]').forEach(input=>{input.checked=state.rules[input.dataset.crmRule];input.addEventListener('change',()=>{state.rules[input.dataset.crmRule]=input.checked;log(`${input.closest('label').querySelector('h4').textContent}: ${input.checked?'включено':'выключено'}`)})});
-  const arrivals=[['Ольга','Audi Q5','polish','WhatsApp'],['Михаил','BMW 3','protection','Telegram'],['Анна','MINI Cooper','interior','Instagram'],['Илья','Lexus RX','protection','WhatsApp']];
-  function incoming(){
-    if(arrival>=arrivals.length){setAuto(false);return}
-    const [name,car,service,source]=arrivals[arrival++];const l=addLead({name,car,service,source,origin:'seed',history:[`Здравствуйте! Интересует ${services[service].name.toLowerCase()}. Подскажите, когда можно приехать?`]});
-    if(l){toast(`${source} · новое обращение от ${name}`);if(crmView==='leads')renderList()}
-  }
-
   // SVG endpoints come from transformed DOM anchors, not fixed coordinates.
   function connections(now){
     const app=$('telegramApp'),r=app.getBoundingClientRect();if(!r.width||!r.height)return;
@@ -1193,17 +1205,14 @@ window.createTelegramGlass=function(root){
     });
   }
   let glass=null;
-  function setView(n){view=n;lastUpdate=0;$('ecosystem-modal').dataset.telegramTab=String(n);if(!glass)glass=window.createTelegramGlass(root);if(n===2){renderList();renderDetail();if(crmView==='calendar')renderCalendar()}glass?.invalidate()}
+  function setView(n){view=n;$('ecosystem-modal').dataset.telegramTab=String(n);if(!glass)glass=window.createTelegramGlass(root);if(n===2){renderList();renderDetail();if(crmView==='calendar')renderCalendar()}glass?.invalidate()}
   function update(now,dt){
-    const wallDelta=lastUpdate?Math.max(0,Math.min(1,(now-lastUpdate)/1000)):0;lastUpdate=now;
     if(view===0)connections(now);
     glass?.update(now);
-    if(view===2&&auto&&!document.hidden){autoElapsed+=wallDelta;if(autoElapsed>=8){autoElapsed=0;incoming()}}
     if(lastToast&&now-lastToast>4000){$('crmToast').classList.remove('visible');lastToast=0}
   }
   resetBot();renderList();renderDetail();renderActivity();
-  document.addEventListener('visibilitychange',()=>{lastUpdate=0});
-  window.MBTelegramStudio={setView,update,pauseClock(){lastUpdate=0},get state(){return {view,crmView,auto,botStep,typing,selected,leads:JSON.parse(JSON.stringify(state.leads)),rules:{...state.rules}}}};
+  window.MBTelegramStudio={setView,update,get state(){return {view,crmView,bookingLimit,visitorCount:visitorCount(),botStep,typing,selected,leads:JSON.parse(JSON.stringify(state.leads)),rules:{...state.rules}}}};
 })();
 
 /* Section UI: reuse the existing media, pause hidden scenes, keep all content offline. */
@@ -1223,20 +1232,43 @@ window.createTelegramGlass=function(root){
       'Для телефона меняются композиция, масштаб и управление. Содержание остаётся читаемым, а действия — удобными для касания.'
     ]},
     {title:'Бизнес внутри Telegram',description:'Мини-приложения, боты и автоматизация — в одной системе.',tabs:['Приложение','Бот','CRM'],details:[
-      'Услуги, выбор и запись внутри привычного мессенджера. Показываю на примере приложения для студии детейлинга.',
-      'От первого вопроса до записи: выбор услуги, ответы на вопросы и удобное время. Продолжите диалог с ассистентом.',
-      'Обращения из разных каналов, карточки клиентов и расписание — в одном рабочем пространстве. Всё нужное для следующего шага.'
+      'Приложение знакомит с услугами. Во вкладке «Бот» можно записаться, а в CRM — увидеть результат.',
+      'Выберите услугу и время вместе с ботом. Подтверждённая запись появится в CRM.',
+      'Здесь собраны заявки и расписание. Откройте карточку клиента, чтобы изменить или отменить запись.'
     ]}
   ];
   let index=-1,active=false,tab=0,webMode=0,raf=0,last=0,x=0,y=0,tx=0,ty=0,video=null,contactReturn=null,brief='',resumeVideo=false;
   document.querySelectorAll('[data-section-image]').forEach(img=>img.src=window.MB_SECTION_IMAGES[img.dataset.sectionImage]);
   function tiles(){return window.__MB?.slateObjects||[]}
   function stopMedia(){tiles().forEach(o=>o.setPlaybackActive(false));if(video)video.pause()}
-  function setTab(n,focus=false){
+  function applyTab(n,focus=false){
     tab=n;const d=definitions[index];$('sectionDetail').textContent=d.details[n];
     [...$('sectionOptions').children].forEach((b,i)=>{b.setAttribute('aria-selected',String(i===n));b.tabIndex=i===n?0:-1;if(focus&&i===n)b.focus()});
     if(index===1)setWebMode(n,false);
     if(index===2){['telegramApp','telegramBot','telegramCRM'].forEach((id,i)=>$(id).hidden=i!==n);if(n!==0)tiles()[2]?.phoneDemo.update(false);window.MBTelegramStudio.setView(n)}
+  }
+  let tabTransition=0,tabAnimations=[];
+  function cancelTabTransition(){
+    tabTransition++;tabAnimations.forEach(a=>a.cancel());tabAnimations=[];
+    root.querySelector('.section-presentation').inert=false;
+    root.removeAttribute('aria-busy');
+  }
+  async function setTab(n,focus=false){
+    cancelTabTransition();const token=tabTransition;
+    if(index!==2||n===tab||reduced.matches){applyTab(n,focus);return true}
+    const panel=root.querySelector('.section-presentation'),detail=$('sectionDetail');
+    if(panel.contains(document.activeElement))$('sectionOptions').children[n]?.focus({preventScroll:true});
+    panel.inert=true;root.setAttribute('aria-busy','true');
+    const fade=(from,to,duration)=>{
+      tabAnimations=[panel,detail].map(el=>el.animate([{opacity:from},{opacity:to}],{duration,easing:'cubic-bezier(.22,.61,.36,1)',fill:'forwards'}));
+      return Promise.all(tabAnimations.map(a=>a.finished.catch(()=>{})));
+    };
+    await fade(1,0,180);if(token!==tabTransition)return false;
+    applyTab(n,focus);
+    // The layout changes only while invisible; the glass receives fresh bounds.
+    tabAnimations.forEach(a=>a.cancel());
+    await fade(0,1,320);if(token!==tabTransition)return false;
+    tabAnimations.forEach(a=>a.cancel());tabAnimations=[];panel.inert=false;root.removeAttribute('aria-busy');return true;
   }
   function setWebMode(n,sync=true){
     webMode=n;$('formaSite').hidden=n===1;$('architectureSlot').hidden=n!==1;$('webFrame').classList.toggle('is-mobile',n===2);
@@ -1246,7 +1278,7 @@ window.createTelegramGlass=function(root){
     if(sync){tab=n;$('sectionDetail').textContent=definitions[1].details[n];[...$('sectionOptions').children].forEach((b,i)=>{b.setAttribute('aria-selected',String(i===n));b.tabIndex=i===n?0:-1})}
   }
   function open(n){
-    index=n;active=true;stopMedia();document.body.classList.add('section-open');root.dataset.scene=String(n);root.scrollTop=0;
+    cancelTabTransition();index=n;active=true;stopMedia();document.body.classList.add('section-open');root.dataset.scene=String(n);root.scrollTop=0;
     x=y=tx=ty=0;root.style.setProperty('--sx','0px');root.style.setProperty('--sy','0px');
     const d=definitions[n];$('modalTitle').textContent=d.title;$('modalDesc').textContent=d.description;
     $('sectionOptions').replaceChildren(...d.tabs.map((label,i)=>{const b=document.createElement('button');b.type='button';b.role='tab';b.textContent=label;b.addEventListener('click',()=>setTab(i));return b}));
@@ -1258,16 +1290,16 @@ window.createTelegramGlass=function(root){
     }
     if(n===1){const c=tiles()[1].screenMat.map.image;c.setAttribute('aria-label','Строительство дома в 3D');$('architectureSlot').append(c)}
     if(n===2){const c=tiles()[2].screenMat.map.image;c.setAttribute('aria-label','Мини-приложение AVTOLAB77');$('phoneSlot').append(c)}
-    setTab(0);last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
+    applyTab(0);last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
   }
   function close(){
-    active=false;cancelAnimationFrame(raf);stopMedia();document.body.classList.remove('section-open');
+    cancelTabTransition();active=false;cancelAnimationFrame(raf);stopMedia();document.body.classList.remove('section-open');
     if(video){video.controls=false;video.onplay=video.onpause=null;video.remove()}
   }
   function tick(now){
     if(!active)return;raf=requestAnimationFrame(tick);
     const dt=last?Math.min((now-last)/1000,.05):0;last=now;
-    if(document.hidden||contact.open||$('aboutDialog').open){stopMedia();window.MBTelegramStudio.pauseClock();return}
+    if(document.hidden||contact.open||$('aboutDialog').open){stopMedia();return}
     const ease=1-Math.exp(-4*dt);x+=(tx-x)*ease;y+=(ty-y)*ease;
     root.style.setProperty('--sx',x.toFixed(3)+'px');root.style.setProperty('--sy',y.toFixed(3)+'px');
     if(index===1&&webMode===1)tiles()[1].architectureDemo.update(true,now);
@@ -1307,10 +1339,6 @@ window.createTelegramGlass=function(root){
     setTimeout(()=>{contact.close();contact.classList.remove('is-closing');document.body.classList.remove('contact-open');closingContact=false;contactReturn?.focus({preventScroll:true});if(resumeVideo)video?.play().catch(()=>{})},reduced.matches?0:430);
   }
   $('sectionContact').addEventListener('click',()=>openContact(['Видео','Сайт','Telegram'][index]));
-  $('sectionAbout').addEventListener('click',()=>{
-    const resume=Boolean(index===0&&video&&!video.paused);stopMedia();window.MBAbout.open();
-    $('aboutDialog').addEventListener('close',()=>{if(active&&resume)video?.play().catch(()=>{})},{once:true});
-  });
   $('infoClose').addEventListener('click',closeContact);
   contact.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();closeContact()});
   contact.addEventListener('keydown',e=>{if(e.key==='Escape')e.stopPropagation()});
@@ -1331,6 +1359,12 @@ window.createTelegramGlass=function(root){
 
 </script>
 <!-- SECTIONS_END -->
+
+
+
+
+
+
 
 
 

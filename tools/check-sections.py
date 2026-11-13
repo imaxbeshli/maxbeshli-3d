@@ -54,6 +54,8 @@ with sync_playwright() as p:
     def click_floating(selector):
         # Hover the moving panel as a visitor would: its float pauses on hover.
         el=page.locator(selector)
+        el.wait_for(state="visible")
+        page.wait_for_function('!document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
         el.evaluate('(e)=>e.scrollIntoView({block:"nearest",behavior:"instant"})')
         box=el.bounding_box()
         page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2)

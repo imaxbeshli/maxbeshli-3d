@@ -1,4 +1,4 @@
-/* Local portfolio workspace. Seeded traffic and visitor bookings stay in this
+/* Local portfolio workspace. Initial examples and visitor bookings stay in this
    browser session. No messaging service, studio or external CRM is contacted. */
 (()=>{
   const $=id=>document.getElementById(id),root=$('telegramScene');
@@ -23,7 +23,7 @@
       saved.leads.every(l=>l&&services[l.service]&&statusNames[l.status]&&['Telegram','WhatsApp','Instagram'].includes(l.source)&&
         ['id','name','car','date','time'].every(k=>typeof l[k]==='string')&&Array.isArray(l.history)&&l.history.every(t=>typeof t==='string')))state=saved;
   }catch(e){}
-  let view=0,crmView='leads',selected=state.leads[0]?.id,source='all',query='',sequence=0,auto=true,autoElapsed=0,arrival=0,lastToast=0,lastUpdate=0;
+  let view=0,crmView='leads',selected=state.leads[0]?.id,source='all',query='',sequence=0,lastToast=0;
   let botStep='menu',draft={},replyTimer=0,replyToken=0,typing=false;
   function persist(){try{sessionStorage.setItem('mb-telegram-workspace',JSON.stringify(state))}catch(e){}}
   function log(text){state.activity.unshift({text,time:clockLabel()});state.activity=state.activity.slice(0,12);persist();renderActivity()}
@@ -43,15 +43,22 @@
     if(l.reminder)log(`${l.name}: подготовлен текст напоминания`);
     return true;
   }
+  const bookingLimit=3;
+  const visitorCount=()=>state.leads.filter(l=>l.origin==='visitor').length;
+  function updateBookingLimit(){
+    const used=visitorCount();$('botBookingLimit').textContent=used?`Создано записей: ${Math.min(used,bookingLimit)} из ${bookingLimit}.`:'Можно создать до 3 записей и посмотреть их в CRM.';
+  }
+  function limitReached(){
+    if(visitorCount()<bookingLimit)return false;
+    botStep='limit';updateBookingLimit();
+    reply('Вы создали три записи. Теперь их можно посмотреть, перенести или отменить в CRM.',()=>choices([['Посмотреть записи в CRM',()=>openCRM(state.leads.find(l=>l.origin==='visitor')?.id)]]));return true;
+  }
   function addLead(data){
+    if(data.origin==='visitor'&&visitorCount()>=bookingLimit)return null;
     const l={id:'lead-'+Date.now().toString(36)+'-'+(++sequence),status:'new',date:'',time:'',onCalendar:false,reminder:false,assignee:state.rules.assign?'Администратор':'Не назначен',history:[],...data};
     if(state.leads.length>=30){const i=state.leads.findIndex(x=>x.origin==='seed'&&x.status!=='confirmed');if(i>=0)state.leads.splice(i,1);else return null}
-    state.leads.unshift(l);log(`${l.source}: новое обращение · ${l.name}`);renderList();return l;
+    state.leads.unshift(l);updateBookingLimit();log(`${l.source}: новое обращение · ${l.name}`);renderList();return l;
   }
-  function setAuto(enabled){auto=enabled;autoElapsed=0;lastUpdate=0;$('crmStream').setAttribute('aria-pressed',String(auto));$('crmStream').title=auto?'Приостановить появление новых заявок':'Продолжить показ новых заявок';$('crmStreamIcon').textContent=auto?'Ⅱ':'▷';$('crmStreamLabel').textContent=auto?'Поток заявок':'Продолжить поток'}
-  $('crmStream').addEventListener('click',()=>setAuto(!auto));
-  for(const event of ['pointerdown','keydown','wheel'])root.addEventListener(event,e=>{if(!e.target.closest('#crmStream'))setAuto(false)},{passive:event==='wheel'});
-
   // Chat: choices branch into service information, booking and the shared CRM.
   function scrollChat(){const el=$('botMessages');el.scrollTo({top:el.scrollHeight,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}
   function bubble(text,user=false){
@@ -69,10 +76,10 @@
     replyTimer=setTimeout(()=>{if(token!==replyToken)return;cancelReply();bubble(text);next?.();scrollChat()},520);
   }
   function menu(){botStep='menu';$('botInput').placeholder='Написать сообщение';choices([['Подобрать услугу',()=>startServices()],['Записаться',()=>startServices()],['Стоимость',()=>command('price')],['Адрес и время',()=>command('address')]])}
-  function startServices(){bubble('Хочу подобрать услугу',true);reply('Что хотите сделать для автомобиля?',()=>{botStep='service';choices(Object.entries(services).map(([key,s])=>[s.name,()=>chooseService(key)]))})}
-  function chooseService(key){draft.service=key;delete draft.confirmedId;bubble(services[key].name,true);reply(services[key].info,()=>{botStep='service-info';choices([['Что входит?',()=>{bubble('Что входит в услугу?',true);reply(services[key].info+' Перед началом работ обсуждаем состояние автомобиля и согласуем состав услуги.',serviceNext)}],['Перейти к записи',askCar],['Выбрать другую услугу',startServices]])})}
+  function startServices(){if(limitReached())return;bubble('Хочу подобрать услугу',true);reply('Что хотите сделать для автомобиля?',()=>{botStep='service';choices(Object.entries(services).map(([key,s])=>[s.name,()=>chooseService(key)]))})}
+  function chooseService(key){if(limitReached())return;draft.service=key;delete draft.confirmedId;bubble(services[key].name,true);reply(services[key].info,()=>{botStep='service-info';choices([['Что входит?',()=>{bubble('Что входит в услугу?',true);reply(services[key].info+' Перед началом работ обсуждаем состояние автомобиля и согласуем состав услуги.',serviceNext)}],['Перейти к записи',askCar],['Выбрать другую услугу',startServices]])})}
   function serviceNext(){choices([['Перейти к записи',askCar],['Другие услуги',startServices],['Как определяется стоимость?',()=>command('price')]])}
-  function askCar(){reply('Какая у вас марка и модель автомобиля?',()=>{botStep='car';$('botInput').placeholder='Например, BMW X5';choices([['BMW X5',()=>acceptCar('BMW X5')],['Mercedes-Benz C',()=>acceptCar('Mercedes-Benz C')],['Porsche Macan',()=>acceptCar('Porsche Macan')]])})}
+  function askCar(){if(limitReached())return;reply('Какая у вас марка и модель автомобиля?',()=>{botStep='car';$('botInput').placeholder='Например, BMW X5';choices([['BMW X5',()=>acceptCar('BMW X5')],['Mercedes-Benz C',()=>acceptCar('Mercedes-Benz C')],['Porsche Macan',()=>acceptCar('Porsche Macan')]])})}
   function acceptCar(car){draft.car=car;bubble(car,true);reply('Как к вам обращаться?',()=>{botStep='name';$('botInput').placeholder='Ваше имя';choices([['Александр',()=>acceptName('Александр')],['Мария',()=>acceptName('Мария')]])})}
   function acceptName(name){draft.name=name;bubble(name,true);askDay()}
   function askDay(){reply(`${draft.name}, выберите день визита.`,()=>{botStep='date';$('botInput').placeholder='Например, завтра';choices([0,1,2,3].filter(n=>free(day(n)).length).map(n=>[n===0?'Сегодня':n===1?'Завтра':dateLabel(day(n)),()=>chooseDay(day(n))]));if(!$('botActions').children.length)choices([['Посмотреть следующие дни',()=>chooseDay(day(4))]])})}
@@ -84,12 +91,13 @@
   }
   function confirmBooking(){
     if(draft.confirmedId){openCRM(draft.confirmedId);return}
+    if(limitReached())return;
     if(!free(draft.date).includes(draft.time)){reply('Это время уже занято. Подберём другой свободный вариант.',askTime);return}
     bubble('Подтверждаю запись',true);
     const l=addLead({name:draft.name,car:draft.car,service:draft.service,source:'Telegram',origin:'visitor',history:[`Подобрали услугу: ${services[draft.service].name}.`,`Автомобиль: ${draft.car}.`]});
     if(!l){reply('Список заполнен. Вы можете посмотреть и изменить существующие записи.',()=>choices([['Открыть CRM',()=>openCRM()]]));return}
     applyConfirmation(l,draft.date,draft.time);draft.confirmedId=l.id;selected=l.id;source='all';query='';$('crmSource').value='all';$('crmSearch').value='';persist();renderList();renderDetail();
-    reply(`Готово, ${draft.name}!\n${services[draft.service].name} · ${dateLabel(draft.date)}, ${draft.time}.\n\nКарточка записи теперь доступна в CRM.`,()=>{botStep='done';choices([['Посмотреть запись в CRM',()=>openCRM(l.id)],['Новая запись',resetBot]])});
+    reply(`Готово, ${draft.name}!\n${services[draft.service].name} · ${dateLabel(draft.date)}, ${draft.time}.\n\nКарточка записи теперь доступна в CRM.`,()=>{botStep='done';choices([['Посмотреть запись в CRM',()=>openCRM(l.id)],...(visitorCount()<bookingLimit?[['Новая запись',resetBot]]:[])])});
   }
   function command(key){
     if(typing)return;
@@ -98,7 +106,7 @@
     if(key==='price'){bubble('Как определяется стоимость?',true);reply('Стоимость зависит от автомобиля, состояния поверхности и объёма работ. Сначала подберём услугу, затем специалист сможет уточнить расчёт.',()=>choices([['Подобрать услугу',startServices],...(draft.service?[['Продолжить запись',()=>draft.car&&draft.name?askDay():askCar()]]:[])]));return}
     bubble('Адрес и время работы',true);reply('Ермакова роща, 7А, строение 2.\nСтудия работает с 10:00 до 19:00.\nДля визита удобно заранее выбрать услугу и время.',()=>choices([['Записаться',()=>draft.service?askCar():startServices()],['Главное меню',()=>command('menu')]]));
   }
-  function resetBot(){cancelReply();draft={};$('botMessages').replaceChildren();$('botInput').value='';bubble('Здравствуйте! Помогу выбрать услугу и записаться в студию. С чего начнём?');menu()}
+  function resetBot(){cancelReply();draft={};$('botMessages').replaceChildren();$('botInput').value='';updateBookingLimit();if(limitReached())return;bubble('Здравствуйте! Помогу выбрать услугу и записаться в студию. С чего начнём?');menu()}
   $('botReset').addEventListener('click',resetBot);
   document.querySelectorAll('[data-bot-command]').forEach(b=>b.addEventListener('click',()=>command(b.dataset.botCommand)));
   $('botComposer').addEventListener('submit',e=>{
@@ -119,7 +127,16 @@
     document.querySelectorAll('[data-crm-view]').forEach(b=>{b.setAttribute('aria-selected',String(b.dataset.crmView===name));b.tabIndex=b.dataset.crmView===name?0:-1});
     if(name==='leads'){renderList();renderDetail()}if(name==='calendar')renderCalendar();if(name==='rules')renderActivity();
   }
-  function openCRM(id){if(id)selected=id;source='all';query='';$('crmSource').value='all';$('crmSearch').value='';setCRMView('leads');window.MBSections.selectTab(2)}
+  async function openCRM(id){
+    if(id)selected=id;source='all';query='';$('crmSource').value='all';$('crmSearch').value='';setCRMView('leads');
+    const opened=await window.MBSections.selectTab(2);
+    if(opened&&window.MBSections.state.active&&window.MBSections.state.tab===2){
+      const detail=$('crmLeadDetail');detail.tabIndex=-1;detail.focus({preventScroll:true});
+      const list=$('crmLeadList'),item=list.querySelector('.selected');
+      if(item)list.scrollTop+=item.getBoundingClientRect().top-list.getBoundingClientRect().top;
+      if(innerWidth<=900)detail.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+    }
+  }
   document.querySelectorAll('[data-crm-view]').forEach(b=>b.addEventListener('click',()=>setCRMView(b.dataset.crmView)));
   function matching(){return state.leads.filter(l=>(source==='all'||l.source===source)&&(`${l.name} ${l.car} ${services[l.service].name}`).toLowerCase().includes(query.toLowerCase()))}
   function renderList(){
@@ -155,13 +172,6 @@
   }
   function renderActivity(){if(!$('crmActivity'))return;$('crmActivity').innerHTML=state.activity.length?state.activity.map(a=>`<li><time>${esc(a.time)}</time><span>${esc(a.text)}</span></li>`).join(''):'<li><span>Здесь появятся действия по вашим заявкам.</span></li>'}
   document.querySelectorAll('[data-crm-rule]').forEach(input=>{input.checked=state.rules[input.dataset.crmRule];input.addEventListener('change',()=>{state.rules[input.dataset.crmRule]=input.checked;log(`${input.closest('label').querySelector('h4').textContent}: ${input.checked?'включено':'выключено'}`)})});
-  const arrivals=[['Ольга','Audi Q5','polish','WhatsApp'],['Михаил','BMW 3','protection','Telegram'],['Анна','MINI Cooper','interior','Instagram'],['Илья','Lexus RX','protection','WhatsApp']];
-  function incoming(){
-    if(arrival>=arrivals.length){setAuto(false);return}
-    const [name,car,service,source]=arrivals[arrival++];const l=addLead({name,car,service,source,origin:'seed',history:[`Здравствуйте! Интересует ${services[service].name.toLowerCase()}. Подскажите, когда можно приехать?`]});
-    if(l){toast(`${source} · новое обращение от ${name}`);if(crmView==='leads')renderList()}
-  }
-
   // SVG endpoints come from transformed DOM anchors, not fixed coordinates.
   function connections(now){
     const app=$('telegramApp'),r=app.getBoundingClientRect();if(!r.width||!r.height)return;
@@ -180,15 +190,12 @@
     });
   }
   let glass=null;
-  function setView(n){view=n;lastUpdate=0;$('ecosystem-modal').dataset.telegramTab=String(n);if(!glass)glass=window.createTelegramGlass(root);if(n===2){renderList();renderDetail();if(crmView==='calendar')renderCalendar()}glass?.invalidate()}
+  function setView(n){view=n;$('ecosystem-modal').dataset.telegramTab=String(n);if(!glass)glass=window.createTelegramGlass(root);if(n===2){renderList();renderDetail();if(crmView==='calendar')renderCalendar()}glass?.invalidate()}
   function update(now,dt){
-    const wallDelta=lastUpdate?Math.max(0,Math.min(1,(now-lastUpdate)/1000)):0;lastUpdate=now;
     if(view===0)connections(now);
     glass?.update(now);
-    if(view===2&&auto&&!document.hidden){autoElapsed+=wallDelta;if(autoElapsed>=8){autoElapsed=0;incoming()}}
     if(lastToast&&now-lastToast>4000){$('crmToast').classList.remove('visible');lastToast=0}
   }
   resetBot();renderList();renderDetail();renderActivity();
-  document.addEventListener('visibilitychange',()=>{lastUpdate=0});
-  window.MBTelegramStudio={setView,update,pauseClock(){lastUpdate=0},get state(){return {view,crmView,auto,botStep,typing,selected,leads:JSON.parse(JSON.stringify(state.leads)),rules:{...state.rules}}}};
+  window.MBTelegramStudio={setView,update,get state(){return {view,crmView,bookingLimit,visitorCount:visitorCount(),botStep,typing,selected,leads:JSON.parse(JSON.stringify(state.leads)),rules:{...state.rules}}}};
 })();

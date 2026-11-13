@@ -40,7 +40,7 @@ with tempfile.TemporaryDirectory(prefix='mb-telegram-') as folder, sync_playwrig
         page.wait_for_function('!MBTelegramStudio.state.typing')
         click(page.locator('#botActions').get_by_role('button',name=text,exact=True))
     def select_tab(n):
-        click(page.locator('#sectionOptions button').nth(n));page.wait_for_timeout(200)
+        click(page.locator('#sectionOptions button').nth(n));page.wait_for_function('!document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
     def crm_view(name): click(page.locator(f'[data-crm-view="{name}"]'))
     def book(name,service,time):
         select_tab(1);click(page.locator('#botReset'))
@@ -50,6 +50,9 @@ with tempfile.TemporaryDirectory(prefix='mb-telegram-') as folder, sync_playwrig
         choice('Завтра')
         assert '12:00' not in page.locator('#botActions').inner_text(),'Occupied seed booking must not be offered'
         choice(time);choice('Подтвердить запись');choice('Посмотреть запись в CRM')
+        assert page.locator('#ecosystem-modal').get_attribute('aria-busy')=='true','Handoff should animate'
+        page.wait_for_function('MBSections.state.tab===2 && !document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
+        assert page.evaluate('document.activeElement.id')=='crmLeadDetail'
         return next(l for l in state()['leads'] if l['name']==name)
     def endpoint_error():
         return page.evaluate('''()=>{const r=telegramApp.getBoundingClientRect();return Math.max(...[...telegramConnections.querySelectorAll('.connection')].map((g,i)=>{const p=g.children[1],end=p.getPointAtLength(p.getTotalLength()),b=document.querySelectorAll('.flow-port')[i].getBoundingClientRect();return Math.hypot(end.x-(b.x+b.width/2-r.x),end.y-(b.y+b.height/2-r.y))}))}''')
@@ -96,11 +99,29 @@ with tempfile.TemporaryDirectory(prefix='mb-telegram-') as folder, sync_playwrig
     page.locator('#crmSearch').fill('');page.locator('#crmSource').select_option('all')
     print('PASS effective automation toggles, manual calendar, cancellation, source filters and search',flush=True)
 
-    count=len(state()['leads']);click(page.locator('#crmStream'));assert state()['auto']
-    page.wait_for_function('(count)=>MBTelegramStudio.state.leads.length>count',arg=count,timeout=20000)
-    assert len(state()['leads'])==count+1
-    click(page.locator('#crmLeadList button').first);assert not state()['auto']
+    third=book('Третья запись','Полировка','14:00')
+    assert state()['visitorCount']==3
+    assert page.locator('#crmStream').count()==0 and page.locator('#sectionAbout').count()==0
+    select_tab(1)
+    assert page.locator('#botActions').get_by_role('button',name='Новая запись',exact=True).count()==0
+    click(page.locator('#botReset'));page.wait_for_function('!MBTelegramStudio.state.typing')
+    assert 'три записи' in page.locator('#botMessages').inner_text()
+    page.locator('#botInput').fill('полировка');click(page.locator('#botComposer button'))
+    page.wait_for_function('!MBTelegramStudio.state.typing')
+    assert state()['visitorCount']==3 and state()['botStep']=='limit'
+    choice('Посмотреть записи в CRM')
+    page.wait_for_function('!document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
+    assert third['name'] in page.locator('#crmLeadDetail').inner_text()
     count=len(state()['leads']);page.evaluate('MBTelegramStudio.update(performance.now()+9000,9)');assert len(state()['leads'])==count
+    # Rapid navigation and closing cannot leave the presentation invisible or inert.
+    page.evaluate('MBSections.selectTab(0);MBSections.selectTab(1);MBSections.selectTab(2)')
+    page.wait_for_function('!document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
+    assert page.locator('#telegramCRM').is_visible()
+    assert page.locator('.section-presentation').evaluate('(e)=>!e.inert && getComputedStyle(e).opacity==="1"')
+    page.evaluate('MBSections.selectTab(1);MBSections.close();MBSections.open(2)')
+    page.wait_for_timeout(600)
+    assert page.locator('#telegramApp').is_visible()
+    print('PASS three-booking limit including cancelled records, soft CRM handoff and interruptible navigation',flush=True)
     for n in [0,1,2]:
         page.set_viewport_size({'width':390,'height':844});select_tab(n);page.wait_for_timeout(800)
         dims=page.locator('#ecosystem-modal').evaluate('(e)=>[e.clientWidth,e.scrollWidth]');assert dims[1]<=dims[0]+1,dims
@@ -110,6 +131,9 @@ with tempfile.TemporaryDirectory(prefix='mb-telegram-') as folder, sync_playwrig
     assert page.locator('.tg-float').first.evaluate('(e)=>getComputedStyle(e).animationName')=='none'
     page.reload();page.wait_for_function('MBSections.state.active')
     assert next(l for l in state()['leads'] if l['id']==first['id'])['time']=='16:00'
+    assert state()['visitorCount']==3
+    select_tab(1);page.wait_for_function('!MBTelegramStudio.state.typing')
+    assert 'три записи' in page.locator('#botMessages').inner_text()
     assert not errors,errors
-    print('PASS incoming flow pauses on interaction, mobile layout, reduced motion, session persistence; no page errors',flush=True)
+    print('PASS mobile layout, reduced motion, bookings and limit survive reload; no page errors',flush=True)
     browser.close();server.shutdown()

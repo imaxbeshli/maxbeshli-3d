@@ -101,7 +101,7 @@ body.section-open #custom-cursor,body.contact-open #custom-cursor{display:none!i
 .crm-record h3{font-size:16px;font-weight:500;margin:0 0 7px}.crm-record p{font-size:11px;color:#ccd3dc;margin:0}.crm-record strong{font-size:10px;font-weight:400;margin-left:auto;color:#f9aeb8}
 .crm-fields{margin:20px 0 25px}.crm-fields>div{display:flex;justify-content:space-between;gap:15px;padding:12px 0;border-bottom:1px solid #ffffff15;font-size:12px}.crm-fields dt{color:#a9b6c6}.crm-fields dd{margin:0;text-align:right}
 #ecosystem-modal.active .section-intro{animation:sectionEnter .8s .08s both}#ecosystem-modal.active .section-content:not([hidden]){animation:sectionEnter .9s .16s both}
-.section-footer{max-width:1600px;width:100%;margin:0 auto}.section-about{font-size:12px;color:#ddd;background:#14192133}
+.section-footer{max-width:1600px;width:100%;margin:0 auto}.section-footer{justify-content:flex-end}
 @keyframes sectionFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes sectionLight{from{transform:translate(-1%,0) rotate(-2deg);opacity:.12}to{transform:translate(2%,2%) rotate(2deg);opacity:.24}}
 @keyframes villaBreath{from{transform:scale(1)}to{transform:scale(1.035)}}

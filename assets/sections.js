@@ -15,20 +15,43 @@
       'Для телефона меняются композиция, масштаб и управление. Содержание остаётся читаемым, а действия — удобными для касания.'
     ]},
     {title:'Бизнес внутри Telegram',description:'Мини-приложения, боты и автоматизация — в одной системе.',tabs:['Приложение','Бот','CRM'],details:[
-      'Услуги, выбор и запись внутри привычного мессенджера. Показываю на примере приложения для студии детейлинга.',
-      'От первого вопроса до записи: выбор услуги, ответы на вопросы и удобное время. Продолжите диалог с ассистентом.',
-      'Обращения из разных каналов, карточки клиентов и расписание — в одном рабочем пространстве. Всё нужное для следующего шага.'
+      'Приложение знакомит с услугами. Во вкладке «Бот» можно записаться, а в CRM — увидеть результат.',
+      'Выберите услугу и время вместе с ботом. Подтверждённая запись появится в CRM.',
+      'Здесь собраны заявки и расписание. Откройте карточку клиента, чтобы изменить или отменить запись.'
     ]}
   ];
   let index=-1,active=false,tab=0,webMode=0,raf=0,last=0,x=0,y=0,tx=0,ty=0,video=null,contactReturn=null,brief='',resumeVideo=false;
   document.querySelectorAll('[data-section-image]').forEach(img=>img.src=window.MB_SECTION_IMAGES[img.dataset.sectionImage]);
   function tiles(){return window.__MB?.slateObjects||[]}
   function stopMedia(){tiles().forEach(o=>o.setPlaybackActive(false));if(video)video.pause()}
-  function setTab(n,focus=false){
+  function applyTab(n,focus=false){
     tab=n;const d=definitions[index];$('sectionDetail').textContent=d.details[n];
     [...$('sectionOptions').children].forEach((b,i)=>{b.setAttribute('aria-selected',String(i===n));b.tabIndex=i===n?0:-1;if(focus&&i===n)b.focus()});
     if(index===1)setWebMode(n,false);
     if(index===2){['telegramApp','telegramBot','telegramCRM'].forEach((id,i)=>$(id).hidden=i!==n);if(n!==0)tiles()[2]?.phoneDemo.update(false);window.MBTelegramStudio.setView(n)}
+  }
+  let tabTransition=0,tabAnimations=[];
+  function cancelTabTransition(){
+    tabTransition++;tabAnimations.forEach(a=>a.cancel());tabAnimations=[];
+    root.querySelector('.section-presentation').inert=false;
+    root.removeAttribute('aria-busy');
+  }
+  async function setTab(n,focus=false){
+    cancelTabTransition();const token=tabTransition;
+    if(index!==2||n===tab||reduced.matches){applyTab(n,focus);return true}
+    const panel=root.querySelector('.section-presentation'),detail=$('sectionDetail');
+    if(panel.contains(document.activeElement))$('sectionOptions').children[n]?.focus({preventScroll:true});
+    panel.inert=true;root.setAttribute('aria-busy','true');
+    const fade=(from,to,duration)=>{
+      tabAnimations=[panel,detail].map(el=>el.animate([{opacity:from},{opacity:to}],{duration,easing:'cubic-bezier(.22,.61,.36,1)',fill:'forwards'}));
+      return Promise.all(tabAnimations.map(a=>a.finished.catch(()=>{})));
+    };
+    await fade(1,0,180);if(token!==tabTransition)return false;
+    applyTab(n,focus);
+    // The layout changes only while invisible; the glass receives fresh bounds.
+    tabAnimations.forEach(a=>a.cancel());
+    await fade(0,1,320);if(token!==tabTransition)return false;
+    tabAnimations.forEach(a=>a.cancel());tabAnimations=[];panel.inert=false;root.removeAttribute('aria-busy');return true;
   }
   function setWebMode(n,sync=true){
     webMode=n;$('formaSite').hidden=n===1;$('architectureSlot').hidden=n!==1;$('webFrame').classList.toggle('is-mobile',n===2);
@@ -38,7 +61,7 @@
     if(sync){tab=n;$('sectionDetail').textContent=definitions[1].details[n];[...$('sectionOptions').children].forEach((b,i)=>{b.setAttribute('aria-selected',String(i===n));b.tabIndex=i===n?0:-1})}
   }
   function open(n){
-    index=n;active=true;stopMedia();document.body.classList.add('section-open');root.dataset.scene=String(n);root.scrollTop=0;
+    cancelTabTransition();index=n;active=true;stopMedia();document.body.classList.add('section-open');root.dataset.scene=String(n);root.scrollTop=0;
     x=y=tx=ty=0;root.style.setProperty('--sx','0px');root.style.setProperty('--sy','0px');
     const d=definitions[n];$('modalTitle').textContent=d.title;$('modalDesc').textContent=d.description;
     $('sectionOptions').replaceChildren(...d.tabs.map((label,i)=>{const b=document.createElement('button');b.type='button';b.role='tab';b.textContent=label;b.addEventListener('click',()=>setTab(i));return b}));
@@ -50,16 +73,16 @@
     }
     if(n===1){const c=tiles()[1].screenMat.map.image;c.setAttribute('aria-label','Строительство дома в 3D');$('architectureSlot').append(c)}
     if(n===2){const c=tiles()[2].screenMat.map.image;c.setAttribute('aria-label','Мини-приложение AVTOLAB77');$('phoneSlot').append(c)}
-    setTab(0);last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
+    applyTab(0);last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
   }
   function close(){
-    active=false;cancelAnimationFrame(raf);stopMedia();document.body.classList.remove('section-open');
+    cancelTabTransition();active=false;cancelAnimationFrame(raf);stopMedia();document.body.classList.remove('section-open');
     if(video){video.controls=false;video.onplay=video.onpause=null;video.remove()}
   }
   function tick(now){
     if(!active)return;raf=requestAnimationFrame(tick);
     const dt=last?Math.min((now-last)/1000,.05):0;last=now;
-    if(document.hidden||contact.open||$('aboutDialog').open){stopMedia();window.MBTelegramStudio.pauseClock();return}
+    if(document.hidden||contact.open||$('aboutDialog').open){stopMedia();return}
     const ease=1-Math.exp(-4*dt);x+=(tx-x)*ease;y+=(ty-y)*ease;
     root.style.setProperty('--sx',x.toFixed(3)+'px');root.style.setProperty('--sy',y.toFixed(3)+'px');
     if(index===1&&webMode===1)tiles()[1].architectureDemo.update(true,now);
@@ -99,10 +122,6 @@
     setTimeout(()=>{contact.close();contact.classList.remove('is-closing');document.body.classList.remove('contact-open');closingContact=false;contactReturn?.focus({preventScroll:true});if(resumeVideo)video?.play().catch(()=>{})},reduced.matches?0:430);
   }
   $('sectionContact').addEventListener('click',()=>openContact(['Видео','Сайт','Telegram'][index]));
-  $('sectionAbout').addEventListener('click',()=>{
-    const resume=Boolean(index===0&&video&&!video.paused);stopMedia();window.MBAbout.open();
-    $('aboutDialog').addEventListener('close',()=>{if(active&&resume)video?.play().catch(()=>{})},{once:true});
-  });
   $('infoClose').addEventListener('click',closeContact);
   contact.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();closeContact()});
   contact.addEventListener('keydown',e=>{if(e.key==='Escape')e.stopPropagation()});
