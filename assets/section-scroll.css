@@ -1,9 +1,10 @@
 /* Free vertical scrolling inside the selected environment. */
 #ecosystem-modal.is-scroll-story{display:block;overflow-y:auto;overflow-x:hidden;padding:24px clamp(20px,3vw,48px) 110px;scroll-padding-top:100px;scrollbar-width:thin;scrollbar-color:#aab5c540 transparent}
-#ecosystem-modal.is-scroll-story .section-header{position:sticky;top:0;z-index:10;max-width:1600px;margin:auto;padding:10px 0;isolation:isolate}
+#ecosystem-modal.is-scroll-story .section-header{position:relative;z-index:10;max-width:1600px;min-height:66px;margin:auto;padding:10px 0}
+#ecosystem-modal.is-scroll-story #modalCloseBtn{position:fixed;z-index:10;top:26px;right:max(clamp(20px,3vw,48px),calc((100% - 1600px)/2))}
 /* A separate viewport layer avoids clipping inside sticky-header compositor layers. */
-#ecosystem-modal.is-scroll-story .section-top-shade{position:fixed;inset:0 0 auto;height:112px;z-index:9;pointer-events:none;background:linear-gradient(to bottom,rgba(9,14,19,.72),rgba(9,14,19,.48) 45%,rgba(9,14,19,.12) 78%,rgba(9,14,19,0));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.94) 32%,rgba(0,0,0,.64) 58%,rgba(0,0,0,.22) 82%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.94) 32%,rgba(0,0,0,.64) 58%,rgba(0,0,0,.22) 82%,transparent 100%)}
-@media(max-width:540px){#ecosystem-modal.is-scroll-story .section-top-shade{height:96px}}
+#ecosystem-modal.is-scroll-story .section-top-shade{position:fixed;inset:0 0 auto;height:160px;z-index:9;pointer-events:none;background:linear-gradient(to bottom,rgba(9,14,19,.72),rgba(9,14,19,.56) 45%,rgba(9,14,19,.12) 80%,rgba(9,14,19,0));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);mask-image:linear-gradient(to bottom,#000 0%,#000 45%,rgba(0,0,0,.6) 65%,rgba(0,0,0,.12) 82%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 45%,rgba(0,0,0,.6) 65%,rgba(0,0,0,.12) 82%,transparent 100%)}
+@media(max-width:540px){#ecosystem-modal.is-scroll-story .section-top-shade{height:140px}}
 #ecosystem-modal.is-scroll-story .section-layout{display:block;max-width:1520px;width:100%;margin:clamp(32px,5vw,76px) auto 0;min-height:0}
 #ecosystem-modal.is-scroll-story .section-layout>.section-intro{max-width:760px;margin-bottom:52px}
 #ecosystem-modal.is-scroll-story .section-intro h2{font-size:clamp(36px,4.5vw,64px);max-width:760px;margin-bottom:20px}
@@ -25,7 +26,7 @@
 .film-held-frame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
 #filmScene .film-view video{position:relative;z-index:1}
 #filmScene #filmStart{display:none}#filmScene[data-film-view="0"] #filmStart:not([hidden]){display:block}
-#ecosystem-modal.is-scroll-story .section-footer{position:absolute;z-index:12;bottom:max(20px,env(safe-area-inset-bottom));right:clamp(20px,3vw,48px);width:auto;max-width:none;pointer-events:none}
+#ecosystem-modal.is-scroll-story .section-footer{position:fixed;z-index:12;bottom:max(20px,env(safe-area-inset-bottom));right:clamp(20px,3vw,48px);width:auto;max-width:none;pointer-events:none}
 #ecosystem-modal.is-scroll-story .section-footer button{pointer-events:auto;background-color:#121923b8}
 #ecosystem-modal.is-scroll-story #telegramBot,#ecosystem-modal.is-scroll-story #telegramCRM{width:100%;height:auto;max-width:800px;margin:0 auto}
 #ecosystem-modal.is-scroll-story #telegramBot{max-width:600px}
@@ -35,6 +36,7 @@
 @keyframes crmArrival{0%,100%{box-shadow:none}35%{box-shadow:0 0 0 1px #f06c8277,0 0 30px #e3324826}}
 @media(max-width:900px){
  #ecosystem-modal.is-scroll-story{padding:18px 24px 100px}
+ #ecosystem-modal.is-scroll-story #modalCloseBtn{right:24px}
  #ecosystem-modal.is-scroll-story .section-layout{margin:28px auto 0;max-width:700px;flex:none;grid-template-rows:none}
  #ecosystem-modal.is-scroll-story .section-layout>.section-intro{margin-bottom:42px}
  .scroll-chapter{grid-template-columns:1fr;gap:30px}.scroll-copy{max-width:600px}.scroll-copy h2{font-size:30px;margin-bottom:12px}.scroll-copy p{font-size:14px}
@@ -43,7 +45,8 @@
 }
 @media(max-width:540px){
  #ecosystem-modal.is-scroll-story{padding:12px 18px 100px}
- #ecosystem-modal.is-scroll-story .section-header{padding:5px 0}
+ #ecosystem-modal.is-scroll-story .section-header{padding:5px 0;min-height:50px}
+ #ecosystem-modal.is-scroll-story #modalCloseBtn{top:21px;right:18px}
  #ecosystem-modal.is-scroll-story .section-intro h2{font-size:34px;line-height:1.12;margin:0 0 14px}
  #ecosystem-modal.is-scroll-story .section-intro>p{font-size:13px;line-height:1.6}
  .scroll-copy h2{font-size:27px}.scroll-copy p{font-size:13px}.scroll-chapter{gap:26px}

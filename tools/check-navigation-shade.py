@@ -38,16 +38,35 @@ with sync_playwright() as p:
                 page.locator('#ecosystem-modal').evaluate('(e,y)=>e.scrollTop=y',y)
                 page.wait_for_timeout(150)
                 r=page.locator('.section-top-shade').bounding_box()
-                assert r['x']==0 and r['y']==0 and r['width']==w and r['height']==(96 if w<=540 else 112),(w,scene,y,r)
+                assert r['x']==0 and r['y']==0 and r['width']==w and r['height']==(140 if w<=540 else 160),(w,scene,y,r)
                 assert page.locator('.section-header .section-top-shade').count()==0
                 assert page.locator('.section-header').evaluate("e=>getComputedStyle(e,'::before').content")=='none'
                 assert page.locator('.section-top-shade').evaluate('e=>getComputedStyle(e).pointerEvents')=='none'
                 assert page.locator('#ecosystem-modal').evaluate('e=>e.scrollWidth<=e.clientWidth+1')
                 back=page.locator('#modalCloseBtn').bounding_box();assert 0<=back['y']<80
+                cta=page.locator('#sectionContact').bounding_box()
+                assert 0<=h-cta['y']-cta['height']<=30,(w,scene,y,cta)
+                assert cta['x']>=0 and cta['x']+cta['width']<=w
+                brand=page.locator('.section-brand').bounding_box()
+                if y==0:
+                    start_brand=brand['y'];start_back=back['y'];start_cta=cta['y']
+                else:
+                    scroll=page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop')
+                    assert abs(brand['y']-(start_brand-scroll))<1,(w,scene,y,brand)
+                    assert abs(back['y']-start_back)<1 and abs(cta['y']-start_cta)<1
+                # The solid portion of the fade extends below the entire back button.
+                assert back['y']+back['height']<=r['height']*.45+1
                 if scene==0 and w in [1600,390]:
                     page.wait_for_timeout(1500)
                     page.screenshot(path=f'/tmp/navigation-shade-{w}-{y}.png')
         print(f'PASS full app at {w}x{h}: all three sections, top and scrolled, viewport bounds and no clipping',flush=True)
+    # Contact is reachable while scrolled, and closing it preserves the position.
+    scroll=page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop')
+    page.locator('#sectionContact').click()
+    page.wait_for_function('infoDialog.open')
+    page.keyboard.press('Escape')
+    page.wait_for_function('!infoDialog.open')
+    assert page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop')==scroll
     # Back navigation remains clickable through the decorative layer.
     page.locator('#modalCloseBtn').click()
     page.wait_for_function("__MB.state.phase==='focused'")
