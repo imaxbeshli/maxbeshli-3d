@@ -4409,9 +4409,9 @@ window.MBEnvironment={
       const referenceDistance=home.distanceTo(tileFocusPose(2).to);
       const referenceDuration=Math.max(1.9,referenceDistance/CAMERA_SPEED);
       const journey=cameraJourney(to,qTo);
-      // Video and website cards travel at half the Telegram reference speed.
-      // Apply the same slowdown to approach and retreat, including partial returns.
-      const durationScale=selectedIndex===2?1:2;
+      // Keep video/web timing; Telegram travels 20% faster than the reference.
+      // Apply the same factor to approach and retreat, including partial returns.
+      const durationScale=selectedIndex===2?1/1.2:2;
       journey.duration=Math.max(.35,journey.from.distanceTo(to)*referenceDuration/Math.max(.001,referenceDistance))*durationScale;
       return journey;
     }

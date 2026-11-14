@@ -1,4 +1,4 @@
-"""Video and website cards travel at half speed; Telegram timing stays unchanged."""
+"""Video/web keep their slower timing; Telegram travels 20% faster in both directions."""
 from pathlib import Path
 import functools,http.server,threading
 from playwright.sync_api import sync_playwright
@@ -34,9 +34,9 @@ with sync_playwright() as p:
                 page.wait_for_function('journey.done')
                 data=page.evaluate('({duration:journey.duration,distance:journey.distance,referenceSpeed:journey.referenceSpeed,referenceDuration:journey.referenceDuration,samples:journey.samples,zoom:journey.zoom})')
                 samples=data['samples'];steps=[b-a for a,b in zip(samples,samples[1:])]
-                expected_speed=data['referenceSpeed']/(1 if index==2 else 2)
+                expected_speed=data['referenceSpeed']*(1.2 if index==2 else .5)
                 assert abs(data['distance']/data['duration']-expected_speed)<.0001,(width,index,direction,data)
-                if index==2:assert abs(data['duration']-data['referenceDuration'])<.0001,data
+                if index==2:assert abs(data['duration']-data['referenceDuration']/1.2)<.0001,data
                 if direction=='in':approach_duration=data['duration']
                 else:assert abs(data['duration']-approach_duration)<.0001,data
                 max_step=1.875*.05/data['duration']+.0001
