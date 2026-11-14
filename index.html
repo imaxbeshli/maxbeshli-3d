@@ -3686,7 +3686,7 @@ window.MBEnvironment={
         halfWidth = Math.max(halfWidth, Math.abs(camera.position.x + backdropRay.x * distance));
         top = Math.max(top, camera.position.y + backdropRay.y * distance);
       }
-      const shift = THREE.MathUtils.lerp(isMobilePortrait() ? .12 : .15, .07, THREE.MathUtils.smoothstep(camera.aspect, .65, 1.3));
+      const shift = THREE.MathUtils.lerp(isMobilePortrait() ? .11 : .14, .06, THREE.MathUtils.smoothstep(camera.aspect, .65, 1.3));
       const scale = Math.max(1, halfWidth * 2 * 1.06 / (46 * (1-2*shift)),
         (top - FLOOR_Y) * 1.06 / (26.6 * window.MBWaterfall.shore));
       backdropMesh.scale.set(scale, scale, 1);
@@ -3936,11 +3936,12 @@ window.MBEnvironment={
           '#include <begin_vertex>\nvIslandWorld=(modelMatrix*vec4(transformed,1.0)).xyz;');
         shader.fragmentShader='uniform float uIslandHover; uniform vec3 uIslandLight; varying vec3 vIslandWorld;\n'+shader.fragmentShader;
         shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
+          diffuseColor.a=min(1.0,diffuseColor.a/.875);
           float spread=exp(-pow((vIslandWorld.x-uIslandLight.x)/1.65,2.0));
           float upper=.45+.55*smoothstep(-2.04,-1.25,vIslandWorld.y);
           diffuseColor.rgb+=uIslandHover*spread*upper*(vec3(.055,.075,.085)+diffuseColor.rgb*.28);`);
       };
-      mat.customProgramCacheKey=()=> 'basalt-island-hover-v1';
+      mat.customProgramCacheKey=()=> 'basalt-island-solid-interior-v2';
       const rockMesh=new THREE.Mesh(geo,mat);return rockMesh;
     }
 
@@ -4010,13 +4011,16 @@ window.MBEnvironment={
               }
               rockSample=vec4(sumColor/max(sumAlpha,.0001),sumAlpha/sumWeight);
             }
+            // The source cutout has sub-opaque alpha even inside solid stone.
+            // Restore full coverage there; retain the blurred alpha only at the silhouette.
+            rockSample.a=min(1.0,rockSample.a/.875);
             diffuseColor*=mapTexelToLinear(rockSample);
           #endif
           float hover=exp(-pow((vFrontWorld.x-uFrontLight.x)/2.2,2.0))*uFrontHover;
           float cursor=exp(-dot(vFrontWorld.xz-uFrontCursor.xz,vFrontWorld.xz-uFrontCursor.xz)/5.0)*.18;
           diffuseColor.rgb+=(hover+cursor)*(vec3(.035,.045,.05)+diffuseColor.rgb*.2);`);
       };
-      mat.customProgramCacheKey=()=> 'basalt-foreground-entry-defocus-v2';
+      mat.customProgramCacheKey=()=> 'basalt-foreground-solid-interior-v3';
       const rockMesh=new THREE.Mesh(geo,mat);return rockMesh;
     }
 
