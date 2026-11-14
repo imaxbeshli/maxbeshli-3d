@@ -21,7 +21,7 @@ window.probeFrame=()=>{
   const d=b.center.clone().sub(a.center),axes=[...a.axes,...b.axes,...a.axes.flatMap(x=>b.axes.map(y=>x.clone().cross(y)))];
   return Math.max(...axes.filter(x=>x.lengthSq()>1e-10).map(x=>{x.normalize();return Math.abs(d.dot(x))-a.axes.reduce((r,v,i)=>r+Math.abs(v.dot(x))*a.half[i],0)-b.axes.reduce((r,v,i)=>r+Math.abs(v.dot(x))*b.half[i],0)}));
  };
- return {phase,progress:currentProgress,selectedIndex,opacities:slateObjects.map(o=>o.screenMat.opacity),poses:slateObjects.map(o=>({p:o.holder.position.toArray(),q:o.holder.quaternion.toArray()})),gaps:[[0,1],[0,2],[1,2]].map(([a,b])=>separation(boxes[a],boxes[b]))};
+ return {phase,progress:currentProgress,selectedIndex,opacities:slateObjects.map(o=>o.screenMat.opacity),poses:slateObjects.map(o=>({p:o.holder.position.toArray(),q:o.holder.quaternion.toArray()})),insets:slateObjects.map(o=>({p:o.inset.group.position.toArray(),q:o.inset.group.quaternion.toArray(),rp:o.reflectedInset.position.toArray(),rq:o.reflectedInset.quaternion.toArray()})),gaps:[[0,1],[0,2],[1,2]].map(([a,b])=>separation(boxes[a],boxes[b]))};
 };
 window.advanceProbe=(steps)=>{
  const render=renderer.render,waterUpdate=water.update;
@@ -63,11 +63,18 @@ with sync_playwright() as p:
     def validate(frames):
         assert min(min(f['gaps']) for f in frames)>0, 'Glass frames intersect'
         assert min(max(f['opacities']) for f in frames)>.75, 'Both screens fade out'
+        for frame in frames:
+            for inset in frame['insets']:
+                assert inset['p']==inset['rp'] and inset['q']==inset['rq'], 'Inset reflection lags behind'
         for before,after in zip(frames,frames[1:]):
             for a,b in zip(before['poses'],after['poses']):
                 turn=2*math.acos(min(1,abs(sum(x*y for x,y in zip(a['q'],b['q'])))))
                 assert turn<.063, ('Abrupt rotation',turn)
                 assert math.dist(a['p'],b['p'])<.12, 'Abrupt translation'
+            for a,b in zip(before['insets'],after['insets']):
+                turn=2*math.acos(min(1,abs(sum(x*y for x,y in zip(a['q'],b['q'])))))
+                assert turn<.0012, ('Inset returns too quickly',turn)
+                assert math.dist(a['p'],b['p'])<.0009, 'Inset position returns too quickly'
             assert max(abs(a-b) for a,b in zip(before['opacities'],after['opacities']))<.12, 'Abrupt opacity change'
     for w,h in [(1280,800),(390,844)]:
         page.set_viewport_size({'width':w,'height':h})

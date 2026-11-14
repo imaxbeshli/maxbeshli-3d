@@ -4598,7 +4598,12 @@ window.MBEnvironment={
           ? i===travel.fromIndex?1-easeTravel(THREE.MathUtils.clamp(focusP/.18,0,1))
             :i===selectedIndex?easeTravel(THREE.MathUtils.clamp((focusP-.82)/.18,0,1)):0
           :i!==selectedIndex?0:phase==='focusing'?easeTravel(focusP):zoomFactor;
-        window.MBTileArt.animateInset(obj.inset,poseTime,i,floatRoll,focusAlign);
+        // The glass needs staged alignment for clearance, but its image can
+        // settle over the entire transition instead of snapping at either end.
+        const insetAlign=switchingFocus
+          ? i===travel.fromIndex?1-easeTravel(focusP):i===selectedIndex?easeTravel(focusP):0
+          :focusAlign;
+        window.MBTileArt.animateInset(obj.inset,poseTime,i,floatRoll,insetAlign);
         obj.reflectedInset.position.copy(obj.inset.group.position);
         obj.reflectedInset.quaternion.copy(obj.inset.group.quaternion);
         obj.hover=THREE.MathUtils.lerp(obj.hover||0,hoverIndex===i?1:0,1-Math.exp(-8*dt));
