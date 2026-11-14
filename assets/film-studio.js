@@ -9,7 +9,6 @@
   const editStart=arrivals[0]+.2;
   const prompt='Стеклянный флакон духов на тёмном фоне. Янтарное свечение и мягкий студийный свет.';
   const aiStages=['Ввод запроса','Изображение готово','Изображение оживает'];
-  function playbackButton(type,n){const b=$(type+'Playback');b.textContent=paused[n]?'Продолжить':'Пауза';b.setAttribute('aria-label',(paused[n]?'Продолжить':'Приостановить')+(n===1?' монтажную сцену':' AI-сцену'))}
   function rewindEdit(){editingStarted=false;if(video){video.pause();video.currentTime=0}}
   function resume(){
     if(!video||document.hidden||$('infoDialog').open)return;
@@ -34,8 +33,8 @@
     const scrolling=$('ecosystem-modal').classList.contains('is-scroll-story');
     ['filmShooting','filmEditing','filmAI'].forEach((id,i)=>$(id).hidden=scrolling?false:i!==n);
     $('filmChapters').hidden=scrolling?false:n!==0;$('filmScene').dataset.filmView=String(n);
-    if(n===1&&previous!==1){clocks[1]=reduced.matches?16:0;paused[1]=reduced.matches;rewindEdit();playbackButton('edit',1)}
-    if(n===2&&previous!==2){clocks[2]=reduced.matches?14:0;paused[2]=reduced.matches;playbackButton('ai',2)}
+    if(n===1&&previous!==1){clocks[1]=reduced.matches?16:0;paused[1]=reduced.matches;rewindEdit()}
+    if(n===2&&previous!==2){clocks[2]=reduced.matches?14:0;paused[2]=reduced.matches}
     if(n===1)measureDrags();
     if(video){
       video.pause();
@@ -132,11 +131,8 @@
     if(view===1){if(clocks[1]<previous)rewindEdit();if(!editingStarted&&clocks[1]>=editStart)resume()}
     if(now-frame<1000/30)return;frame=now;render();
   }
-  ['edit','ai'].forEach((type,i)=>{
-    const n=i+1;$(type+'Playback').addEventListener('click',()=>{paused[n]=!paused[n];playbackButton(type,n);if(n===1){if(paused[n])video?.pause();else resume()}});
-  });
   let wave='';for(let x=0;x<600;x+=3){const a=2+Math.abs(Math.sin(x*.13)*Math.sin(x*.035))*10;wave+=`M${x} ${14-a}V${14+a}`}$('editWaveform').setAttribute('d',wave);
-  function motionPreference(){if(reduced.matches){clocks[1]=16;clocks[2]=14;paused[1]=paused[2]=true;playbackButton('edit',1);playbackButton('ai',2);if(view===1)video?.pause()}render()}
+  function motionPreference(){paused[1]=paused[2]=reduced.matches;if(reduced.matches){clocks[1]=16;clocks[2]=14;if(view===1)video?.pause()}else resume();render()}
   reduced.addEventListener('change',motionPreference);motionPreference();
   const resize=new ResizeObserver(()=>{if(view===1)measureDrags();if(view>0)render()});resize.observe(ai);resize.observe(edit);
   window.MBFilmStudio={setView,update,resume,get state(){return {view,editingTime:clocks[1],aiTime:clocks[2],editingStarted,shootingTime,paused:[...paused]}}};

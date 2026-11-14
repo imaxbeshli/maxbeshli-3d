@@ -20,8 +20,6 @@
 #filmScene .film-chapters{margin-top:22px;gap:14px}
 #filmScene .film-chapters button{aspect-ratio:2.7;background:linear-gradient(140deg,#c2c7d41c,#171a2099);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-color:#dce8f449;box-shadow:inset 0 1px 0 #ffffff26,0 12px 28px #0004}
 #filmScene .film-chapters button[aria-pressed="true"]{border-color:#e7c4a7b3}
-.film-playback{margin-left:auto;min-height:28px;padding:5px 9px;border:1px solid #ffffff30;border-radius:7px;background:#10121665;color:#e8e8ea;font-size:10px}
-.film-playback:hover{background:#ffffff18}
 .edit-workspace{display:grid;grid-template-rows:8% 44% 43% 5%;background:#17181d;font:10px/1.3 Inter,Arial,sans-serif;--edit-color:0;--edit-head:0;--edit-audio:0;--edit-reset:0;--edit-preview:0}
 .edit-toolbar{display:flex;align-items:center;gap:9px;padding:0 1.6%;background:#25262c;color:#ececf0;border-bottom:1px solid #ffffff12}
 .edit-mark{display:grid;place-items:center;width:19px;height:19px;border:1px solid #bc94fc66;border-radius:4px;background:#211b35;color:#c8b3f4;font-size:10px;font-weight:600}
@@ -97,7 +95,6 @@
 .ai-prompt-caret{display:inline-block;height:1em;width:1px;background:#d4b785;vertical-align:-.1em;opacity:var(--ai-caret);margin-left:2px}
 .ai-prompt-send{width:30px;height:30px;display:grid;place-items:center;flex:none;border:1px solid #b99c7240;border-radius:8px;background:rgb(182 146 90 / calc(.06 + var(--ai-send)*.22));box-shadow:0 0 20px rgb(209 162 92 / calc(var(--ai-send)*.12))}
 .ai-prompt-send svg{width:18px;height:18px;fill:none;stroke:#d0ba99;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
-.ai-topline{position:absolute;inset:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 15px;font-size:11px;letter-spacing:.08em;background:linear-gradient(#08090ba3,transparent);z-index:2}
 .ai-caption{position:absolute;inset:auto 0 0;padding:22px 15px 12px;background:linear-gradient(transparent,#08090bb5);display:flex;align-items:center;justify-content:space-between;gap:20px;font-size:10px;color:#e0d8cb;z-index:2}
 .ai-progress{width:23%;height:1px;background:#d3c2a638}
 .ai-progress i{display:block;height:1px;background:#dfc7a2;transform:scaleX(var(--ai-progress));transform-origin:left}
@@ -122,7 +119,6 @@
   #filmScene .film-viewport{aspect-ratio:4/3}
   .edit-workspace{grid-template-rows:11% 43% 40% 6%;font-size:7px}
   .edit-toolbar{gap:4px}.edit-mark{width:14px;height:14px;font-size:8px}.edit-workspaces{display:none}
-  .film-playback{font-size:9px;min-height:25px;padding:3px 7px}
   .edit-monitors{grid-template-columns:24% 53% 23%}
   .edit-bin{padding:5px 3px;gap:4px}.edit-caption{font-size:6px}.edit-media-list{gap:4px}.edit-source{font-size:6px;padding:2px;gap:3px}.edit-source small{display:none}.edit-bin-count{font-size:5px}
   .edit-preview-heading{padding:4px;font-size:5px}.edit-monitor-footer{font-size:5px;padding:4px}#editVideoSlot{inset:17px 0 15px}
@@ -131,7 +127,7 @@
   .edit-tools-icons{width:40px;height:8px}.edit-sequence-bar{font-size:5px;gap:10px}.edit-sequence-bar small,.edit-ruler{font-size:5px}
   .edit-timeline{padding-bottom:3px}.edit-track{gap:3px;padding:1px 0}.edit-track>b{font-size:5px}.edit-clip{font-size:5px;padding:1px 3px;gap:2px}.edit-audio>span{font-size:4px}
   .edit-playhead{bottom:3px}.edit-status{font-size:5px}.edit-status i{width:3px;height:3px}.edit-drag{font-size:5px;gap:3px;padding:2px}.edit-drag>svg{width:11px;height:14px;bottom:-10px}.edit-cycle-veil{top:11%}
-  .ai-topline{padding:7px 9px;font-size:9px}.ai-caption{padding:15px 9px 8px;font-size:8px}
+  .ai-caption{padding:15px 9px 8px;font-size:8px}
   .ai-prompt-scene{gap:11px}.ai-prompt-heading{font-size:8px;letter-spacing:.12em}.ai-prompt-bar{width:90%;min-height:84px;gap:9px;padding:13px 11px;border-radius:11px}.ai-prompt-copy{font-size:10px;line-height:1.6}.ai-prompt-icon{width:13px;height:13px}.ai-prompt-send{width:22px;height:22px;border-radius:6px}.ai-prompt-send svg{width:14px;height:14px}
 }
 @media(prefers-reduced-motion:reduce){.ai-image,#filmScene>.section-float,#filmScene .film-chapters button{will-change:auto}}

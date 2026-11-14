@@ -29,9 +29,6 @@ with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() 
     def tab(n):
         assert page.evaluate('(n)=>MBSections.selectTab(n)',n)
         page.wait_for_function(f'MBSections.state.tab==={n} && !document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
-    def stationary_click(selector):
-        # Real pointer click in the center avoids Playwright waiting for a floating card to stop.
-        r=page.locator(selector).bounding_box();page.mouse.click(r['x']+r['width']/2,r['y']+r['height']/2)
     def advance(n,t):
         page.evaluate('''([n,t])=>{const s=MBFilmStudio.state,key=n===1?'editingTime':'aiTime',duration=n===1?22:18;MBFilmStudio.update(performance.now()+40,(t-s[key]+duration)%duration)}''',[n,t])
         page.wait_for_timeout(100)
@@ -64,11 +61,8 @@ with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() 
     assert float(page.locator('#editTarget1').evaluate('e=>getComputedStyle(e).opacity'))==0
     before=page.evaluate('MBFilmStudio.state.editingTime');page.wait_for_timeout(350)
     assert page.evaluate('MBFilmStudio.state.editingTime')>before
-    stationary_click('#editPlayback');page.wait_for_timeout(80)
-    frozen=page.evaluate('MBFilmStudio.state.editingTime');page.wait_for_timeout(300)
-    assert page.evaluate('MBFilmStudio.state.editingTime')==frozen
-    assert page.evaluate('__MB.slateObjects[0].video.paused')
-    stationary_click('#editPlayback');advance(1,8.8)
+    assert page.locator('#editPlayback,#aiPlayback,.film-playback').count()==0
+    advance(1,8.8)
     assert page.locator('.edit-workspaces .is-current').inner_text()=='Звук'
     advance(1,12)
     assert page.locator('.edit-workspaces .is-current').inner_text()=='Цвет'

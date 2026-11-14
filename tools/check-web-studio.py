@@ -19,10 +19,24 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
  browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox','--enable-unsafe-swiftshader'])
  page=browser.new_page(**(p.devices['Pixel 7'] if args.mobile else {'viewport':{'width':1440,'height':960}}));page.set_default_timeout(45000)
  errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+ # The intro must already be visible even when video bytes cannot load.
+ page.route('**/avtolab77-intro-scroll-60fps.mp4*',lambda r:r.abort())
+ page.goto(f'http://127.0.0.1:{server.server_port}/index.html')
+ page.wait_for_function('MBSections.state.active')
+ page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop=e.scrollHeight')
+ assert page.locator('#webReadyVideo').evaluate("""async v=>{
+   const image=new Image();image.src=v.poster;await image.decode();
+   return image.naturalWidth===1280&&image.naturalHeight===720&&v.readyState===0;
+ }""")
+ page.wait_for_timeout(1600)
+ page.screenshot(path=f'/tmp/avtolab-intro-loading-{"mobile" if args.mobile else "desktop"}.png')
+ page.unroute('**/avtolab77-intro-scroll-60fps.mp4*')
+ print('PASS intro poster remains visible while video loading is blocked',flush=True)
  page.goto(f'http://127.0.0.1:{server.server_port}/index.html')
  page.wait_for_function('MBSections.state.active && MBWebStudio.state.time>0')
  assert page.locator('#architectureSlot canvas').is_visible()
  assert page.locator('#webScene .scroll-chapter').count()==2
+ assert page.locator('#webScene .web-ready').evaluate('e=>getComputedStyle(e).borderTopWidth')=='0px'
  assert page.locator('#webScene button,#webScene input').count()==0
  player=page.locator('#webReadyVideo')
  assert player.evaluate('v=>v.muted&&v.defaultMuted&&v.loop&&v.playsInline&&!v.controls')

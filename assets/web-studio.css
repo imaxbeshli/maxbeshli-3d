@@ -28,7 +28,7 @@
 @media(prefers-reduced-motion:reduce){.web-site-float{animation:none;will-change:auto}}
 
 #webScene .web-opening{min-height:calc(100dvh - 140px)}
-#webScene .web-ready{border-top:1px solid #cbd8e21c;margin-top:50px;padding-top:50px}
+#webScene .web-ready{margin-top:50px;padding-top:50px}
 .web-ready h2{font-size:clamp(38px,4.5vw,68px);font-weight:450;line-height:1.08;letter-spacing:-.045em;margin:0 0 28px;color:#f1f0eb}
 .web-ready h2 em{font-style:normal;color:#c4b799}
 .web-eyebrow{font-size:10px;letter-spacing:.18em;color:#a7b3ba;margin:0 0 24px}
