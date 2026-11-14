@@ -30,3 +30,11 @@
  #ecosystem-modal.is-scroll-story #webScene .web-ready{margin-top:72px;padding-top:28px}
 }
 #ecosystem-modal.is-scroll-story .web-hero-lead + .web-hero-lead{margin-top:10px}
+
+/* Gentle shared motion for service frames and informational cards. */
+#ecosystem-modal.is-scroll-story{--card-float-offset:-6px}
+#ecosystem-modal.is-scroll-story :is(.section-float,.tg-float,.tg-workspace-host,.web-site-float,#filmChapters button){animation-name:sectionCardFloat;animation-play-state:running;will-change:transform}
+#ecosystem-modal.is-scroll-story:not(.active) :is(.section-float,.tg-float,.tg-workspace-host,.web-site-float,#filmChapters button){animation-play-state:paused!important}
+@keyframes sectionCardFloat{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,var(--card-float-offset),0)}}
+@media(max-width:900px){#ecosystem-modal.is-scroll-story{--card-float-offset:-4px}}
+@media(prefers-reduced-motion:reduce){#ecosystem-modal.is-scroll-story :is(.section-float,.tg-float,.tg-workspace-host,.web-site-float,#filmChapters button){animation:none!important;will-change:auto}}
