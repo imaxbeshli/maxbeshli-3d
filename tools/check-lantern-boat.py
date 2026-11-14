@@ -1,7 +1,8 @@
 """Boat timing, shared water reflection, pause/resume and cursor wake regression."""
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-import threading,http.server,functools
+import threading,http.server,functools,base64,io
+from PIL import Image,ImageChops
 class Quiet(http.server.SimpleHTTPRequestHandler):
  def log_message(self,*a):pass
 root=Path(__file__).resolve().parents[1]
@@ -35,7 +36,7 @@ with sync_playwright() as p:
  print('PASS reflection refreshed on every frame with mip filtering',flush=True)
  # Advance the real update path deterministically; freeze only the boat for visual checks.
  page.evaluate('''()=>{
-   const b=__MB.lanternBoat;window.boatUpdate=b.update;let now=performance.now();
+   const b=__MB.lanternBoat;window.boatUpdate=b.update;let now=elapsed*1000;
    for(let i=0;i<370;i++)b.update(now+i*50,true,__MB.backdrop);
    const before=b.state.elapsed;b.update(now+19000,false,__MB.backdrop);
    if(b.state.elapsed!==before)throw Error('Boat clock advances while paused');
@@ -44,13 +45,26 @@ with sync_playwright() as p:
  assert page.evaluate('__MB.lanternBoat.root.visible && __MB.water.material.uniforms.uBoat.value.z>.9')
  page.set_viewport_size({'width':1440,'height':900});page.mouse.move(1400,850);page.wait_for_timeout(1600)
  # Align again after the responsive backdrop has settled.
- page.evaluate('boatUpdate(performance.now(),false,__MB.backdrop)')
+ page.evaluate('boatUpdate(elapsed*1000,false,__MB.backdrop)')
  page.wait_for_timeout(400);page.screenshot(path='/tmp/lantern-boat-desktop.png')
+ # Compare identical renders: the visible wake must affect water behind the stern.
+ frames=page.evaluate("""()=>{
+   const u=water.material.uniforms.uBoat.value,strength=u.z,t=elapsed;
+   const frames=[strength,0].map(z=>{u.z=z;water.update(t,camera,lightReveal);renderer.render(scene,camera);return renderer.domElement.toDataURL().split(',')[1]});
+   u.z=strength;
+   return frames;
+ }""")
+ images=[Image.open(io.BytesIO(base64.b64decode(f))).convert('RGB') for f in frames]
+ diff=ImageChops.difference(*images);bbox=diff.getbbox();assert bbox,'Boat wake is invisible'
+ visible=sum(max(px)>4 for px in diff.getdata());assert visible>30,visible
+ images[0].save('/workspace/artifacts/boat-wake-desktop.png')
+ diff.save('/workspace/artifacts/boat-wake-difference.png')
+ print('PASS visible trailing wake:',visible,'pixels, bounds',bbox,flush=True)
  print('PASS delayed passage, pause, fade and 65-second rest',flush=True)
  print('BOAT',page.evaluate('''()=>{const b=__MB.lanternBoat,v=b.root.position.clone().project(__MB.camera);return {state:b.state,position:b.root.position.toArray(),screen:[(v.x+1)*innerWidth/2,(1-v.y)*innerHeight/2]}}'''),flush=True)
  # Observe actual main/mirror passes during motion, not just a still screenshot.
  page.evaluate("""()=>{
-  const b=__MB.lanternBoat;b.update=boatUpdate;
+  const b=__MB.lanternBoat;b.update=boatUpdate;boatUpdate(elapsed*1000,false,__MB.backdrop);
   window.boatPasses=[];
   b.root.getObjectByName('Smooth planked wooden hull').onBeforeRender=(_,scene,camera)=>{
    boatPasses.push({mirror:camera===__MB.water.mirror,time:__MB.water.material.uniforms.uTime.value,x:b.root.position.x});
@@ -70,8 +84,18 @@ with sync_playwright() as p:
  assert page.evaluate('__MB.water.ripples.map(v=>v.z)')!=before
  print('PASS cursor wakes with boat wake active',flush=True)
  page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(1000)
- page.evaluate('boatUpdate(performance.now(),false,__MB.backdrop)');page.wait_for_timeout(400)
+ page.evaluate('boatUpdate(elapsed*1000,false,__MB.backdrop)');page.wait_for_timeout(400)
  page.screenshot(path='/tmp/lantern-boat-mobile.png')
+ # Once the boat disappears, residual ripples fade instead of being cut off.
+ assert page.evaluate("""()=>{
+   const b=__MB.lanternBoat;b.update=()=>{};let now=elapsed*1000;
+   boatUpdate(now,false,__MB.backdrop);
+   while(b.state.elapsed<38.1){now+=50;boatUpdate(now,true,__MB.backdrop);}
+   const lingering=water.material.uniforms.uBoat.value.z;
+   while(b.state.elapsed<56){now+=50;boatUpdate(now,true,__MB.backdrop);}
+   return !b.root.visible&&lingering>.05&&water.material.uniforms.uBoat.value.z<.001;
+ }"""),'Wake must linger briefly and then disappear during the rest'
+ print('PASS wake fades naturally after the boat leaves',flush=True)
  assert not errors,errors
  print('PASS desktop/mobile render without shader errors',flush=True)
  b.close()

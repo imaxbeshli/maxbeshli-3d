@@ -3367,7 +3367,7 @@ window.MBLanternBoat = (() => {
     g.addColorStop(0,'rgba(255,235,170,.95)');g.addColorStop(.18,'rgba(255,190,80,.5)');g.addColorStop(.5,'rgba(255,146,35,.10)');g.addColorStop(1,'rgba(255,130,30,0)');ctx.fillStyle=g;ctx.fillRect(0,0,64,64);
     const haloMaterial=new T.SpriteMaterial({map:new T.CanvasTexture(c),color:0xffc36c,blending:T.AdditiveBlending,transparent:true,depthWrite:false,fog:false,toneMapped:false});
     const halo=new T.Sprite(haloMaterial);halo.position.set(0,-.055,0);halo.scale.set(.9,.9,1);lamp.add(halo);
-    let elapsed=0,last=null,state=sample(0);
+    let elapsed=0,last=null,state=sample(0),wakeStrength=0;
     function update(now,active,backdrop) {
       const dt=last===null?0:Math.min(.05,Math.max(0,(now-last)/1000));last=now;
       if(active)elapsed+=dt;
@@ -3380,7 +3380,9 @@ window.MBLanternBoat = (() => {
       materials.forEach(m=>{m.opacity=state.opacity;});
       const flicker=.96+.025*Math.sin(elapsed*1.7)+.015*Math.sin(elapsed*3.3);
       haloMaterial.opacity=state.opacity*.85*flicker;glass.color.setRGB(1,.79*flicker,.43*flicker);
-      water.material.uniforms.uBoat.value.set(root.position.x,root.position.z,state.visible?state.opacity:0);
+      // The wake lingers briefly after the hull fades into the distant haze.
+      if(active){const target=state.visible?state.opacity:0;wakeStrength+=(target-wakeStrength)*(1-Math.exp(-(target>wakeStrength?2.5:.45)*dt));}
+      water.material.uniforms.uBoat.value.set(root.position.x,root.position.z,wakeStrength);
     }
     return {root,update,get state(){return {...state,elapsed};}};
   }
@@ -3413,11 +3415,25 @@ window.MBEnvironment={
   const mirror=new T.PerspectiveCamera(),textureMatrix=new T.Matrix4(),waterPlane=new T.Plane(new T.Vector3(0,1,0),-y),normal=new T.Vector3(0,1,0);
   const u={uTime:{value:0},uRipples:{value:ripples},uReflection:{value:target.texture},uMatrix:{value:textureMatrix},uReveal:{value:0},uEye:{value:new T.Vector3()},uFog:{value:new T.Color(0x0b1118)},uFallSource:{value:new T.Vector2(-8.8,-23.8)},uBoat:{value:new T.Vector3(0,0,0)}};
   const wave=`uniform float uTime; uniform vec4 uRipples[12]; uniform vec2 uFallSource; uniform vec3 uBoat;
+   vec2 boatWake(vec2 p){
+    float behind=uBoat.x-.78-p.x;
+    if(uBoat.z<.0001||behind<=0.0||behind>=6.8)return vec2(0.0);
+    float d=behind,cross=abs(p.y-uBoat.y);
+    float spread=.18+d*.25,width=.055+d*.018;
+    float side=cross-spread;
+    float envelope=uBoat.z*smoothstep(0.0,.35,behind)*(1.0-smoothstep(4.2,6.8,d))*exp(-d*.22);
+    float primary=side/width,secondary=(side+.17)/width;
+    float crest=exp(-primary*primary);
+    float second=exp(-secondary*secondary)*.45;
+    float texture=.72+.28*sin(d*8.0-uTime*1.5+cross*13.0);
+    float churn=exp(-cross*cross/ (.025+d*.018))*exp(-d*.65);
+    return vec2(envelope*((crest-second)*.008+churn*sin(d*13.0-uTime*2.0)*.004),
+                envelope*((crest+second)*texture+churn*.2));
+   }
    float heightAt(vec2 p){float h=sin(p.x*.72+p.y*.51+uTime*.36)*.0025+sin(p.x*1.9-p.y*.67-uTime*.29)*.0014;
     float impactDistance=length(p-uFallSource);
     h+=sin(impactDistance*8.5-uTime*2.7)*.0035*exp(-impactDistance*.42)*smoothstep(.08,.6,impactDistance);
-    float stern=uBoat.x-p.x,side=abs(p.y-uBoat.y)-max(0.0,stern)*.28;
-    h+=uBoat.z*.0025*sin(side*22.0-uTime*.8)*exp(-side*side*35.0)*exp(-max(0.0,stern)*.7)*smoothstep(0.0,.25,stern)*(1.0-smoothstep(2.5,4.0,stern));
+    h+=boatWake(p).x;
     for(int i=0;i<12;i++){float age=uTime-uRipples[i].z;if(age>0.0&&age<6.0){float d=length(p-uRipples[i].xy),front=d-age*.95;h+=sin(front*18.0)*exp(-front*front*9.0)*exp(-age*.8)*.012*uRipples[i].w;}}return h;}`;
   const material=new T.ShaderMaterial({uniforms:u,vertexShader:`varying vec3 vWorld;varying vec4 vReflect;uniform mat4 uMatrix;${wave}
    void main(){vec4 world=modelMatrix*vec4(position,1.0);world.y+=heightAt(world.xz);vWorld=world.xyz;vReflect=uMatrix*world;gl_Position=projectionMatrix*viewMatrix*world;}`,
@@ -3428,7 +3444,8 @@ window.MBEnvironment={
     vec3 reflected=texture2D(uReflection,uv).rgb*.52;reflected+=(texture2D(uReflection,uv+vec2(.0015,0.0)).rgb+texture2D(uReflection,uv-vec2(.0015,0.0)).rgb+texture2D(uReflection,uv+vec2(0.0,.0015)).rgb+texture2D(uReflection,uv-vec2(0.0,.0015)).rgb)*.12;
     vec3 base=vec3(.018,.035,.042)*uReveal;vec3 col=mix(base,reflected,fresnel*.82);
     vec3 light=normalize(vec3(.25,.8,-.5));float spec=pow(max(dot(n,normalize(view+light)),0.0),110.0);col+=vec3(1.0,.79,.52)*spec*.38*uReveal;
-    col+=vec3(.20,.30,.34)*length(gradient)*.20*uReveal;float fog=1.0-exp(-pow(length(uEye-vWorld)*.027,2.0));col=mix(col,uFog,fog);
+    col+=vec3(.20,.30,.34)*length(gradient)*.20*uReveal;
+    col+=vec3(.09,.13,.15)*boatWake(p).y*uReveal;float fog=1.0-exp(-pow(length(uEye-vWorld)*.027,2.0));col=mix(col,uFog,fog);
     gl_FragColor=vec4(col,1.0);
     #include <tonemapping_fragment>
     #include <encodings_fragment>
@@ -3686,7 +3703,7 @@ window.MBEnvironment={
         halfWidth = Math.max(halfWidth, Math.abs(camera.position.x + backdropRay.x * distance));
         top = Math.max(top, camera.position.y + backdropRay.y * distance);
       }
-      const shift = THREE.MathUtils.lerp(isMobilePortrait() ? .11 : .14, .06, THREE.MathUtils.smoothstep(camera.aspect, .65, 1.3));
+      const shift = THREE.MathUtils.lerp(isMobilePortrait() ? .102 : .132, .052, THREE.MathUtils.smoothstep(camera.aspect, .65, 1.3));
       const scale = Math.max(1, halfWidth * 2 * 1.06 / (46 * (1-2*shift)),
         (top - FLOOR_Y) * 1.06 / (26.6 * window.MBWaterfall.shore));
       backdropMesh.scale.set(scale, scale, 1);
@@ -4324,11 +4341,12 @@ window.MBEnvironment={
     }
     const CAMERA_SPEED=(5.4+.85)/1.7;
     const easeTravel=p=>p*p*p*(p*(p*6-15)+10);
-    function cameraJourney(to,qTo){return {elapsed:0,duration:Math.max(.16,camera.position.distanceTo(to)/CAMERA_SPEED),from:camera.position.clone(),to,qFrom:camera.quaternion.clone(),qTo};}
+    // Short approaches to wide cards need the same soft start/stop as the phone.
+    function cameraJourney(to,qTo){return {elapsed:0,duration:Math.max(1.9,camera.position.distanceTo(to)/CAMERA_SPEED),from:camera.position.clone(),to,qFrom:camera.quaternion.clone(),qTo};}
     let mouseX=0,mouseY=0,isDragging=false,prevX=0,dragDelta=0,lastPointerTime=0,releaseVelocity=0;
     let parallaxX=0,parallaxY=0,waterStroke=null;
     const raycaster=new THREE.Raycaster(),mouseNDC=new THREE.Vector2(5,5),hoverLocal=new THREE.Vector2();
-    function waterPointerActive(){return studioEntered&&['orbit','focusing','focused'].includes(phase);}
+    function waterPointerActive(){return studioEntered&&['orbit','focusing','focused','unfocusing'].includes(phase);}
     const mainHeader=document.getElementById('mainHeader'),bottomCaption=document.getElementById('bottomCaption');
     const bottomWrap=document.querySelector('.bottom-wrap'),capTitle=document.getElementById('capTitle'),capText=document.getElementById('capText');
     const ecosystemModal=document.getElementById('ecosystem-modal'),veil=document.getElementById('travelVeil');
@@ -4345,7 +4363,7 @@ window.MBEnvironment={
       return {centre,normal,to,qTo:tmp.quaternion.clone()};
     }
     function focusTile(index){
-      if(!studioEntered||['entering','diving','section','returning'].includes(phase))return;
+      if(!studioEntered||['entering','diving','section','returning','unfocusing'].includes(phase))return;
       initAudio();selectedIndex=index;
       targetProgress=currentProgress;velocity=coastVelocity=0;phase='focusing';zoomState=1;pendingDive=false;cursorLabel.textContent='ВОЙТИ';
       const initialProgress=currentProgress,finalProgress=index+SLATES_DATA.length*Math.round((currentProgress-index)/SLATES_DATA.length);
@@ -4355,7 +4373,16 @@ window.MBEnvironment={
       travel={...cameraJourney(to,qTo),centre,normal,initialZoom:zoomFactor,initialProgress,finalProgress};
       playWhooshSound(travel.duration);
     }
-    function returnToOrbit(){if(['entering','diving','returning','section'].includes(phase))return;if(zoomState)playWhooshSound(.85,'return');phase='orbit';zoomState=0;travel=null;pendingDive=false;coastVelocity=0;cursorLabel.textContent='ОТКРЫТЬ'}
+    function returnToOrbit(){
+      if(['entering','diving','returning','section','unfocusing'].includes(phase))return;
+      coastVelocity=0;if(!zoomState)return;
+      const to=BASE_CAM_POS.clone().add(new THREE.Vector3(parallaxX*.22,-parallaxY*.14,0));
+      const orbitLookAt=BASE_LOOK_AT.clone().add(new THREE.Vector3(parallaxX*.08,-parallaxY*.06,0));
+      const tmp=camera.clone();tmp.position.copy(to);tmp.lookAt(orbitLookAt);
+      travel={...cameraJourney(to,tmp.quaternion.clone()),initialZoom:zoomFactor,orbitLookAt};
+      phase='unfocusing';zoomState=0;pendingDive=false;cursorLabel.textContent='ОТКРЫТЬ';
+      playWhooshSound(travel.duration,'return');
+    }
 
     function startDive(){
       if(phase==='focusing'){pendingDive=true;return}if(phase!=='focused')return;
@@ -4389,8 +4416,8 @@ window.MBEnvironment={
     document.getElementById('modalCloseBtn').addEventListener('click',closeEcosystemModal);
     bottomCaption.addEventListener('click',()=>focusTile(activeIndex));
     function hitAt(e){const r=canvas.getBoundingClientRect();mouseNDC.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);camera.updateMatrixWorld();scene.updateMatrixWorld();raycaster.setFromCamera(mouseNDC,camera);return raycaster.intersectObjects(hitMeshes)[0]}
-    canvas.addEventListener('click',e=>{if(!studioEntered||dragDelta>=6||['entering','diving','section','returning'].includes(phase))return;const hit=hitAt(e);if(!hit){if(zoomState)returnToOrbit();return}const idx=hit.object.userData.slateIndex;if(zoomState&&idx===selectedIndex)startDive();else focusTile(idx)});
-    canvas.addEventListener('wheel',e=>{if(!studioEntered||['entering','diving','section','returning'].includes(phase))return;e.preventDefault();if(zoomState){returnToOrbit();return}lastOrbitInput=performance.now();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);coastVelocity=THREE.MathUtils.clamp(coastVelocity+delta*.012,-3.8,3.8)},{passive:false});
+    canvas.addEventListener('click',e=>{if(!studioEntered||dragDelta>=6||['entering','diving','section','returning','unfocusing'].includes(phase))return;const hit=hitAt(e);if(!hit){if(zoomState)returnToOrbit();return}const idx=hit.object.userData.slateIndex;if(zoomState&&idx===selectedIndex)startDive();else focusTile(idx)});
+    canvas.addEventListener('wheel',e=>{if(!studioEntered||['entering','diving','section','returning','unfocusing'].includes(phase))return;e.preventDefault();if(zoomState){returnToOrbit();return}lastOrbitInput=performance.now();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);coastVelocity=THREE.MathUtils.clamp(coastVelocity+delta*.012,-3.8,3.8)},{passive:false});
     canvas.addEventListener('pointerdown',e=>{if(!studioEntered||e.button!==0||phase!=='orbit')return;isDragging=true;lastOrbitInput=performance.now();prevX=e.clientX;lastPointerTime=performance.now();dragDelta=0;releaseVelocity=0;coastVelocity=0;canvas.setPointerCapture(e.pointerId)});
     canvas.addEventListener('pointerdown',e=>{if(waterPointerActive()){if(phase!=='orbit'&&e.button===0){waterStroke={id:e.pointerId,x:e.clientX,y:e.clientY};dragDelta=0;canvas.setPointerCapture(e.pointerId)}hitAt(e);water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft])}});
     window.addEventListener('pointerdown',e=>{if(waterPointerActive()&&e.button===0&&heroLeft.contains(e.target)){hitAt(e);water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft])}});
@@ -4630,7 +4657,11 @@ window.MBEnvironment={
       cursorFloorLight.position.x += (mouseX * 4.2 - cursorFloorLight.position.x) * 0.08;
       cursorFloorLight.position.z += (1.8 + mouseY * 2.0 - cursorFloorLight.position.z) * 0.08;
 
-      zoomFactor += (zoomState - zoomFactor) * (1-Math.exp(-4*dt));
+      // Camera, card alignment and fading share the same gentle acceleration.
+      if(phase==='focusing'||phase==='unfocusing'){
+        const p=Math.min(1,(travel.elapsed+dt)/travel.duration);
+        zoomFactor=THREE.MathUtils.lerp(travel.initialZoom,phase==='focusing'?1:0,easeTravel(p));
+      }else zoomFactor += (zoomState - zoomFactor) * (1-Math.exp(-4*dt));
 
       hoverIndex=-1;
       if(studioEntered&&phase==='orbit'&&!isDragging&&!customCursor.classList.contains('hover-ui')){
@@ -4697,14 +4728,14 @@ window.MBEnvironment={
         obj.hover=THREE.MathUtils.lerp(obj.hover||0,hoverIndex===i?1:0,1-Math.exp(-8*dt));
         if(hoverIndex===i)obj.hoverLocal.lerp(hoverLocal,1-Math.exp(-12*dt));
 
-        if(phase==='orbit'||phase==='focusing')obj.holder.position.set(localX+Math.sin(poseTime*.73+obj.phase)*.045,floatY,localZ+Math.cos(poseTime*.61+obj.phase)*.045);
+        if(phase==='orbit'||phase==='focusing'||phase==='unfocusing')obj.holder.position.set(localX+Math.sin(poseTime*.73+obj.phase)*.045,floatY,localZ+Math.cos(poseTime*.61+obj.phase)*.045);
 
         const baseYaw=safeOrbitYaw(angle);
         const rotX=isMobilePortrait()?0:-parallaxY*.015-obj.hoverLocal.y*.025*obj.hover;
         const rotY=baseYaw+(isMobilePortrait()?0:parallaxX*.015+obj.hoverLocal.x*.020*obj.hover);
         const rotZ = floatRoll;
 
-        if(phase==='orbit'||phase==='focusing'){
+        if(phase==='orbit'||phase==='focusing'||phase==='unfocusing'){
           const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(rotX*(1-focusAlign),rotY,rotZ*(1-focusAlign)));
           const frontGate=1-THREE.MathUtils.smoothstep(Math.abs(offset),.02,.12);
           // Keep the collision-safe yaw until the card reaches the front.
@@ -4715,7 +4746,7 @@ window.MBEnvironment={
         const depthFactor = (Math.cos(angle) + 1) * 0.5;
         // При наезде задние плитки чуть уменьшаются и уходят в глубокий боке, чтобы вообще не спорить с главной
         const scale=.84+depthFactor*.16;
-        if(phase==='orbit'||phase==='focusing')obj.holder.scale.setScalar(scale*mobileFrameScale(i,angle));
+        if(phase==='orbit'||phase==='focusing'||phase==='unfocusing')obj.holder.scale.setScalar(scale*mobileFrameScale(i,angle));
 
         const baseOp = 0.32 + depthFactor * 0.66;
 
@@ -4775,11 +4806,12 @@ window.MBEnvironment={
         entryElapsed+=dt;const p=Math.min(1,entryElapsed/ENTRY_DURATION),e=easeTravel(p);
         camera.position.copy(BASE_CAM_POS).add(new THREE.Vector3(0,0,8*(1-e)));camera.lookAt(BASE_LOOK_AT);currentLookAt.copy(BASE_LOOK_AT);
         if(p===1){phase='orbit';preloader.hidden=true;preloader.classList.add('hidden');}
-      }else if(['focusing','diving','returning'].includes(phase)){
+      }else if(['focusing','diving','returning','unfocusing'].includes(phase)){
         travel.elapsed+=dt;const p=Math.min(1,travel.elapsed/travel.duration),ease=easeTravel(p);
         camera.position.lerpVectors(travel.from,travel.to,ease);camera.quaternion.slerpQuaternions(travel.qFrom,travel.qTo,ease);
         currentLookAt.copy(camera.position).add(new THREE.Vector3(0,0,-3).applyQuaternion(camera.quaternion));
         if(phase==='focusing'){zoomFactor=THREE.MathUtils.lerp(travel.initialZoom,1,ease);if(p===1){currentProgress=targetProgress=travel.finalProgress;phase='focused';zoomFactor=1;if(pendingDive)startDive()}}
+        else if(phase==='unfocusing'){if(p===1){currentLookAt.copy(travel.orbitLookAt);travel=null;phase='orbit';zoomFactor=0;}}
         else if(phase==='diving'){veil.style.opacity=THREE.MathUtils.smoothstep(p,.2,.76).toFixed(4);if(p===1)openEcosystemModal()}
         else {veil.style.opacity=(1-THREE.MathUtils.smoothstep(p,.12,.8)).toFixed(4);if(p===1){travel=null;phase='focused';canvas.focus({preventScroll:true})}}
       }else if(phase==='orbit'){
