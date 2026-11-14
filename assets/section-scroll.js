@@ -6,7 +6,12 @@
   const copy={0:[['Съёмка','Кадр, свет и движение. Снимаю людей, продукты и пространство. Ниже — фрагменты моих работ.'],['Монтаж','От исходного материала к цельной истории: видеоряд, звук и цвет.'],['AI-видео','Создаю образы и оживляю сцены с помощью современных технологий.']],1:[['Первое впечатление','Сайт знакомит с вами ещё до разговора. Выстраиваю композицию, типографику и визуал так, чтобы они передавали характер проекта.'],['Движение со смыслом','Объём помогает показать то, что трудно объяснить статичным кадром. Здесь можно управлять строительством дома и сменой света.'],['На любом экране','Мобильная версия — отдельная продуманная композиция. С тем же характером и удобным управлением пальцем.'],['От идеи до запуска','Веду проект целиком: связываю содержание, дизайн и разработку в один понятный процесс.']],2:[['Мини-приложение','Услуги, выбор времени и запись — прямо внутри Telegram.'],['Бот','Выберите услугу и удобное время. Бот проведёт через запись, а результат появится в CRM ниже.'],['CRM','Обращения из разных каналов, записи и расписание — в одном рабочем пространстве.']]};
   function chapter(scene,n,visual){
     const block=document.createElement('section');block.className='scroll-chapter';block.id=`story-${scene}-${n}`;block.dataset.chapter=n;
-    const intro=document.createElement('div');intro.className='scroll-copy';const h=document.createElement('h2'),p=document.createElement('p');h.id=block.id+'-title';h.textContent=copy[scene][n][0];p.textContent=copy[scene][n][1];intro.append(h,p);block.setAttribute('aria-labelledby',h.id);
+    const intro=document.createElement('div');intro.className='scroll-copy';const h=document.createElement('h2'),p=document.createElement('p');h.id=block.id+'-title';h.textContent=copy[scene][n][0];p.textContent=copy[scene][n][1];if(n===0){
+      const label=document.createElement('div');label.className='section-eyebrow';label.textContent=h.textContent;
+      h.textContent=$('modalTitle').textContent;h.className='section-hero-title';p.textContent=$('modalDesc').textContent;
+      intro.append(label);
+    }
+    intro.append(h,p);block.setAttribute('aria-labelledby',h.id);
     const media=document.createElement('div');media.className='scroll-media';media.append(visual);block.append(intro,media);return block;
   }
   function prepare(scene){
