@@ -8,7 +8,6 @@
       tile=source;view=0;tile.setPlaybackActive(false);
       const video=tile.video;
       video.controls=false;video.muted=true;video.loop=true;video.playsInline=true;
-      if(!reduced.matches)video.currentTime=0;
     },
     setView(n){view=n},
     suspend(){tile?.setPlaybackActive(false)},

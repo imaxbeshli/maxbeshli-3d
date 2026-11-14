@@ -1,7 +1,10 @@
 """Check the shared AVTOLAB video, visibility lifecycle and unchanged frame layout."""
 from pathlib import Path
-import re,tempfile,threading,http.server,functools
+import re,tempfile,threading,http.server,functools,argparse
 from playwright.sync_api import sync_playwright
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--mobile',action='store_true',help='Run with touch input and mobile browser settings')
+args=parser.parse_args()
 root=Path(__file__).resolve().parents[1]
 html=(root/'index.html').read_text()
 three=next(m.group(1) for m in re.finditer(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>',html) if len(m.group(1))>200000 and 'REVISION' in m.group(1) and 'Copyright 2010-2021 Three.js Authors' in m.group(1))
@@ -17,7 +20,7 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
  Path(folder,'assets').symlink_to(root/'assets',target_is_directory=True)
  server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Quiet,directory=folder));threading.Thread(target=server.serve_forever,daemon=True).start()
  browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox','--enable-unsafe-swiftshader'])
- page=browser.new_page(viewport={'width':1440,'height':960});page.set_default_timeout(45000)
+ page=browser.new_page(**(p.devices['Pixel 7'] if args.mobile else {'viewport':{'width':1440,'height':960}}));page.set_default_timeout(45000)
  errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto(f'http://127.0.0.1:{server.server_port}/index.html');page.wait_for_function('window.__MB && MBSections.state.active')
  page.wait_for_function('[...document.querySelectorAll("#webScene img")].every(i=>i.complete&&i.naturalWidth>0)')
@@ -55,6 +58,8 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
   dims=page.locator('#ecosystem-modal').evaluate('e=>[e.clientWidth,e.scrollWidth]');assert dims[1]<=dims[0]+1,(width,dims)
   r=player.bounding_box();assert r['x']>=0 and r['x']+r['width']<=width+1,(width,r)
   assert r['y']+r['height']<height,(width,height,r)
+  c=page.locator('#sectionContact').bounding_box()
+  assert c['x']>width/2 and c['x']+c['width']<=width and c['y']+c['height']<=height,(width,height,c)
   t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(250)
   assert page.evaluate('MBWebStudio.state.time')!=t,(width,t)
   if width in [1440,390]:page.screenshot(path=f'/tmp/web-simple-{width}.png')
@@ -80,10 +85,15 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
  page.wait_for_function('__MB.slateObjects[1].video.paused')
  page.evaluate("delete document.hidden;document.dispatchEvent(new Event('visibilitychange'))")
  page.wait_for_function('!__MB.slateObjects[1].video.paused')
+ player.evaluate('(v)=>v.currentTime=12')
+ page.wait_for_function('!__MB.slateObjects[1].video.seeking && MBWebStudio.state.time>=12')
+ held=page.evaluate('MBWebStudio.state.time')
  page.evaluate('MBSections.close()')
  assert page.evaluate('__MB.slateObjects[1].video.paused')
  assert page.locator('#architectureSlot video').count()==0
  page.evaluate('MBSections.open(1)');page.wait_for_function('!__MB.slateObjects[1].video.paused')
+ page.wait_for_timeout(500)
+ assert held<=page.evaluate('MBWebStudio.state.time')<held+2,'Reentry must resume the held position, without rewinding'
  assert page.locator('#architectureSlot video').count()==1
  player.evaluate('(v)=>v.currentTime=v.duration-.2')
  page.wait_for_function('__MB.slateObjects[1].video.currentTime<1 && !__MB.slateObjects[1].video.paused')
