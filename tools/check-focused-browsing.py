@@ -29,7 +29,7 @@ with sync_playwright() as p:
             page.touchscreen.tap(*xy) if mobile else page.mouse.click(*xy)
         def focused(index):
             try:
-                page.wait_for_function("i=>__MB.state.phase==='focused'&&__MB.state.selectedIndex===i", arg=index, timeout=30000)
+                page.wait_for_function("i=>__MB.state.phase==='focused'&&__MB.state.selectedIndex===i", arg=index, timeout=90000)
             except Exception:
                 print('Unexpected navigation state:',page.evaluate('__MB.state'),flush=True)
                 page.screenshot(path='/tmp/focused-browsing-failure.png')

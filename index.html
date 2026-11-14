@@ -4282,7 +4282,7 @@ window.MBEnvironment={
        5. УПРАВЛЕНИЕ ОРБИТОЙ, НАЕЗДОМ И МОДАЛЬНЫМ ОКНОМ
        ========================================================= */
     let targetProgress=0,currentProgress=0,velocity=0,coastVelocity=0,activeIndex=0,settleBlend=0,lastOrbitInput=-Infinity;
-    let zoomState=0,zoomFactor=0,selectedIndex=0,phase='orbit',pendingDive=false,travel=null,hoverIndex=-1;
+    let zoomState=0,zoomFactor=0,selectedIndex=0,phase='orbit',pendingDive=false,queuedFocus=null,travel=null,hoverIndex=-1;
     // Periodic, precomputed collision-clear yaw path on the ORIGINAL orbit.
     // All cards use the same angular law, including reverse motion. No impulses,
     // per-frame solver, hidden recycling, changes to centers, sizes or orbit radii.
@@ -4290,6 +4290,24 @@ window.MBEnvironment={
     function safeOrbitYaw(angle){
       const c=ORBIT_YAW_COEFFICIENTS;
       return 1.55*Math.tanh(c[0]+c[1]*Math.sin(angle)+c[2]*Math.cos(angle)+c[3]*Math.sin(2*angle)+c[4]*Math.cos(2*angle)+c[5]*Math.sin(3*angle)+c[6]*Math.cos(3*angle));
+    }
+    // Distribute time by the cards' angular travel, so tight bends in the safe
+    // orbit do not turn into sudden flips. Geometry and orbit remain unchanged.
+    function focusOrbitTiming(from,to){
+      const samples=[0],count=384;
+      let previous=SLATES_DATA.map((_,i)=>safeOrbitYaw((i-from)*Math.PI*2/3));
+      for(let n=1;n<=count;n++){
+        const progress=THREE.MathUtils.lerp(from,to,n/count);
+        const next=SLATES_DATA.map((_,i)=>safeOrbitYaw((i-progress)*Math.PI*2/3));
+        const turn=Math.max(...next.map((yaw,i)=>Math.abs(yaw-previous[i])));
+        samples.push(samples[n-1]+Math.abs(to-from)/count+turn*2);previous=next;
+      }
+      const length=samples[count];return samples.map(v=>v/length);
+    }
+    function timedFocusProgress(p,samples){
+      let lo=0,hi=samples.length-1;
+      while(hi-lo>1){const mid=(lo+hi)>>1;if(samples[mid]<p)lo=mid;else hi=mid;}
+      return (lo+(p-samples[lo])/(samples[hi]-samples[lo]))/(samples.length-1);
     }
     const CAMERA_SPEED=(5.4+.85)/1.7;
     const easeTravel=p=>p*p*p*(p*(p*6-15)+10);
@@ -4305,7 +4323,9 @@ window.MBEnvironment={
     function fillSection(index){window.MBSections.open(index)}
     function focusTile(index){
       if(!studioEntered||['entering','diving','section','returning'].includes(phase))return;
-      const switching=zoomState&&index!==selectedIndex;
+      if(phase==='focusing'){if(index!==selectedIndex){queuedFocus=index;pendingDive=false;}return;}
+      const fromIndex=selectedIndex,switching=zoomState&&index!==selectedIndex;
+      queuedFocus=null;
       initAudio();selectedIndex=index;
       targetProgress=currentProgress;velocity=coastVelocity=0;phase='focusing';zoomState=1;pendingDive=false;cursorLabel.textContent='ВОЙТИ';
       const entry=slateObjects[index];
@@ -4316,17 +4336,18 @@ window.MBEnvironment={
       const normal=new THREE.Vector3(0,0,1),size=SLATES_DATA[index].size,halfTan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
       const distance=Math.max(size[1]/(2*halfTan),size[0]/(2*halfTan*camera.aspect))*1.12+.3;
       const to=centre.clone().addScaledVector(normal,distance),tmp=camera.clone();tmp.position.copy(to);tmp.lookAt(centre);
-      travel={...cameraJourney(to,tmp.quaternion.clone()),centre,normal,initialZoom:zoomFactor,initialProgress,finalProgress};
-      if(switching)travel.duration=Math.max(.8,travel.duration);
+      travel={...cameraJourney(to,tmp.quaternion.clone()),centre,normal,initialZoom:zoomFactor,initialProgress,finalProgress,switching,fromIndex};
+      if(switching){travel.duration=Math.max(2.1,travel.duration);travel.orbitTiming=focusOrbitTiming(initialProgress,finalProgress);}
       playWhooshSound(travel.duration);
     }
     function stepFocused(direction){
       if(phase!=='focused'&&phase!=='focusing')return;
       focusTile((selectedIndex+direction+SLATES_DATA.length)%SLATES_DATA.length);
     }
-    function returnToOrbit(){if(['entering','diving','returning','section'].includes(phase))return;if(zoomState)playWhooshSound(.85,'return');phase='orbit';zoomState=0;travel=null;pendingDive=false;coastVelocity=0;cursorLabel.textContent='ОТКРЫТЬ'}
+    function returnToOrbit(){if(['entering','diving','returning','section'].includes(phase))return;if(zoomState)playWhooshSound(.85,'return');phase='orbit';zoomState=0;travel=null;pendingDive=false;queuedFocus=null;coastVelocity=0;cursorLabel.textContent='ОТКРЫТЬ'}
 
     function startDive(){
+      queuedFocus=null;
       if(phase==='focusing'){pendingDive=true;return}if(phase!=='focused')return;
       phase='diving';pendingDive=false;
       const obj=slateObjects[selectedIndex].holder;obj.updateWorldMatrix(true,false);
@@ -4527,13 +4548,22 @@ window.MBEnvironment={
       }
       if(phase==='focusing'){
         const p=Math.min(1,(travel.elapsed+dt)/travel.duration);
-        currentProgress=THREE.MathUtils.lerp(travel.initialProgress,travel.finalProgress,easeTravel(p));
+        // Restore the outgoing card's safe yaw before moving; align the incoming
+        // card only after the orbit has stopped. Neither frame snaps or crosses.
+        const orbitP=travel.switching?THREE.MathUtils.clamp((p-.18)/.64,0,1):p;
+        const orbitEase=easeTravel(orbitP);
+        const orbitStep=travel.switching?timedFocusProgress(orbitEase,travel.orbitTiming):orbitEase;
+        currentProgress=THREE.MathUtils.lerp(travel.initialProgress,travel.finalProgress,orbitStep);
         targetProgress=currentProgress;
       }
       const total = SLATES_DATA.length;
       const nearestIndex = Math.round(currentProgress);
       updateCaption(nearestIndex);
-      slateObjects.forEach((obj,i)=>obj.setPlaybackActive(studioEntered && activeIndex===i && !document.getElementById('aboutDialog').open));
+      const switchingFocus=phase==='focusing'&&travel.switching;
+      const focusP=phase==='focusing'?Math.min(1,(travel.elapsed+dt)/travel.duration):1;
+      slateObjects.forEach((obj,i)=>obj.setPlaybackActive(studioEntered &&
+        (switchingFocus?(i===travel.fromIndex||i===selectedIndex):activeIndex===i) &&
+        !document.getElementById('aboutDialog').open));
 
       // Круговая 3D-орбита СПРАВА
       const radiusX = 2.05;
@@ -4551,7 +4581,12 @@ window.MBEnvironment={
 
         // 1 для выбранной передней плитки, 0 для двух задних
         const frontness = Math.max(0, Math.cos(angle));
-        const isFrontMask = zoomState ? (i===selectedIndex?1:0) : Math.pow(frontness,4);
+        let isFrontMask = zoomState ? (i===selectedIndex?1:0) : Math.pow(frontness,4);
+        if(switchingFocus){
+          // Keep both passing cards readable; fade only at the ends of the move.
+          isFrontMask=i===travel.fromIndex?1-easeTravel(THREE.MathUtils.clamp((focusP-.78)/.22,0,1))
+            :i===selectedIndex?easeTravel(THREE.MathUtils.clamp(focusP/.22,0,1)):0;
+        }
 
         // ГЛУБОКИЙ РАСФОКУС для задних плиток при наезде (defocus -> 1 для всех неактивных плиток)
         const defocus = zoomFactor * (1 - isFrontMask);
@@ -4559,8 +4594,10 @@ window.MBEnvironment={
         const floatY = Math.sin(poseTime*(.95+i*.13)+obj.phase)*.14;
         const floatRoll=Math.cos(poseTime*(.81+i*.04)+obj.phase)*.022;
         // Align roll/pitch and inset throughout the existing camera approach.
-        const focusAlign = i!==selectedIndex ? 0 : phase==='focusing'
-          ? easeTravel(Math.min(1,(travel.elapsed+dt)/travel.duration)) : zoomFactor;
+        const focusAlign = switchingFocus
+          ? i===travel.fromIndex?1-easeTravel(THREE.MathUtils.clamp(focusP/.18,0,1))
+            :i===selectedIndex?easeTravel(THREE.MathUtils.clamp((focusP-.82)/.18,0,1)):0
+          :i!==selectedIndex?0:phase==='focusing'?easeTravel(focusP):zoomFactor;
         window.MBTileArt.animateInset(obj.inset,poseTime,i,floatRoll,focusAlign);
         obj.reflectedInset.position.copy(obj.inset.group.position);
         obj.reflectedInset.quaternion.copy(obj.inset.group.quaternion);
@@ -4579,7 +4616,7 @@ window.MBEnvironment={
           const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(rotX*(1-focusAlign),rotY,rotZ*(1-focusAlign)));
           const frontGate=1-THREE.MathUtils.smoothstep(Math.abs(offset),.02,.12);
           // Keep the collision-safe yaw until the card reaches the front.
-          if(i===selectedIndex)q.slerp(new THREE.Quaternion(),focusAlign*frontGate);
+          if(focusAlign>0)q.slerp(new THREE.Quaternion(),focusAlign*frontGate);
           obj.holder.quaternion.copy(q);
         }
 
@@ -4647,7 +4684,7 @@ window.MBEnvironment={
         travel.elapsed+=dt;const p=Math.min(1,travel.elapsed/travel.duration),ease=easeTravel(p);
         camera.position.lerpVectors(travel.from,travel.to,ease);camera.quaternion.slerpQuaternions(travel.qFrom,travel.qTo,ease);
         currentLookAt.copy(camera.position).add(new THREE.Vector3(0,0,-3).applyQuaternion(camera.quaternion));
-        if(phase==='focusing'){zoomFactor=THREE.MathUtils.lerp(travel.initialZoom,1,ease);if(p===1){currentProgress=targetProgress=travel.finalProgress;phase='focused';zoomFactor=1;if(pendingDive)startDive()}}
+        if(phase==='focusing'){zoomFactor=THREE.MathUtils.lerp(travel.initialZoom,1,ease);if(p===1){currentProgress=targetProgress=travel.finalProgress;phase='focused';zoomFactor=1;if(pendingDive)startDive();else if(queuedFocus!==null)focusTile(queuedFocus)}}
         else if(phase==='diving'){veil.style.opacity=THREE.MathUtils.smoothstep(p,.2,.76).toFixed(4);if(p===1)openEcosystemModal()}
         else {veil.style.opacity=(1-THREE.MathUtils.smoothstep(p,.12,.8)).toFixed(4);if(p===1){travel=null;phase='focused';canvas.focus({preventScroll:true})}}
       }else if(phase==='orbit'){
