@@ -114,13 +114,9 @@ with sync_playwright() as p:
     assert page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')>t
     assert page.locator('#architectureSlot canvas').is_visible()
     assert page.locator('#webMode3D').count()==0
-    click_floating('#webMotionPause')
-    t=page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')
-    page.wait_for_timeout(300)
-    assert page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')==t
-    click_floating('#webMotionPause')
+    assert page.locator('#webScene button,#webScene input').count()==0
     mobile('web');leave()
-    print('PASS original animated website visible immediately, playback controls and mobile composition',flush=True)
+    print('PASS original animated website visible immediately, no extra controls and mobile composition',flush=True)
 
     enter(2);screenshot('telegram')
     assert page.evaluate('__MB.slateObjects[2].phoneDemo.state.active')

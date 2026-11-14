@@ -26,35 +26,24 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
  def click(selector):
   el=page.locator(selector);el.focus();page.wait_for_timeout(100);el.click()
  page.wait_for_timeout(900)
- assert page.locator('#webScene .scroll-chapter').count()==2
+ assert page.locator('#webScene .scroll-chapter').count()==1
  assert page.locator('#sectionOptions').is_hidden()
- assert page.locator('#webMode3D,#webSpaceConcept,#webObjectConcept').count()==0
+ assert page.locator('#webScene button,#webScene input,#webScene .web-delivery').count()==0
  canvas=page.locator('#architectureSlot canvas');assert canvas.is_visible()
  r=canvas.bounding_box();assert r['y']>=75 and r['y']+r['height']<960,r
  t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(600)
  assert page.evaluate('MBWebStudio.state.time')>t
  assert page.evaluate('__MB.slateObjects[1].architectureDemo.state.renderedTime')>0
- page.screenshot(path='/tmp/web-live-desktop.png')
- print('PASS original FORMA canvas visible and playing on entry without clicks',flush=True)
- click('#webMotionPause');t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(300)
- assert page.evaluate('MBWebStudio.state.time')==t
- click('[data-web-seek="21"]');assert page.evaluate('Math.abs(MBWebStudio.state.time-21)<.01 && MBWebStudio.state.paused')
- page.locator('#webMotionSeek').focus();page.keyboard.press('Home');page.keyboard.press('ArrowRight')
- assert abs(page.evaluate('MBWebStudio.state.time')-.1)<.01
- click('#webMotionRestart');page.wait_for_timeout(300)
- assert not page.evaluate('MBWebStudio.state.paused') and page.evaluate('MBWebStudio.state.time')<2
+ page.screenshot(path='/tmp/web-simple-desktop.png')
+ print('PASS original FORMA canvas plays on entry, no controls or duplicate contact buttons',flush=True)
+ contact_before=page.locator('.section-footer').bounding_box()
  click('#sectionContact');t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(300)
  assert page.evaluate('MBWebStudio.state.time')==t
+ assert page.locator('#contactTelegram').get_attribute('href')=='https://t.me/IMAXBESHLI'
  page.keyboard.press('Escape');page.wait_for_function('!infoDialog.open');page.wait_for_timeout(250)
  assert page.evaluate('MBWebStudio.state.time')>t
- click('#webExplore')
- page.wait_for_function('MBSections.state.tab===1 && !document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
- t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(300)
- assert page.evaluate('MBWebStudio.state.time')==t
- click('.web-closing [data-web-contact]');assert page.locator('#infoDialog').is_visible()
- assert page.locator('#contactTelegram').get_attribute('href')=='https://t.me/IMAXBESHLI'
- page.keyboard.press('Escape');page.wait_for_function('!infoDialog.open')
- print('PASS real timeline controls, keyboard, offscreen/contact pause and direct contact',flush=True)
+ assert page.locator('.section-footer').bounding_box()==contact_before
+ print('PASS fixed contact opens, pauses animation and restores playback',flush=True)
  for width,height in [(1440,960),(1024,768),(768,1024),(390,844),(360,740)]:
   page.set_viewport_size({'width':width,'height':height})
   page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop=0');page.wait_for_timeout(500)
@@ -63,14 +52,12 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
   assert r['y']+r['height']<height,(width,height,r)
   t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(250)
   assert page.evaluate('MBWebStudio.state.time')!=t,(width,t)
-  if width in [1440,390]:page.screenshot(path=f'/tmp/web-live-{width}.png')
-  go(1)
-  assert page.locator('#ecosystem-modal').evaluate('e=>e.scrollWidth<=e.clientWidth+1')
- page.emulate_media(reduced_motion='reduce');go(0)
- assert page.evaluate('MBWebStudio.state.paused')
+  if width in [1440,390]:page.screenshot(path=f'/tmp/web-simple-{width}.png')
+ page.emulate_media(reduced_motion='reduce')
+ page.wait_for_function('MBWebStudio.state.paused && MBWebStudio.state.time===18')
  t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(300);assert page.evaluate('MBWebStudio.state.time')==t
  page.evaluate('MBSections.close();MBSections.open(1)')
- assert page.locator('#webScene .scroll-chapter').count()==2
+ assert page.locator('#webScene .scroll-chapter').count()==1
  assert page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop')==0
  assert page.evaluate('MBWebStudio.state.paused')
  page.emulate_media(reduced_motion='no-preference');page.evaluate('MBSections.close();MBSections.open(1)');page.wait_for_timeout(500)
