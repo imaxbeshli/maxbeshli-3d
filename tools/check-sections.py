@@ -109,18 +109,18 @@ with sync_playwright() as p:
     print('PASS video shares existing source, plays, seeks and returns',flush=True)
 
     enter(1);screenshot('web')
-    page.evaluate('MBSections.selectTab(1)')
-    click_floating('#webMode3D')
-    page.wait_for_timeout(500)
     t=page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')
     page.wait_for_timeout(500)
     assert page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')>t
     assert page.locator('#architectureSlot canvas').is_visible()
-    click_floating('#webMode3D')
-    click_floating('[data-web-device="mobile"]')
-    assert page.locator('#webScene').get_attribute('data-device')=='mobile'
-    page.evaluate('MBSections.selectTab(0)');mobile('web');leave()
-    print('PASS website overview, live architecture and mobile composition',flush=True)
+    assert page.locator('#webMode3D').count()==0
+    click_floating('#webMotionPause')
+    t=page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')
+    page.wait_for_timeout(300)
+    assert page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')==t
+    click_floating('#webMotionPause')
+    mobile('web');leave()
+    print('PASS original animated website visible immediately, playback controls and mobile composition',flush=True)
 
     enter(2);screenshot('telegram')
     assert page.evaluate('__MB.slateObjects[2].phoneDemo.state.active')

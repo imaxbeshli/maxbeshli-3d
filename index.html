@@ -1113,88 +1113,53 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 }
 @media(prefers-reduced-motion:reduce){.scroll-copy,.scroll-media{opacity:1;transform:none;transition:none}#filmScene .section-float{will-change:auto}}
 
-/* Editorial web-design page: one visual language, full-width compositions. */
-#ecosystem-modal[data-scene="1"]{background:#0b0d10}
-[data-scene="1"] .section-environment{background:#0b0d10;transform:none}
-[data-scene="1"] .section-light{background:radial-gradient(ellipse at 80% 0%,#b6a17c18,transparent 62%);filter:blur(30px);opacity:.35}
-#ecosystem-modal[data-scene="1"] .section-layout{max-width:1480px;margin:10px auto 0}
+/* The live architectural website is the centerpiece, visible without a mode switch. */
+#ecosystem-modal[data-scene="1"]{background:#0b1015}
+[data-scene="1"] .section-environment{background:radial-gradient(ellipse at 75% 30%,#35443e80,transparent 62%),linear-gradient(140deg,#12191e,#0b1015 70%);transform:none}
+[data-scene="1"] .section-light{background:radial-gradient(ellipse at 70% 20%,#c8ba8f25,transparent 60%);filter:blur(35px);opacity:.6}
+#ecosystem-modal[data-scene="1"] .section-layout{max-width:1520px;margin:30px auto 0}
 #ecosystem-modal[data-scene="1"] .section-layout>.section-intro{display:none}
 #ecosystem-modal.is-scroll-story #webScene{display:block;width:100%;max-width:none;margin:0;padding:0}
 #webScene .scroll-chapter{display:block;margin:0;min-width:0}
 #webScene .scroll-media{width:100%;max-width:none;perspective:none}
-#webScene .web-hero>.scroll-media{position:relative;min-height:min(820px,calc(100dvh - 105px));display:flex;flex-direction:column;justify-content:center;isolation:isolate;overflow:hidden}
-.web-hero-visual{position:absolute;inset:-2% -3% 0 10%;z-index:-1;pointer-events:none;transform:translate3d(calc(var(--sx)*.5),calc(var(--sy)*.5),0);mask-image:linear-gradient(90deg,transparent,#000 30%),linear-gradient(#000 80%,transparent);mask-composite:intersect}
-.web-hero-visual img{width:100%;height:100%;display:block;object-fit:cover;object-position:70% 50%;animation:webHeroDrift 12s ease-in-out infinite alternate}
-.web-hero-copy{position:relative;z-index:1;max-width:800px;padding:70px 0 100px}
+#webScene .web-opening{display:grid;grid-template-columns:minmax(240px,.65fr) minmax(0,1.65fr);align-items:center;gap:clamp(30px,4vw,70px);min-height:calc(100dvh - 190px);padding:24px 0 50px}
+.web-hero-copy{max-width:370px}
 #webScene .web-eyebrow{font-size:11px;line-height:1.5;letter-spacing:.16em;text-transform:uppercase;color:#b9b1a1;margin:0 0 26px}
-.web-hero h1{font-size:clamp(64px,7.6vw,112px);font-weight:450;line-height:.99;letter-spacing:-.06em;margin:0 0 33px;color:#f1f0eb}
-.web-hero h1 em{font-style:normal;color:#bcb3a0}
-#webScene .web-hero-lead{max-width:420px;font-size:16px;line-height:1.8;color:#b5b9bc;margin:0 0 30px}
-.web-hero-actions{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
-.web-primary{border:1px solid #e3ded2;background:#e3ded2;color:#15191d;min-height:50px;padding:14px 24px;font:500 13px/1.4 Inter,Arial,sans-serif;border-radius:6px;transition:background .25s,box-shadow .25s}
+.web-hero h1{font-size:clamp(48px,5.2vw,78px);font-weight:450;line-height:1.04;letter-spacing:-.055em;margin:0 0 28px;color:#f1f0eb}
+.web-hero h1 em{font-style:normal;color:#c4b799}
+#webScene .web-hero-lead{font-size:15px;line-height:1.8;color:#b5bfc4;margin:0 0 28px}
+.web-hero-actions{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.web-primary{border:1px solid #e3ded2;background:#e3ded2;color:#15191d;min-height:48px;padding:13px 21px;font:500 13px/1.4 Inter,Arial,sans-serif;border-radius:8px;transition:background .25s,box-shadow .25s}
 .web-primary:hover{background:#f4eee0;box-shadow:0 6px 30px #c6b89515}
 .web-text-link{border:0;border-bottom:1px solid #888c8c60;background:none;color:#d2d4d3;padding:12px 0;min-height:44px;font-size:12px}
 .web-text-link:hover{border-color:#e8dfca;color:#fff}
-.web-hero-bottom{position:relative;display:flex;justify-content:space-between;gap:20px;border-top:1px solid #c2c6ca25;padding:22px 0 8px;margin-top:auto;color:#a1a5a8;font-size:11px;letter-spacing:.02em}
-#webScene .web-showcase{padding-top:130px}
+.web-live-site{min-width:0;width:100%}
+.web-site-heading{display:flex;justify-content:space-between;gap:20px;margin:0 3px 20px;color:#bdc6ca;font-size:11px;letter-spacing:.03em}.web-site-heading span+span{color:#83918f;font-size:10px}
+.web-site-float{animation:webSiteFloat 9s ease-in-out infinite;will-change:transform}
+.web-preview-stage{padding:6px;background:linear-gradient(135deg,#bac8d250,#8b9aa914 55%,#dce5de45);border:1px solid #cbd8e267;border-radius:16px;box-shadow:inset 0 1px 0 #eaf1f64d,3px 5px 0 #b2c5d01a,0 25px 60px #0006;overflow:hidden}
+#webScene #architectureSlot{aspect-ratio:1.6;border-radius:10px;background:#e6e4dd;overflow:hidden}#webScene #architectureSlot canvas{display:block;width:100%;height:auto;aspect-ratio:1.6}
+.web-motion-controls{padding:21px 4px 0}.web-motion-top{display:flex;align-items:center;justify-content:space-between;gap:15px;font-size:12px;color:#c7cdd1;margin-bottom:5px}
+.web-motion-top button,.web-motion-stages button{font:inherit;color:#c2c7c8;background:none;border:1px solid transparent;border-radius:5px;font-size:11px;padding:8px 10px;min-height:44px}.web-motion-top button{border-color:#b1c4d137;min-width:90px}.web-motion-top button:hover,.web-motion-stages button:hover{background:#d5e3ec10;color:#fff}
+#webMotionSeek{width:100%;height:28px;margin:0;accent-color:#c5b48d;cursor:ew-resize}.web-motion-stages{display:flex;justify-content:space-between;gap:6px}.web-motion-stages button{padding:5px 3px;font-size:10px;color:#9cadb9}.web-motion-stages button[aria-pressed="true"]{color:#e5d6b2}
+#webScene .web-site-caption{max-width:620px;font-size:12px;line-height:1.7;color:#8f9ca3;margin:16px 4px 0}
 .web-section-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:45px;margin-bottom:48px}
 .web-section-heading h2{font-size:clamp(38px,4.4vw,66px);font-weight:450;line-height:1.06;letter-spacing:-.045em;margin:0;color:#e9e9e5}
 #webScene .web-section-heading>p{max-width:360px;font-size:14px;line-height:1.85;color:#a6acb1;margin:0}
-.web-showcase-toolbar{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:22px}
-.web-directions{display:flex;gap:24px}.web-directions button{font-size:15px;font-weight:450;border:0;border-bottom:1px solid transparent;background:none;color:#868e95;padding:12px 0;min-height:44px;transition:color .25s,border-color .25s}.web-directions button[aria-pressed="true"]{color:#e8e3d8;border-color:#c0ae87}
-.web-display-controls{display:flex;align-items:center;gap:18px}.web-device-controls{display:flex;gap:4px}.web-device-controls button{display:grid;place-items:center;width:44px;height:44px;background:transparent;border:1px solid transparent;border-radius:6px;color:#707b84}.web-device-controls button[aria-pressed="true"]{color:#dbd4c4;border-color:#8996a32e;background:#ffffff06}.web-device-controls svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.3}
-#webMode3D{background:transparent;color:#c3c7c7;font-size:12px;padding:12px 15px;min-height:44px;border:1px solid #a6b7c431;border-radius:6px}#webMode3D[aria-pressed="true"]{color:#f1dfb9;border-color:#c9b38677;background:#b69b5912}
-.web-preview-stage{padding:8px;background:linear-gradient(135deg,#bdc5cc13,#bdc5cc03);border:1px solid #cbd8e22b;border-radius:15px;min-width:0;box-shadow:0 30px 80px #0004;overflow:hidden}
-.web-preview-shell{width:100%;max-width:100%;margin:auto;border-radius:9px;overflow:hidden;container-type:inline-size}
-#webScene[data-device="mobile"] .web-preview-shell{max-width:370px;border:1px solid #b6c4ce42;border-radius:24px;box-shadow:0 16px 45px #0005}
-#webScene[data-device="mobile"] .web-preview-stage{padding:30px 8px}
-.web-concept{position:relative;aspect-ratio:16/9;min-height:360px;isolation:isolate;overflow:hidden;background:#1b201e;color:#fff}
-.web-case-images{position:absolute;inset:0;z-index:-2;overflow:hidden}.web-case-images img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 1.1s cubic-bezier(.2,.6,.3,1)}
-.web-space-concept:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(#0005,transparent 35%,#0009)}
-.web-case-header{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:32px 38px;position:relative;z-index:2}
-.web-case-brand{font-size:24px;letter-spacing:.23em;font-weight:500;line-height:1}.web-case-brand>span{display:block;font-size:7px;letter-spacing:.12em;margin-top:9px;font-weight:400}
-.web-case-header nav{display:flex;gap:22px}.web-case-header button{min-height:44px;border:0;border-bottom:1px solid transparent;color:#e3e4de;background:transparent;font-size:12px;padding:9px 0}.web-case-header button[aria-pressed="true"]{border-color:#dfdcd1}
-.web-case-copy{position:absolute;left:38px;bottom:90px;right:25px;pointer-events:none}.web-case-copy>*{pointer-events:auto}.web-case-copy>p{font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin:0 0 18px;color:#dddfd7}
-.web-case-copy h3{font-size:clamp(36px,5.9cqw,82px);line-height:1.02;font-weight:450;letter-spacing:-.045em;margin:0 0 23px}
-.web-case-copy button{background:none;color:inherit;border:0;border-bottom:1px solid #e0dfd780;padding:11px 0;font-size:12px;min-height:44px;display:inline-flex;align-items:center;gap:22px}
-.web-case-copy button span{width:15px;height:1px;background:currentColor;display:inline-block}
-.web-case-foot{position:absolute;bottom:0;left:38px;right:38px;display:flex;justify-content:space-between;gap:20px;border-top:1px solid #deded849;padding:20px 0;font-size:8px;letter-spacing:.08em;color:#dedfd8}
-.web-object-concept{background:#e3ddd1;color:#272824}.web-object-concept .web-case-copy>p{color:#5b5c53}.web-object-concept .web-case-copy button{border-color:#454b4266}.web-object-concept .web-case-foot{color:#62655a;border-color:#646d5840}.web-object-edition{font-size:10px;letter-spacing:.04em;color:#64665c}.web-object-concept .web-case-copy h3{font-size:clamp(32px,5.2cqw,70px)}
-.web-object-concept[data-detail="true"] .web-case-images img{transform:scale(1.33) translateX(-8%)}
-#webScene[data-device="mobile"] .web-concept{aspect-ratio:9/16;min-height:620px}
-#webScene[data-device="mobile"] .web-case-header{padding:25px 22px;gap:10px}
-#webScene[data-device="mobile"] .web-case-brand{font-size:19px}
-#webScene[data-device="mobile"] .web-case-header nav{gap:16px}
-#webScene[data-device="mobile"] .web-case-header button{font-size:11px}
-#webScene[data-device="mobile"] .web-case-copy{left:22px;bottom:86px}
-#webScene[data-device="mobile"] .web-case-copy h3{font-size:44px}
-#webScene[data-device="mobile"] .web-case-foot{left:22px;right:22px;font-size:6px}
-#webScene[data-device="mobile"] .web-case-images img{object-position:65% center}
-#webScene[data-device="mobile"] .web-object-concept .web-case-copy{bottom:80px;background:linear-gradient(90deg,#e9e3d4db,transparent);padding:14px 8px 0 0;right:0}
-#webScene[data-device="mobile"] .web-object-concept .web-case-copy h3{font-size:36px}
-.web-showcase-caption{display:flex;justify-content:space-between;gap:20px;padding:18px 2px 0;font-size:11px;line-height:1.6;color:#89929a}.web-showcase-caption p{margin:0}
-#webScene #architectureSlot{aspect-ratio:1.6;border-radius:0;background:#e6e4dd;overflow:hidden}#webScene #architectureSlot canvas{display:block;width:100%;height:auto;aspect-ratio:1.6}
-.web-motion-controls{background:#151b20;padding:16px 22px}.web-motion-top{display:flex;align-items:center;justify-content:space-between;gap:15px;font-size:12px;color:#c7cdd1;margin-bottom:8px}
-.web-motion-top button,.web-motion-stages button{font:inherit;color:#c2c7c8;background:none;border:1px solid transparent;border-radius:5px;font-size:11px;padding:8px 10px;min-height:40px}.web-motion-top button{border-color:#b1c4d137;min-width:90px}.web-motion-top button:hover,.web-motion-stages button:hover{background:#d5e3ec10;color:#fff}
-#webMotionSeek{width:100%;height:26px;margin:0;accent-color:#c5b48d;cursor:ew-resize}.web-motion-stages{display:flex;justify-content:space-between;gap:6px}.web-motion-stages button{padding:5px 3px;font-size:10px;color:#9cadb9}.web-motion-stages button[aria-pressed="true"]{color:#e5d6b2}
 #webScene .web-delivery{padding-top:145px}.web-delivery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:48px;padding:8px 0 100px;border-bottom:1px solid #c3cdd025}.web-delivery-line{display:block;width:34px;height:1px;background:#a69b85;margin-bottom:27px}.web-delivery-grid h3{font-size:23px;line-height:1.3;letter-spacing:-.02em;font-weight:450;color:#e2e3df;margin:0 0 19px}.web-delivery-grid p{font-size:13px;line-height:1.9;color:#959fa7;margin:0;max-width:370px}
 .web-closing{padding:95px 0 20px;text-align:center}.web-closing h2{font-size:clamp(36px,4.5vw,66px);font-weight:450;line-height:1.1;letter-spacing:-.045em;margin:0 0 24px;color:#e6e5df}.web-closing>p:not(.web-eyebrow){font-size:14px;line-height:1.8;color:#9ea6ad;margin:0 auto 28px;max-width:480px}
-@keyframes webHeroDrift{from{transform:scale(1.015) translateY(0)}to{transform:scale(1.04) translateY(-7px)}}
-#webScene .web-hero:not(.is-visible) .web-hero-visual img{animation-play-state:paused}
-@media(max-width:1000px){.web-hero-copy{max-width:640px}.web-hero-visual{inset:0 -15% 0 0;opacity:.75}.web-section-heading{gap:30px}.web-section-heading>p{max-width:290px!important}.web-delivery-grid{gap:28px}}
-@media(max-width:700px){
- #ecosystem-modal[data-scene="1"] .section-layout{margin-top:0}
- #webScene .web-hero>.scroll-media{min-height:690px}.web-hero-copy{padding:65px 0 75px}.web-hero h1{font-size:clamp(48px,10vw,68px);line-height:1.02;margin-bottom:28px}.web-hero-visual{inset:0 -60% 0 -35%;opacity:.55;mask-image:linear-gradient(90deg,#0006,#000),linear-gradient(#000 65%,transparent);mask-composite:intersect}
- #webScene .web-hero-lead{font-size:14px;max-width:330px}.web-hero-actions{gap:20px}.web-primary{padding:13px 20px;font-size:12px}.web-text-link{font-size:11px}.web-hero-bottom{gap:12px;font-size:9px;line-height:1.5;padding-top:19px}.web-hero-bottom span{flex:1}
- #webScene .web-showcase{padding-top:85px}.web-section-heading{display:block;margin-bottom:32px}.web-section-heading h2{font-size:40px}.web-section-heading>p{margin-top:24px!important;max-width:420px!important;font-size:13px!important}.web-eyebrow{font-size:10px!important;margin-bottom:19px!important}
- .web-showcase-toolbar{gap:12px;flex-wrap:wrap}.web-directions{gap:20px}.web-directions button{font-size:13px}.web-display-controls{gap:10px}.web-device-controls{display:none}#webMode3D{font-size:11px;padding:10px}
- .web-preview-stage{padding:4px;border-radius:12px}.web-preview-shell{border-radius:8px}.web-concept{aspect-ratio:3/4;min-height:440px}.web-case-header{padding:22px 20px;gap:10px}.web-case-brand{font-size:19px}.web-case-header nav{gap:15px}.web-case-header button{font-size:11px}.web-case-copy{left:20px;bottom:82px;right:14px}.web-case-copy h3{font-size:40px}.web-case-copy>p{font-size:8px}.web-case-copy button{font-size:11px}.web-case-foot{left:20px;right:20px;font-size:6px;gap:12px}.web-case-images img{object-position:65% center}
- .web-object-edition{font-size:8px;max-width:80px;text-align:right}.web-object-concept .web-case-copy{background:linear-gradient(90deg,#e9e3d4dd,transparent);padding:14px 8px 0 0;right:0}.web-object-concept .web-case-copy h3{font-size:34px}
- #webScene[data-device="mobile"] .web-preview-stage{padding:4px}#webScene[data-device="mobile"] .web-preview-shell{max-width:100%;border:0;border-radius:8px}#webScene[data-device="mobile"] .web-concept{aspect-ratio:3/4;min-height:440px}
- .web-showcase-caption{display:block;font-size:10px}.web-showcase-caption p+p{margin-top:5px}.web-motion-controls{padding:12px 10px}.web-motion-top{font-size:10px}.web-motion-stages button{font-size:9px}
- #webScene .web-delivery{padding-top:90px}.web-delivery-grid{grid-template-columns:1fr;gap:38px;padding-bottom:65px}.web-delivery-line{margin-bottom:17px}.web-delivery-grid h3{font-size:22px;margin-bottom:13px}.web-delivery-grid p{font-size:13px}.web-closing{padding-top:65px}.web-closing h2{font-size:39px}.web-closing>p:not(.web-eyebrow){font-size:13px}
+
+@keyframes webSiteFloat{0%,100%{transform:translate3d(0,3px,0)}50%{transform:translate3d(0,-5px,0)}}
+.web-hero:not(.is-visible) .web-site-float{animation-play-state:paused}
+@media(max-width:1000px){#webScene .web-opening{grid-template-columns:minmax(220px,.7fr) minmax(0,1.3fr);gap:28px}.web-hero h1{font-size:52px}.web-delivery-grid{gap:28px}}
+@media(max-width:760px){
+ #ecosystem-modal[data-scene="1"] .section-layout{margin-top:26px}
+ #webScene .web-opening{display:flex;flex-direction:column;gap:30px;min-height:0;padding:0 0 25px;align-items:stretch}.web-hero-copy{max-width:600px}.web-hero h1{font-size:clamp(38px,8vw,54px);line-height:1.05;margin-bottom:18px}.web-hero h1 br{display:none}.web-hero h1 br:after{content:' '}.web-hero h1 em{display:block}
+ #webScene .web-hero-lead{font-size:13px;line-height:1.7;max-width:540px;margin-bottom:18px}.web-hero-actions{gap:22px}.web-primary{padding:12px 18px;font-size:12px}.web-text-link{font-size:11px}
+ #webScene .web-eyebrow{font-size:10px;margin-bottom:16px}.web-site-heading{margin-bottom:15px;font-size:10px;gap:10px}.web-site-heading span+span{font-size:9px}.web-preview-stage{padding:4px;border-radius:12px}#webScene #architectureSlot{border-radius:7px}.web-motion-controls{padding-top:15px}.web-motion-top{font-size:11px}.web-motion-stages button{font-size:10px}#webScene .web-site-caption{font-size:11px;margin-top:8px}
+ .web-section-heading{display:block;margin-bottom:32px}.web-section-heading h2{font-size:36px}.web-section-heading>p{margin-top:24px!important;max-width:420px!important;font-size:13px!important}
+ #webScene .web-delivery{padding-top:75px}.web-delivery-grid{grid-template-columns:1fr;gap:35px;padding-bottom:55px}.web-delivery-line{margin-bottom:17px}.web-delivery-grid h3{font-size:22px;margin-bottom:13px}.web-delivery-grid p{font-size:13px}.web-closing{padding-top:60px}.web-closing h2{font-size:36px}.web-closing>p:not(.web-eyebrow){font-size:13px}
 }
-@media(prefers-reduced-motion:reduce){.web-hero-visual{transform:none}.web-hero-visual img{animation:none}.web-case-images img{transition:none}}
+@media(prefers-reduced-motion:reduce){.web-site-float{animation:none;will-change:auto}}
 
 </style>
 <div id="ecosystem-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" inert>
@@ -1258,45 +1223,28 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 </div>
 
       </section>
-      <section id="webScene" class="section-content web-editorial" aria-label="Создание сайтов" data-direction="space" data-device="desktop" data-mode="design" hidden>
+      <section id="webScene" class="section-content web-editorial" aria-label="Создание сайтов" hidden>
   <section class="scroll-chapter web-hero" id="story-1-0" data-chapter="0" aria-labelledby="webHeroTitle">
-    <div class="scroll-media">
-      <div class="web-hero-visual" aria-hidden="true"><img data-section-image="web-hero" alt=""></div>
-      <div class="web-hero-copy"><p class="web-eyebrow">Дизайн · 3D · Разработка</p><h1 id="webHeroTitle">Ваш бизнес.<br>В новом<br><em>измерении.</em></h1><p class="web-hero-lead">Создаю сайты, которые передают характер компании и помогают человеку разобраться в вашем предложении.</p><div class="web-hero-actions"><button type="button" class="web-primary" data-web-contact>Обсудить сайт</button><button type="button" class="web-text-link" id="webExplore">Посмотреть подход</button></div></div>
-      <div class="web-hero-bottom"><span>Авторский дизайн</span><span>Живое взаимодействие</span><span>От идеи до запуска</span></div>
-    </div>
-  </section>
-  <section class="scroll-chapter web-showcase" id="story-1-1" data-chapter="1" aria-labelledby="webShowcaseTitle">
-    <div class="scroll-media">
-      <div class="web-section-heading"><div><p class="web-eyebrow">Визуальные направления</p><h2 id="webShowcaseTitle">Дизайн следует<br>задаче.</h2></div><p>Архитектура требует пространства.<br>Предмет — внимания к деталям.<br>Сайт получает собственный визуальный язык.</p></div>
-      <div class="web-showcase-toolbar">
-        <div class="web-directions" role="group" aria-label="Визуальное направление"><button type="button" data-web-direction="space" aria-pressed="true">Пространство</button><button type="button" data-web-direction="object" aria-pressed="false">Предмет</button></div>
-        <div class="web-display-controls"><div role="group" aria-label="Размер макета" class="web-device-controls"><button type="button" data-web-device="desktop" aria-pressed="true" aria-label="Макет на компьютере"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 21h8m-4-5v5"/></svg></button><button type="button" data-web-device="mobile" aria-pressed="false" aria-label="Макет на телефоне"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></svg></button></div><button type="button" id="webMode3D" aria-pressed="false">3D-сцена</button></div>
+    <div class="scroll-media web-opening">
+      <div class="web-hero-copy">
+        <p class="web-eyebrow">Сайты · Дизайн · 3D</p>
+        <h1 id="webHeroTitle">Сайты, <br>которые<br><em>оживают.</em></h1>
+        <p class="web-hero-lead">Создаю визуальные истории для бизнеса. Соединяю дизайн, объём и движение в сайте, который хочется исследовать.</p>
+        <div class="web-hero-actions"><button type="button" class="web-primary" data-web-contact>Обсудить сайт</button><button type="button" class="web-text-link" id="webExplore">Как я работаю</button></div>
       </div>
-      <div class="web-preview-stage">
-        <div class="web-preview-shell" id="webViewport">
-          <article class="web-concept web-space-concept" id="webSpaceConcept" aria-label="Концепция сайта архитектурного бюро FORMA" data-page="exterior">
-            <div class="web-case-images"><img data-section-image="villa" alt="Современный дом среди сосен" class="web-case-exterior"><img data-section-image="web-interior" alt="Светлая гостиная с панорамными окнами" class="web-case-interior" hidden></div>
-            <header class="web-case-header"><span class="web-case-brand">FORMA<span>АРХИТЕКТУРА</span></span><nav aria-label="Страницы концепции FORMA"><button type="button" data-space-page="exterior" aria-pressed="true">Дом</button><button type="button" data-space-page="interior" aria-pressed="false">Интерьер</button></nav></header>
-            <div class="web-case-copy"><p>Частная архитектура</p><h3 id="webSpaceTitle">Пространство<br>для жизни.</h3><button type="button" id="webSpaceNext">Открыть интерьер<span aria-hidden="true"></span></button></div>
-            <div class="web-case-foot"><span>HOUSE 01</span><span>Бетон. Стекло. Дерево.</span></div>
-          </article>
-          <article class="web-concept web-object-concept" id="webObjectConcept" aria-label="Концепция сайта предметного бренда ARC" data-detail="false" hidden>
-            <div class="web-case-images"><img data-section-image="web-object" alt="Скульптурный светильник из шлифованного алюминия"></div>
-            <header class="web-case-header"><span class="web-case-brand">ARC<span>OBJECT DESIGN</span></span><span class="web-object-edition">Свет как искусство</span></header>
-            <div class="web-case-copy"><p>Коллекция света</p><h3 id="webObjectTitle">Форма.<br>Свет.<br>Ничего лишнего.</h3><button type="button" id="webObjectDetail" aria-pressed="false">Рассмотреть детали<span aria-hidden="true"></span></button></div>
-            <div class="web-case-foot"><span>ARC / 01</span><span>Металл. Свет. Геометрия.</span></div>
-          </article>
-          <div id="webMotion" hidden>
-            <div id="architectureSlot" aria-label="Управляемая 3D-сцена строительства дома"></div>
-            <div class="web-motion-controls"><div class="web-motion-top"><span id="webMotionStage">От идеи к пространству</span><button type="button" id="webMotionPause" aria-label="Приостановить строительство">Пауза</button></div><label class="sr-only" for="webMotionSeek">Этап строительства</label><input id="webMotionSeek" type="range" min="0" max="27.5" step="0.1" value="0"><div class="web-motion-stages"><button type="button" data-web-seek="2">Основание</button><button type="button" data-web-seek="11">Архитектура</button><button type="button" data-web-seek="21">Свет</button><button type="button" id="webMotionRestart">Сначала</button></div></div>
+      <div class="web-live-site">
+        <div class="web-site-heading"><span>Сайт архитектурного бюро</span><span>FORMA / концепция</span></div>
+        <div class="web-site-float">
+          <div class="web-preview-stage" id="webMotion">
+            <div id="architectureSlot" aria-label="Сайт FORMA с анимацией строительства дома"></div>
           </div>
         </div>
+        <div class="web-motion-controls"><div class="web-motion-top"><span id="webMotionStage">От основания к форме</span><button type="button" id="webMotionPause" aria-label="Приостановить строительство">Пауза</button></div><label class="sr-only" for="webMotionSeek">Этап строительства</label><input id="webMotionSeek" type="range" min="0" max="29.9" step="0.1" value="0"><div class="web-motion-stages"><button type="button" data-web-seek="2">Основание</button><button type="button" data-web-seek="11">Архитектура</button><button type="button" data-web-seek="21">Свет</button><button type="button" id="webMotionRestart">Сначала</button></div></div>
+        <p class="web-site-caption">Дом вырастает из основания, камера приближается, день сменяется ночью. Всё происходит внутри сайта.</p>
       </div>
-      <div class="web-showcase-caption"><p id="webCaseCaption">FORMA — концепция архитектурного сайта</p><p id="webCaseHint">Откройте интерьер или исследуйте 3D-сцену.</p></div>
     </div>
   </section>
-  <section class="scroll-chapter web-delivery" id="story-1-2" data-chapter="2" aria-labelledby="webDeliveryTitle">
+  <section class="scroll-chapter web-delivery" id="story-1-1" data-chapter="1" aria-labelledby="webDeliveryTitle">
     <div class="scroll-media">
       <div class="web-section-heading"><div><p class="web-eyebrow">Работа над проектом</p><h2 id="webDeliveryTitle">Цельная идея.<br>Точная реализация.</h2></div><p>Я веду проект от первого разговора до публикации. Содержание, визуал и разработка складываются в одну систему.</p></div>
       <div class="web-delivery-grid"><article><span class="web-delivery-line"></span><h3>Содержание</h3><p>Разбираюсь в задаче, выстраиваю структуру и путь посетителя. Определяем, что важно рассказать и какое действие предложить.</p></article><article><span class="web-delivery-line"></span><h3>Визуальный язык</h3><p>Собираю композицию, типографику и изображения. Добавляю объём и движение там, где они раскрывают смысл.</p></article><article><span class="web-delivery-line"></span><h3>Работающий сайт</h3><p>Адаптирую интерфейс под разные экраны, проверяю взаимодействие и загрузку. Подключаю контакты и готовлю сайт к запуску.</p></article></div>
@@ -1791,54 +1739,16 @@ window.createTelegramGlass=function(root){
   window.MBFilmStudio={setView,update,resume,get state(){return {view,editingTime:clocks[1],aiTime:clocks[2],editingStarted,shootingTime,paused:[...paused]}}};
 })();
 
-/* Editorial showcase: independent concepts, responsive presentation, one existing 3D renderer. */
+/* The existing FORMA website is visible and playing immediately on entry. */
 (()=>{
   const $=id=>document.getElementById(id),root=$('webScene'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
-  let demo=null,view=-1,paused=reduced.matches,lastLabel=-1,direction='space',mode='design',device='desktop',spacePage='exterior',detail=false;
-  function heading(el,lines){el.replaceChildren(...lines.flatMap((text,i)=>i?[document.createElement('br'),document.createTextNode(text)]:[document.createTextNode(text)]))}
-  function reveal(el){if(!reduced.matches)el.animate([{opacity:.35},{opacity:1}],{duration:450,easing:'ease-out'})}
-  function caption(){
-    $('webCaseCaption').textContent=direction==='space'?'FORMA — концепция архитектурного сайта':'ARC — концепция сайта предметного бренда';
-    $('webCaseHint').textContent=mode==='3d'?'Управляйте строительством и светом с помощью ползунка.':direction==='space'?'Откройте интерьер или исследуйте 3D-сцену.':'Рассмотрите объект и его детали.';
-  }
-  function setMode(value){
-    mode=value;root.dataset.mode=mode;
-    $('webSpaceConcept').hidden=mode==='3d'||direction!=='space';$('webObjectConcept').hidden=mode==='3d'||direction!=='object';$('webMotion').hidden=mode!=='3d';
-    $('webMode3D').setAttribute('aria-pressed',String(mode==='3d'));$('webMode3D').textContent=mode==='3d'?'Дизайн':'3D-сцена';
-    if(mode==='3d'){setDevice('desktop',false);reveal($('webMotion'))}else demo?.update(false);
-    caption();
-  }
-  function setDevice(value,reset=true){device=value;root.dataset.device=device;root.querySelectorAll('[data-web-device]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.webDevice===device)));if(reset&&mode==='3d')setMode('design')}
-  function setDirection(value){
-    direction=value;root.dataset.direction=direction;
-    root.querySelectorAll('[data-web-direction]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.webDirection===direction)));
-    $('webMode3D').hidden=direction!=='space';setMode('design');reveal($(direction==='space'?'webSpaceConcept':'webObjectConcept'));
-  }
-  function setSpacePage(value){
-    spacePage=value;$('webSpaceConcept').dataset.page=spacePage;
-    const interior=spacePage==='interior';root.querySelector('.web-case-exterior').hidden=interior;root.querySelector('.web-case-interior').hidden=!interior;
-    heading($('webSpaceTitle'),interior?['Свет. Тишина.','Дом.']:['Пространство','для жизни.']);
-    $('webSpaceNext').firstChild.textContent=interior?'Вернуться к дому':'Открыть интерьер';
-    root.querySelectorAll('[data-space-page]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.spacePage===spacePage)));
-    reveal(root.querySelector(interior?'.web-case-interior':'.web-case-exterior'));
-  }
-  function setDetail(value){
-    detail=value;$('webObjectConcept').dataset.detail=String(detail);$('webObjectDetail').setAttribute('aria-pressed',String(detail));
-    heading($('webObjectTitle'),detail?['Чистая','геометрия.']:['Форма.','Свет.','Ничего лишнего.']);
-    $('webObjectDetail').firstChild.textContent=detail?'Весь объект':'Рассмотреть детали';
-  }
-  root.querySelectorAll('[data-web-direction]').forEach(b=>b.addEventListener('click',()=>setDirection(b.dataset.webDirection)));
-  root.querySelectorAll('[data-web-device]').forEach(b=>b.addEventListener('click',()=>setDevice(b.dataset.webDevice)));
-  root.querySelectorAll('[data-space-page]').forEach(b=>b.addEventListener('click',()=>setSpacePage(b.dataset.spacePage)));
-  $('webSpaceNext').addEventListener('click',()=>setSpacePage(spacePage==='exterior'?'interior':'exterior'));
-  $('webObjectDetail').addEventListener('click',()=>setDetail(!detail));
-  $('webMode3D').addEventListener('click',()=>setMode(mode==='3d'?'design':'3d'));
+  let demo=null,view=-1,paused=reduced.matches,lastLabel=-1;
   $('webExplore').addEventListener('click',()=>window.MBSections.selectTab(1));
   root.querySelectorAll('[data-web-contact]').forEach(b=>b.addEventListener('click',()=>window.MBSections.openContact()));
   function button(){const b=$('webMotionPause');b.textContent=paused?'Продолжить':'Пауза';b.setAttribute('aria-label',paused?'Продолжить строительство':'Приостановить строительство')}
   function sync(){
     if(!demo)return;const t=demo.state.time;
-    if(document.activeElement!==$('webMotionSeek'))$('webMotionSeek').value=String(Math.min(27.5,t));
+    if(document.activeElement!==$('webMotionSeek'))$('webMotionSeek').value=String(Math.min(29.9,t));
     const stage=t<5?0:t<16?1:2;
     if(stage!==lastLabel){lastLabel=stage;$('webMotionStage').textContent=['От основания к форме','Архитектура приобретает объём','Свет меняет пространство'][stage];root.querySelectorAll('[data-web-seek]').forEach((b,i)=>b.setAttribute('aria-pressed',String(i===stage)))}
     $('webMotionSeek').setAttribute('aria-valuetext',`${Math.round(t)} из 30 секунд`);
@@ -1850,15 +1760,15 @@ window.createTelegramGlass=function(root){
   $('webMotionRestart').addEventListener('click',()=>{if(!demo)return;demo.seek(0);paused=false;button();sync()});
   reduced.addEventListener('change',()=>{if(reduced.matches){paused=true;demo?.update(false);button()}});
   window.MBWebStudio={
-    open(source){demo=source;view=0;paused=reduced.matches;demo.update(false);demo.seek(reduced.matches?18:0);setDirection('space');setDevice('desktop');button();sync()},
+    open(source){demo=source;view=0;paused=reduced.matches;demo.update(false);demo.seek(reduced.matches?18:0);button();sync()},
     setView(n){if(view!==n)demo?.update(false);view=n;sync()},
     suspend(){demo?.update(false)},
     update(now){
       const r=$('architectureSlot').getBoundingClientRect();
-      if(view!==1||mode!=='3d'||paused||document.hidden||r.bottom<90||r.top>innerHeight){demo?.update(false);return}
+      if(paused||document.hidden||r.bottom<90||r.top>innerHeight){demo?.update(false);return}
       demo?.update(true,now);sync();
     },
-    get state(){return {view,paused,time:demo?.state.time??0,direction,mode,device,spacePage,detail}}
+    get state(){return {view,paused,time:demo?.state.time??0}}
   };
 })();
 
@@ -1938,7 +1848,7 @@ window.createTelegramGlass=function(root){
       'Собираю материал в цельную историю: структура, ритм, цвет и звук. Готовлю версии для сайта, презентации и социальных сетей.',
       'Создаю сцены, оживляю изображения и добавляю эффекты, которые расширяют возможности съёмки и монтажа.'
     ]},
-    {title:'Сайты с характером',description:'Не просто страницы — визуальные истории для вашего бизнеса.',tabs:['Вступление','Визуальные направления','Процесс'],details:[
+    {title:'Сайты с характером',description:'Не просто страницы — визуальные истории для вашего бизнеса.',tabs:['Сайт в движении','Процесс'],details:[
       'Начинаю с содержания и структуры. Выстраиваю понятный путь от знакомства с компанией до обращения.',
       'Превращаю просмотр в взаимодействие: движение камеры, объёмные объекты и анимация, которая помогает раскрыть продукт.',
       'Для телефона меняются композиция, масштаб и управление. Содержание остаётся читаемым, а действия — удобными для касания.',
@@ -2062,6 +1972,8 @@ window.createTelegramGlass=function(root){
 
 </script>
 <!-- SECTIONS_END -->
+
+
 
 
 
