@@ -4429,9 +4429,9 @@ window.MBEnvironment={
       }
       // Reserve real space for the text and caption, including short phones.
       const top=heroLeft.offsetTop+heroLeft.offsetHeight+20;
-      const bottom=innerHeight-18-Math.max(88,bottomWrap.offsetHeight)-58;
-      const height=Math.max(80,Math.min(innerHeight*.33,bottom-top));
-      const width=innerWidth-48,tan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+      const bottom=innerHeight-18-Math.max(88,bottomWrap.offsetHeight)-38;
+      const height=Math.max(88,Math.min(innerHeight*.365,bottom-top));
+      const width=innerWidth-32,tan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
       let scale=.65;
       for(let n=0;n<4;n++){
         const depth=BASE_CAM_POS.z-(ORBIT_ORIGIN.z+1.1*scale);
