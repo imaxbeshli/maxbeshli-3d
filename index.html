@@ -3866,18 +3866,6 @@ window.MBEnvironment={
       };
     }
 
-    // Cache opaque mesh samples for responsive clearance against the real silhouette.
-    function rememberRockSilhouette(mesh,pixels,width,height){
-      const p=mesh.geometry.attributes.position,uv=mesh.geometry.attributes.uv,points=[];
-      for(let i=0;i<p.count;i++){
-        const x=THREE.MathUtils.clamp(Math.round(uv.getX(i)*(width-1)),0,width-1);
-        const y=THREE.MathUtils.clamp(Math.round((1-uv.getY(i))*(height-1)),0,height-1);
-        if(pixels[(y*width+x)*4+3]>=32)points.push(new THREE.Vector3().fromBufferAttribute(p,i));
-      }
-      mesh.userData.silhouette=points;
-      refreshComposition();
-    }
-
     // A photographic cutout on a shallow relief mesh: fixed in world space,
     // so camera travel and the existing water reflection use the same geometry.
     function createPedestalRock() {
@@ -3921,7 +3909,6 @@ window.MBEnvironment={
           positions.setZ(i,.2-height*.3+Math.sin(Math.PI*u)*Math.sin(Math.PI*height)*.07);
         }
         positions.needsUpdate=true;geo.computeVertexNormals();geo.computeBoundingSphere();
-        rememberRockSilhouette(rockMesh,pixels,image.width,image.height);
         window.MBLoading.island=true;
       },undefined,()=>{throw new Error('Unable to load basalt island texture')});
       map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
@@ -3981,7 +3968,6 @@ window.MBEnvironment={
           pos.setZ(i,-height*.65+Math.sin(Math.PI*u)*Math.sin(Math.PI*height)*.15);
         }
         pos.needsUpdate=true;geo.computeVertexNormals();geo.computeBoundingSphere();
-        rememberRockSilhouette(rockMesh,data,c.width,c.height);
         window.MBLoading.foreground=true;
       },undefined,()=>{throw new Error('Unable to load foreground rock texture')});
       map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
@@ -4330,10 +4316,6 @@ window.MBEnvironment={
     function updateCaption(newIndex){const idx=((newIndex%3)+3)%3;if(idx===activeIndex)return;activeIndex=idx;clearTimeout(captionTimer);bottomCaption.classList.add('switching');captionTimer=setTimeout(()=>{capTitle.textContent=SLATES_DATA[idx].title;capText.textContent=SLATES_DATA[idx].text;bottomCaption.classList.remove('switching')},160)}
     function fillSection(index){window.MBSections.open(index)}
     function tileFocusPose(index){
-      if(isMobileScene()){
-        const tmp=camera.clone();tmp.position.copy(BASE_CAM_POS);tmp.lookAt(BASE_LOOK_AT);
-        return {centre:BASE_LOOK_AT.clone(),normal:new THREE.Vector3(0,0,1),to:BASE_CAM_POS.clone(),qTo:tmp.quaternion.clone()};
-      }
       const entry=slateObjects[index],size=SLATES_DATA[index].size;
       orbitGroup.updateMatrixWorld(true);
       const centre=orbitGroup.localToWorld(new THREE.Vector3(-.92+Math.sin(poseTime*.73+entry.phase)*.045,Math.sin(poseTime*(.95+index*.13)+entry.phase)*.14,1.1+Math.cos(poseTime*.61+entry.phase)*.045));
@@ -4351,7 +4333,6 @@ window.MBEnvironment={
       // approaches. Only the final front-facing part is allowed to straighten.
       const {centre,normal,to,qTo}=tileFocusPose(index);
       travel={...cameraJourney(to,qTo),centre,normal,initialZoom:zoomFactor,initialProgress,finalProgress};
-      if(isMobileScene())travel.duration=.9;
       playWhooshSound(travel.duration);
     }
     function returnToOrbit(){if(['entering','diving','returning','section'].includes(phase))return;if(zoomState)playWhooshSound(.85,'return');phase='orbit';zoomState=0;travel=null;pendingDive=false;coastVelocity=0;cursorLabel.textContent='ОТКРЫТЬ'}
@@ -4364,8 +4345,6 @@ window.MBEnvironment={
       // Stop in front of the glass; the veil bridges the remaining distance.
       const end=centre.clone().addScaledVector(normal,1.6),aim=centre.clone();
       const tmp=camera.clone();tmp.position.copy(end);tmp.lookAt(aim);
-      // Touch selection enlarges the tiles, never the landscape or foreground.
-      if(isMobileScene()){end.copy(BASE_CAM_POS);tmp.position.copy(end);tmp.lookAt(BASE_LOOK_AT);}
       const journey=cameraJourney(end,tmp.quaternion.clone());
       travel={...journey,duration:THREE.MathUtils.clamp(journey.duration,.95,1.35),centre,normal,focusPosition:camera.position.clone(),focusQuaternion:camera.quaternion.clone()};
       veil.style.opacity='0';
@@ -4397,8 +4376,7 @@ window.MBEnvironment={
     window.addEventListener('pointerdown',e=>{if(studioEntered&&phase==='orbit'&&e.button===0&&heroLeft.contains(e.target)){hitAt(e);water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft])}});
     window.addEventListener('pointermove',e=>{
       customCursor.style.transform=`translate3d(${e.clientX}px,${e.clientY}px,0) translate(-50%,-50%)`;
-      mouseNDC.set(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2);
-      mouseX=isMobileScene()?0:mouseNDC.x;mouseY=isMobileScene()?0:-mouseNDC.y;
+      mouseX=e.clientX/innerWidth*2-1;mouseY=e.clientY/innerHeight*2-1;mouseNDC.set(mouseX,-mouseY);
       if(studioEntered&&phase==='orbit'&&!isDragging&&(e.target===canvas||heroLeft.contains(e.target)))water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft]);
       if(!isDragging)return;lastOrbitInput=performance.now();const now=performance.now(),dt=Math.max(.008,(now-lastPointerTime)/1000),dx=e.clientX-prevX;prevX=e.clientX;lastPointerTime=now;dragDelta+=Math.abs(dx);
       const delta=-dx*.0038;targetProgress+=delta;releaseVelocity=THREE.MathUtils.lerp(releaseVelocity,THREE.MathUtils.clamp(delta/dt,-5,5),.4);
@@ -4442,52 +4420,32 @@ window.MBEnvironment={
     let baseAnchorScreenY = null;
 
     function isMobilePortrait(){return innerWidth<=760&&innerHeight>=innerWidth;}
-    function isMobileScene(){return isMobilePortrait()||matchMedia('(pointer: coarse)').matches;}
-    let mobileComposition=null;
     function layoutOrbit(){
+      if(!isMobilePortrait()){
+        orbitGroup.scale.setScalar(1);orbitGroup.position.copy(ORBIT_ORIGIN);
+        reflectionGroup.scale.set(1,-1,1);
+        reflectionGroup.position.set(ORBIT_ORIGIN.x,2*FLOOR_Y-ORBIT_ORIGIN.y+.18,ORBIT_ORIGIN.z);
+        return;
+      }
+      // Reserve real space for the text and caption, including short phones.
+      const top=heroLeft.offsetTop+heroLeft.offsetHeight+20;
+      const bottom=innerHeight-18-Math.max(88,bottomWrap.offsetHeight)-58;
+      const height=Math.max(80,Math.min(innerHeight*.33,bottom-top));
+      const width=innerWidth-48,tan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+      let scale=.65;
+      for(let n=0;n<4;n++){
+        const depth=BASE_CAM_POS.z-(ORBIT_ORIGIN.z+1.1*scale);
+        const unit=2*depth*tan/innerHeight;
+        scale=Math.min(width*unit/5.05,height*unit/3.55,1);
+      }
+      const planeZ=ORBIT_ORIGIN.z+1.1*scale,unit=2*(BASE_CAM_POS.z-planeZ)*tan/innerHeight;
+      const centreY=top+3.55*scale/unit/2;
       const layoutCamera=camera.clone();layoutCamera.position.copy(BASE_CAM_POS);layoutCamera.lookAt(BASE_LOOK_AT);layoutCamera.updateMatrixWorld(true);
-      const tan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
-      let rockTop=innerHeight;
-      // Projection uses the neutral camera, so touching a tile cannot move this boundary.
-      for(const rock of [rightPedestalRock,foregroundRockBottomLeft]){
-        rock.updateMatrixWorld(true);
-        for(const point of rock.userData.silhouette||[]){
-          const p=point.clone().applyMatrix4(rock.matrixWorld).project(layoutCamera);
-          if(p.x>=-1.08&&p.x<=1.08&&p.z<1)rockTop=Math.min(rockTop,(1-p.y)*innerHeight/2);
-        }
-      }
-      function fit(top,bottom,width){
-        const height=Math.max(40,bottom-top);
-        let scale=.65;
-        for(let n=0;n<5;n++){
-          const depth=BASE_CAM_POS.z-(ORBIT_ORIGIN.z+1.1*scale),unit=2*depth*tan/innerHeight;
-          scale=Math.min(width*unit/5.05,height*unit/3.55,1);
-        }
-        const planeZ=ORBIT_ORIGIN.z+1.1*scale,unit=2*(BASE_CAM_POS.z-planeZ)*tan/innerHeight;
-        const centreY=top+3.55*scale/unit/2;
-        const ray=new THREE.Vector3(0,1-2*centreY/innerHeight,.5).unproject(layoutCamera).sub(layoutCamera.position);
-        const y=layoutCamera.position.y+ray.y*(planeZ-layoutCamera.position.z)/ray.z;
-        return {scale,position:new THREE.Vector3(.92*scale,y,ORBIT_ORIGIN.z)};
-      }
-      let home={scale:1,position:ORBIT_ORIGIN.clone()};
-      if(isMobilePortrait()){
-        const top=heroLeft.offsetTop+heroLeft.offsetHeight+20;
-        const bottom=Math.min(rockTop-20,innerHeight-18-Math.max(88,bottomWrap.offsetHeight)-38);
-        home=fit(top,Math.min(bottom,top+innerHeight*.365),innerWidth-32);
-      }
-      mobileComposition=isMobileScene()?{
-        home,focus:fit(Math.max(24,innerHeight*.12),rockTop-28,innerWidth-32)
-      }:null;
-      orbitGroup.scale.setScalar(home.scale);orbitGroup.position.copy(home.position);
-      applyMobileComposition();
-      reflectionGroup.scale.set(orbitGroup.scale.x,-orbitGroup.scale.x,orbitGroup.scale.x);
-      reflectionGroup.position.set(orbitGroup.position.x,2*FLOOR_Y-orbitGroup.position.y+.18,orbitGroup.position.z);
-    }
-    function applyMobileComposition(){
-      if(!mobileComposition)return;
-      const {home,focus}=mobileComposition;
-      orbitGroup.scale.setScalar(THREE.MathUtils.lerp(home.scale,focus.scale,zoomFactor));
-      orbitGroup.position.lerpVectors(home.position,focus.position,zoomFactor);
+      const ray=new THREE.Vector3(0,1-2*centreY/innerHeight,.5).unproject(layoutCamera).sub(layoutCamera.position);
+      const y=layoutCamera.position.y+ray.y*(planeZ-layoutCamera.position.z)/ray.z;
+      orbitGroup.scale.setScalar(scale);orbitGroup.position.set(.92*scale,y,ORBIT_ORIGIN.z);
+      reflectionGroup.scale.set(scale,-scale,scale);
+      reflectionGroup.position.set(orbitGroup.position.x,2*FLOOR_Y-y+.18,ORBIT_ORIGIN.z);
     }
     function refreshComposition(){
       layoutOrbit();
@@ -4553,7 +4511,6 @@ window.MBEnvironment={
       }
       // Interior sections own their media loop; do not render the hidden lake.
       if(phase==='section'||document.getElementById('infoDialog').open){clock.getDelta();return;}
-      if(isMobileScene())mouseX=mouseY=0;
       const dt=Math.min(clock.getDelta(),.05);elapsed+=dt;const t=elapsed;if(phase==='orbit')poseTime+=dt;updateGlitch();updateSoundWave(dt);
 
       // Плавное зажигание света в виртуальной студии
@@ -4571,7 +4528,7 @@ window.MBEnvironment={
       zoomFactor += (zoomState - zoomFactor) * (1-Math.exp(-4*dt));
 
       hoverIndex=-1;
-      if(studioEntered&&phase==='orbit'&&!isMobileScene()&&!isDragging&&!customCursor.classList.contains('hover-ui')){
+      if(studioEntered&&phase==='orbit'&&!isDragging&&!customCursor.classList.contains('hover-ui')){
         raycaster.setFromCamera(mouseNDC,camera);const hit=raycaster.intersectObjects(hitMeshes)[0];
         if(hit){hoverIndex=hit.object.userData.slateIndex;const point=hit.object.worldToLocal(hit.point.clone());const size=SLATES_DATA[hoverIndex].size;hoverLocal.set(THREE.MathUtils.clamp(point.x/(size[0]/2),-1,1),THREE.MathUtils.clamp(point.y/(size[1]/2),-1,1));hoverLightTarget.copy(hit.point).add(new THREE.Vector3(0,.3,1));}
       }
@@ -4721,11 +4678,6 @@ window.MBEnvironment={
         const targetCam=new THREE.Vector3(BASE_CAM_POS.x+mouseX*.22,BASE_CAM_POS.y-mouseY*.14,BASE_CAM_POS.z),targetLook=new THREE.Vector3(BASE_LOOK_AT.x+mouseX*.08,BASE_LOOK_AT.y-mouseY*.06,BASE_LOOK_AT.z);
         camera.position.lerp(targetCam,1-Math.exp(-4.5*dt));currentLookAt.lerp(targetLook,1-Math.exp(-5*dt));camera.lookAt(currentLookAt);
       }
-      // A fixed mobile camera prevents the near rock from lifting on selection.
-      if(isMobileScene()&&studioEntered&&phase!=='entering'){
-        camera.position.copy(BASE_CAM_POS);camera.lookAt(BASE_LOOK_AT);currentLookAt.copy(BASE_LOOK_AT);
-      }
-      applyMobileComposition();
       updateSpatialUI();
       fitBackdropToCamera();
       window.MBWaterfall.update(t);

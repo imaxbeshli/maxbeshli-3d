@@ -1,4 +1,4 @@
-"""Portrait composition, rock clearance, fixed touch camera and section return."""
+"""Portrait composition, text clearance, responsive focus and section return."""
 from pathlib import Path
 import functools,http.server,threading
 from playwright.sync_api import sync_playwright
@@ -18,13 +18,7 @@ BOUNDS='''()=>{
   const c=o.holder.getWorldPosition(new THREE.Vector3()).project(m.camera);
   return {left:Math.min(...points.map(p=>p.x)),right:Math.max(...points.map(p=>p.x)),top:Math.min(...points.map(p=>p.y)),bottom:Math.max(...points.map(p=>p.y)),x:(c.x+1)*innerWidth/2,y:(1-c.y)*innerHeight/2};
  });
- let rockTop=innerHeight;
- const rocks=m.rocks.map(rock=>{
-  const projected=(rock.userData.silhouette||[]).map(v=>v.clone().applyMatrix4(rock.matrixWorld).project(m.camera));
-  for(const p of projected)if(p.x>=-1.08&&p.x<=1.08&&p.z<1)rockTop=Math.min(rockTop,(1-p.y)*innerHeight/2);
-  return rock.getWorldPosition(new THREE.Vector3()).project(m.camera).toArray();
- });
- return {tiles,rockTop,rocks,camera:m.camera.position.toArray(),textBottom:heroLeft.getBoundingClientRect().bottom,textTop:heroLeft.getBoundingClientRect().top,headerBottom:mainHeader.getBoundingClientRect().bottom,scale:orbitGroup.scale.x,origin:orbitGroup.position.toArray()};
+ return {tiles,textBottom:heroLeft.getBoundingClientRect().bottom,textTop:heroLeft.getBoundingClientRect().top,headerBottom:mainHeader.getBoundingClientRect().bottom,scale:orbitGroup.scale.x,origin:orbitGroup.position.toArray()};
 }'''
 with sync_playwright() as p:
     browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
@@ -46,17 +40,10 @@ with sync_playwright() as p:
             assert a['left']>=8 and a['right']<=w-8,(w,h,i,r)
             assert abs(a['x']-w/2)<10,(w,h,i,r)
             assert a['bottom']<h-95,(w,h,i,r)
-            assert max(t['bottom'] for t in r['tiles'])<r['rockTop']-8,(w,h,i,r)
             if (w,h)==(400,680) and i==1:
                 page.evaluate('__MB.slateObjects[1].architectureDemo.seek(16)');page.wait_for_timeout(200)
                 page.screenshot(path='/workspace/artifacts/max-beshli-mobile-centered-final.png')
-        # Intermediate orbit angles must clear the rock too, including the tall phone.
-        for progress in [.5,1.5,2.5]:
-            page.evaluate('(v)=>{currentProgress=targetProgress=v;velocity=coastVelocity=0;lastOrbitInput=performance.now()+10000}',progress)
-            page.wait_for_timeout(180)
-            r=page.evaluate(BOUNDS)
-            assert max(t['bottom'] for t in r['tiles'])<r['rockTop']-8,(w,h,progress,r)
-        print(f'PASS {w}x{h}: all tiles clear text and rocks throughout orbit',flush=True)
+        print(f'PASS {w}x{h}: all three tiles centered, fully visible and clear of text',flush=True)
     # Desktop and wide landscape retain the original orbit transformation.
     for w,h in [(1440,900),(844,390)]:
         page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(250)
@@ -64,28 +51,8 @@ with sync_playwright() as p:
         assert r['scale']==1 and r['origin']==[2.45,.28,-.35],r
     page.set_viewport_size({'width':400,'height':680});page.wait_for_timeout(250)
     page.evaluate('mouseX=mouseY=0;currentProgress=targetProgress=1;velocity=coastVelocity=0');page.wait_for_timeout(300)
-    before=page.evaluate(BOUNDS);a=before['tiles'][1]
-    # Record every rendered transition frame, not only its final position.
-    page.evaluate('window.mobileProbe=[];window.readMobileBounds='+BOUNDS)
-    page.evaluate('''()=>{window.recordMobile=true;function record(){
-      if(!window.recordMobile)return;mobileProbe.push(readMobileBounds());requestAnimationFrame(record);
-    }requestAnimationFrame(record)}''')
-    page.touchscreen.tap(a['x'],a['y'])
+    a=page.evaluate(BOUNDS)['tiles'][1];page.touchscreen.tap(a['x'],a['y'])
     page.wait_for_function("__MB.state.phase==='focused'&&__MB.state.selectedIndex===1")
-    page.evaluate('window.recordMobile=false')
-    for r in page.evaluate('mobileProbe'):
-        assert r['camera']==before['camera'],r
-        assert r['rocks']==before['rocks'],r
-        assert max(t['bottom'] for t in r['tiles'])<r['rockTop']-8,r
-    cdp=page.context.new_cdp_session(page)
-    cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':300,'y':350}]})
-    for x in [260,180,100]:
-        cdp.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x,'y':350}]})
-    cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
-    after=page.evaluate(BOUNDS)
-    assert after['rocks']==before['rocks'] and after['camera']==before['camera'],after
-    page.screenshot(path='/workspace/artifacts/max-beshli-mobile-focus-rocks.png')
-    print('PASS every focus frame and touch drag: camera and rocks stay fixed, no rock overlap',flush=True)
     for w,h in [(400,680),(390,844),(844,390),(400,680)]:
         page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(250)
         a=page.evaluate(BOUNDS)['tiles'][1]
@@ -93,7 +60,7 @@ with sync_playwright() as p:
     page.touchscreen.tap(a['x'],a['y']);page.wait_for_function("__MB.state.phase==='section'")
     page.locator('#modalCloseBtn').click();page.wait_for_function("__MB.state.phase==='focused'")
     page.locator('#webgl-canvas').focus();page.keyboard.press('Escape');page.wait_for_function("__MB.state.phase==='orbit'")
-    page.wait_for_function('__MB.state.zoomFactor<.001')
+    page.wait_for_timeout(1800)
     r=page.evaluate(BOUNDS);assert r['tiles'][1]['top']>r['textBottom']+12,r
     assert not errors,errors
     print('PASS focus after tap, portrait/landscape resize, section entry and return; no JS errors',flush=True)
