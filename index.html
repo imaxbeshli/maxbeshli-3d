@@ -4295,6 +4295,7 @@ window.MBEnvironment={
     const easeTravel=p=>p*p*p*(p*(p*6-15)+10);
     function cameraJourney(to,qTo){return {elapsed:0,duration:Math.max(.16,camera.position.distanceTo(to)/CAMERA_SPEED),from:camera.position.clone(),to,qFrom:camera.quaternion.clone(),qTo};}
     let mouseX=0,mouseY=0,isDragging=false,prevX=0,dragDelta=0,lastPointerTime=0,releaseVelocity=0;
+    let focusDrag=false,dragStartX=0,focusWheelTime=-Infinity,focusWheelDelta=0,focusWheelUsed=false;
     const raycaster=new THREE.Raycaster(),mouseNDC=new THREE.Vector2(5,5),hoverLocal=new THREE.Vector2();
     const mainHeader=document.getElementById('mainHeader'),bottomCaption=document.getElementById('bottomCaption');
     const bottomWrap=document.querySelector('.bottom-wrap'),capTitle=document.getElementById('capTitle'),capText=document.getElementById('capText');
@@ -4304,6 +4305,7 @@ window.MBEnvironment={
     function fillSection(index){window.MBSections.open(index)}
     function focusTile(index){
       if(!studioEntered||['entering','diving','section','returning'].includes(phase))return;
+      const switching=zoomState&&index!==selectedIndex;
       initAudio();selectedIndex=index;
       targetProgress=currentProgress;velocity=coastVelocity=0;phase='focusing';zoomState=1;pendingDive=false;cursorLabel.textContent='ВОЙТИ';
       const entry=slateObjects[index];
@@ -4315,7 +4317,12 @@ window.MBEnvironment={
       const distance=Math.max(size[1]/(2*halfTan),size[0]/(2*halfTan*camera.aspect))*1.12+.3;
       const to=centre.clone().addScaledVector(normal,distance),tmp=camera.clone();tmp.position.copy(to);tmp.lookAt(centre);
       travel={...cameraJourney(to,tmp.quaternion.clone()),centre,normal,initialZoom:zoomFactor,initialProgress,finalProgress};
+      if(switching)travel.duration=Math.max(.8,travel.duration);
       playWhooshSound(travel.duration);
+    }
+    function stepFocused(direction){
+      if(phase!=='focused'&&phase!=='focusing')return;
+      focusTile((selectedIndex+direction+SLATES_DATA.length)%SLATES_DATA.length);
     }
     function returnToOrbit(){if(['entering','diving','returning','section'].includes(phase))return;if(zoomState)playWhooshSound(.85,'return');phase='orbit';zoomState=0;travel=null;pendingDive=false;coastVelocity=0;cursorLabel.textContent='ОТКРЫТЬ'}
 
@@ -4352,8 +4359,28 @@ window.MBEnvironment={
     bottomCaption.addEventListener('click',()=>focusTile(activeIndex));
     function hitAt(e){const r=canvas.getBoundingClientRect();mouseNDC.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);camera.updateMatrixWorld();scene.updateMatrixWorld();raycaster.setFromCamera(mouseNDC,camera);return raycaster.intersectObjects(hitMeshes)[0]}
     canvas.addEventListener('click',e=>{if(!studioEntered||dragDelta>=6||['entering','diving','section','returning'].includes(phase))return;const hit=hitAt(e);if(!hit){if(zoomState)returnToOrbit();return}const idx=hit.object.userData.slateIndex;if(zoomState&&idx===selectedIndex)startDive();else focusTile(idx)});
-    canvas.addEventListener('wheel',e=>{if(!studioEntered||['entering','diving','section','returning'].includes(phase))return;e.preventDefault();if(zoomState){returnToOrbit();return}lastOrbitInput=performance.now();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);coastVelocity=THREE.MathUtils.clamp(coastVelocity+delta*.012,-3.8,3.8)},{passive:false});
-    canvas.addEventListener('pointerdown',e=>{if(!studioEntered||e.button!==0||phase!=='orbit')return;isDragging=true;lastOrbitInput=performance.now();prevX=e.clientX;lastPointerTime=performance.now();dragDelta=0;releaseVelocity=0;coastVelocity=0;canvas.setPointerCapture(e.pointerId)});
+    canvas.addEventListener('wheel',e=>{
+      if(!studioEntered||['entering','diving','section','returning'].includes(phase))return;
+      e.preventDefault();
+      const delta=(Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY)*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);
+      if(zoomState){
+        const now=performance.now();
+        if(now-focusWheelTime>180){focusWheelDelta=0;focusWheelUsed=false;}
+        focusWheelTime=now;focusWheelDelta+=delta;
+        // One card per wheel/trackpad gesture, including its inertial tail.
+        if(!focusWheelUsed&&Math.abs(focusWheelDelta)>=30&&phase==='focused'){
+          focusWheelUsed=true;stepFocused(Math.sign(focusWheelDelta));
+        }
+        return;
+      }
+      lastOrbitInput=performance.now();coastVelocity=THREE.MathUtils.clamp(coastVelocity+delta*.012,-3.8,3.8);
+    },{passive:false});
+    canvas.addEventListener('pointerdown',e=>{
+      if(!studioEntered||e.button!==0||!e.isPrimary||!['orbit','focused','focusing'].includes(phase))return;
+      isDragging=true;focusDrag=!!zoomState;dragStartX=prevX=e.clientX;
+      lastOrbitInput=lastPointerTime=performance.now();dragDelta=0;releaseVelocity=0;coastVelocity=0;
+      canvas.setPointerCapture(e.pointerId);
+    });
     canvas.addEventListener('pointerdown',e=>{if(studioEntered&&phase==='orbit'){hitAt(e);water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft])}});
     window.addEventListener('pointerdown',e=>{if(studioEntered&&phase==='orbit'&&e.button===0&&heroLeft.contains(e.target)){hitAt(e);water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft])}});
     window.addEventListener('pointermove',e=>{
@@ -4361,12 +4388,21 @@ window.MBEnvironment={
       mouseX=e.clientX/innerWidth*2-1;mouseY=e.clientY/innerHeight*2-1;mouseNDC.set(mouseX,-mouseY);
       if(studioEntered&&phase==='orbit'&&!isDragging&&(e.target===canvas||heroLeft.contains(e.target)))water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft]);
       if(!isDragging)return;lastOrbitInput=performance.now();const now=performance.now(),dt=Math.max(.008,(now-lastPointerTime)/1000),dx=e.clientX-prevX;prevX=e.clientX;lastPointerTime=now;dragDelta+=Math.abs(dx);
+      if(focusDrag)return;
       const delta=-dx*.0038;targetProgress+=delta;releaseVelocity=THREE.MathUtils.lerp(releaseVelocity,THREE.MathUtils.clamp(delta/dt,-5,5),.4);
     });
-    function release(e){if(!isDragging)return;lastOrbitInput=performance.now();isDragging=false;coastVelocity=performance.now()-lastPointerTime<100?releaseVelocity:0;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId)}
+    function release(e){
+      if(!isDragging)return;
+      lastOrbitInput=performance.now();isDragging=false;
+      if(focusDrag){
+        if(e.type!=='pointercancel'&&Math.abs(e.clientX-dragStartX)>=40)stepFocused(e.clientX<dragStartX?1:-1);
+        coastVelocity=0;focusDrag=false;
+      }else coastVelocity=performance.now()-lastPointerTime<100?releaseVelocity:0;
+      if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);
+    }
     canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',e=>{releaseVelocity=0;release(e)});
     canvas.addEventListener('pointerleave',()=>{if(!isDragging){mouseNDC.set(5,5);hoverIndex=-1}});
-    window.addEventListener('keydown',e=>{if(!studioEntered||document.getElementById('aboutDialog').open||document.getElementById('infoDialog').open)return;if(e.key==='Escape'){if(phase==='section')closeEcosystemModal();else returnToOrbit()}if(e.target!==canvas)return;if(e.key==='Enter'){e.preventDefault();zoomState?startDive():focusTile(activeIndex)}if(phase==='orbit'&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();coastVelocity=0;targetProgress=Math.round(targetProgress)+(e.key==='ArrowRight'?1:-1)}});
+    window.addEventListener('keydown',e=>{if(!studioEntered||document.getElementById('aboutDialog').open||document.getElementById('infoDialog').open)return;if(e.key==='Escape'){if(phase==='section')closeEcosystemModal();else returnToOrbit()}if(e.target!==canvas)return;if(e.key==='Enter'){e.preventDefault();zoomState?startDive():focusTile(activeIndex)}if(['orbit','focused','focusing'].includes(phase)&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();const direction=e.key==='ArrowRight'?1:-1;if(zoomState)stepFocused(direction);else{coastVelocity=0;targetProgress=Math.round(targetProgress)+direction}}});
     document.querySelectorAll('.cta-btn').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();window.MBSections.openContact()}));
     const logoGlitch=document.getElementById('logoGlitch'),heroLeft=document.getElementById('heroLeft'),heroLeftInner=document.getElementById('heroLeftInner');
     const heroTitle=document.getElementById('heroTitle'),heroSubtitle=document.getElementById('heroSubtitle'),heroDesc=document.getElementById('heroDesc');
@@ -4621,7 +4657,7 @@ window.MBEnvironment={
       updateSpatialUI();
       fitBackdropToCamera();
       window.MBWaterfall.update(t);
-      lanternBoat.update(t*1000,studioEntered&&phase==='orbit'&&!document.hidden,backdropMesh);
+      lanternBoat.update(t*1000,studioEntered&&phase!=='entering'&&!document.hidden,backdropMesh);
       water.update(t,camera,lightReveal);
       renderer.render(scene,camera);
       // Gate entry on the rendered environment, never on video decoding or
