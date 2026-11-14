@@ -19,13 +19,22 @@ with sync_playwright() as p:
     page.wait_for_function('window.__MB && MBLoading.ready')
     page.locator('#loaderBtn').click()
     page.wait_for_function("__MB.state.phase==='orbit'")
-    page.context.set_offline(True)
-    print('PASS main enters, remaining checks run offline',flush=True)
+    page.wait_for_function('__MB.slateObjects[1].video.readyState===4')
+    print('PASS main enters with local video assets',flush=True)
 
     def enter(i):
         page.set_viewport_size({'width':700,'height':600})
         page.evaluate(f'__MB.focusTile({i})')
         page.wait_for_function("__MB.state.phase==='focused'")
+        if i==1:
+            page.wait_for_function('!__MB.slateObjects[1].video.paused && __MB.slateObjects[1].video.currentTime>.1')
+            assert page.evaluate('__MB.slateObjects[1].video.muted && !__MB.slateObjects[1].video.controls')
+            frame=page.evaluate('__MB.slateObjects[1].screenMat.map.version')
+            page.wait_for_timeout(200)
+            assert page.evaluate('__MB.slateObjects[1].screenMat.map.version')>frame
+            page.screenshot(path='/tmp/avtolab-web-tile.png')
+        if i==2:
+            page.wait_for_function('__MB.slateObjects[1].video.paused')
         page.evaluate("""()=>{
             window.__entryFrames=[];
             const sample=()=>{
@@ -109,14 +118,14 @@ with sync_playwright() as p:
     print('PASS video shares existing source, plays, seeks and returns',flush=True)
 
     enter(1);screenshot('web')
-    t=page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')
+    t=page.evaluate('__MB.slateObjects[1].video.currentTime')
     page.wait_for_timeout(500)
-    assert page.evaluate('__MB.slateObjects[1].architectureDemo.state.time')>t
-    assert page.locator('#architectureSlot canvas').is_visible()
+    assert page.evaluate('__MB.slateObjects[1].video.currentTime')>t,page.evaluate('({paused:__MB.slateObjects[1].video.paused,error:__MB.slateObjects[1].video.error?.message,ready:__MB.slateObjects[1].video.readyState,time:__MB.slateObjects[1].video.currentTime,section:MBSections.state})')
+    assert page.locator('#architectureSlot video').is_visible()
     assert page.locator('#webMode3D').count()==0
     assert page.locator('#webScene button,#webScene input').count()==0
     mobile('web');leave()
-    print('PASS original animated website visible immediately, no extra controls and mobile composition',flush=True)
+    print('PASS AVTOLAB video in existing frame, unchanged transitions and mobile composition',flush=True)
 
     enter(2);screenshot('telegram')
     assert page.evaluate('__MB.slateObjects[2].phoneDemo.state.active')
@@ -167,6 +176,6 @@ with sync_playwright() as p:
     assert page.locator('.contact-panel').evaluate('(e)=>getComputedStyle(e).animationName')=='none'
     page.locator('#infoClose').evaluate('(e)=>e.click()');page.wait_for_function('!infoDialog.open')
     assert not errors,errors
-    print('PASS no JavaScript errors; all environments available offline',flush=True)
+    print('PASS no JavaScript errors; all sections and locally served media available',flush=True)
     browser.close()
 server.shutdown()

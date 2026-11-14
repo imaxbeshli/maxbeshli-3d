@@ -67,13 +67,14 @@
       video.onplay=()=>{$('filmStart').hidden=true};video.onpause=()=>{$('filmStart').hidden=false};
       $('filmStart').hidden=false;video.play().catch(()=>{$('filmStart').hidden=false});
     }
-    if(n===1){const c=tiles()[1].screenMat.map.image;c.setAttribute('aria-label','Строительство дома в 3D');$('architectureSlot').append(c);window.MBWebStudio.open(tiles()[1].architectureDemo)}
+    if(n===1){const tile=tiles()[1];tile.video.setAttribute('aria-label','Видеопрезентация сайта AVTOLAB77');$('architectureSlot').append(tile.video);window.MBWebStudio.open(tile)}
     if(n===2){const c=tiles()[2].screenMat.map.image;c.setAttribute('aria-label','Мини-приложение AVTOLAB77');$('phoneSlot').append(c)}
     window.MBSectionScroll.open(n,applyTab);if(!window.MBSectionScroll.active)applyTab(0);last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
   }
   function close(){
     window.MBSectionScroll.close();cancelTabTransition();active=false;cancelAnimationFrame(raf);stopMedia();document.body.classList.remove('section-open');
     window.MBFilmStudio.setView(-1);
+    if(index===1)tiles()[1].video.remove();
     if(video){video.controls=false;video.onplay=video.onpause=null;video.remove()}
   }
   function tick(now){

@@ -1,4 +1,4 @@
-/* The live architectural website is the centerpiece, visible without a mode switch. */
+/* The website recording uses the existing floating frame without cropping. */
 #ecosystem-modal[data-scene="1"]{background:#0b1015}
 [data-scene="1"] .section-environment{background:radial-gradient(ellipse at 75% 30%,#35443e80,transparent 62%),linear-gradient(140deg,#12191e,#0b1015 70%);transform:none}
 [data-scene="1"] .section-light{background:radial-gradient(ellipse at 70% 20%,#c8ba8f25,transparent 60%);filter:blur(35px);opacity:.6}
@@ -15,7 +15,7 @@
 .web-live-site{min-width:0;width:100%}
 .web-site-float{animation:webSiteFloat 9s ease-in-out infinite;will-change:transform}
 .web-preview-stage{padding:6px;background:linear-gradient(135deg,#bac8d250,#8b9aa914 55%,#dce5de45);border:1px solid #cbd8e267;border-radius:16px;box-shadow:inset 0 1px 0 #eaf1f64d,3px 5px 0 #b2c5d01a,0 25px 60px #0006;overflow:hidden}
-#webScene #architectureSlot{aspect-ratio:1.6;border-radius:10px;background:#e6e4dd;overflow:hidden}#webScene #architectureSlot canvas{display:block;width:100%;height:auto;aspect-ratio:1.6}
+#webScene #architectureSlot{aspect-ratio:1.6;border-radius:10px;background:#000;overflow:hidden}#webScene #architectureSlot video{display:block;width:100%;height:100%;aspect-ratio:1.6;object-fit:contain;pointer-events:none}
 
 @keyframes webSiteFloat{0%,100%{transform:translate3d(0,3px,0)}50%{transform:translate3d(0,-5px,0)}}
 .web-hero:not(.is-visible) .web-site-float{animation-play-state:paused}
