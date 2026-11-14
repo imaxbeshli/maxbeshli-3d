@@ -1,4 +1,4 @@
-"""All cards use the Telegram travel speed in both directions, with eased endpoints."""
+"""Video and website cards travel at half speed; Telegram timing stays unchanged."""
 from pathlib import Path
 import functools,http.server,threading
 from playwright.sync_api import sync_playwright
@@ -34,7 +34,8 @@ with sync_playwright() as p:
                 page.wait_for_function('journey.done')
                 data=page.evaluate('({duration:journey.duration,distance:journey.distance,referenceSpeed:journey.referenceSpeed,referenceDuration:journey.referenceDuration,samples:journey.samples,zoom:journey.zoom})')
                 samples=data['samples'];steps=[b-a for a,b in zip(samples,samples[1:])]
-                assert abs(data['distance']/data['duration']-data['referenceSpeed'])<.0001,(width,index,direction,data)
+                expected_speed=data['referenceSpeed']/(1 if index==2 else 2)
+                assert abs(data['distance']/data['duration']-expected_speed)<.0001,(width,index,direction,data)
                 if index==2:assert abs(data['duration']-data['referenceDuration'])<.0001,data
                 if direction=='in':approach_duration=data['duration']
                 else:assert abs(data['duration']-approach_duration)<.0001,data
@@ -43,7 +44,7 @@ with sync_playwright() as p:
                 assert min(steps)>-.0001 and max(steps)<max_step,(width,index,direction,steps)
                 assert max(steps[:3])<max_step*.5 and max(steps[-3:])<max_step*.5,(width,index,direction,steps)
                 assert max(abs(b-a) for a,b in zip(data['zoom'],data['zoom'][1:]))<max_step
-            print('PASS',width,'tile',index,'matches Telegram speed, smooth approach and retreat',round(data['duration'],3),'seconds',flush=True)
+            print('PASS',width,'tile',index,'correct card speed, smooth approach and retreat',round(data['duration'],3),'seconds',flush=True)
         page.evaluate('__MB.focusTile(0)')
         page.wait_for_function('__MB.state.zoomFactor>.25')
         page.evaluate('__MB.returnToOrbit()')

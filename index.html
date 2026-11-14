@@ -4409,9 +4409,10 @@ window.MBEnvironment={
       const referenceDistance=home.distanceTo(tileFocusPose(2).to);
       const referenceDuration=Math.max(1.9,referenceDistance/CAMERA_SPEED);
       const journey=cameraJourney(to,qTo);
-      // Match the Telegram card's travel speed, not a fixed duration per shape.
-      // Both directions use the same reference and retain the eased start/stop.
-      journey.duration=Math.max(.35,journey.from.distanceTo(to)*referenceDuration/Math.max(.001,referenceDistance));
+      // Video and website cards travel at half the Telegram reference speed.
+      // Apply the same slowdown to approach and retreat, including partial returns.
+      const durationScale=selectedIndex===2?1:2;
+      journey.duration=Math.max(.35,journey.from.distanceTo(to)*referenceDuration/Math.max(.001,referenceDistance))*durationScale;
       return journey;
     }
     function focusTile(index){
