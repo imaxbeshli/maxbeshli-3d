@@ -18,7 +18,12 @@ BOUNDS='''()=>{
   const c=o.holder.getWorldPosition(new THREE.Vector3()).project(m.camera);
   return {left:Math.min(...points.map(p=>p.x)),right:Math.max(...points.map(p=>p.x)),top:Math.min(...points.map(p=>p.y)),bottom:Math.max(...points.map(p=>p.y)),x:(c.x+1)*innerWidth/2,y:(1-c.y)*innerHeight/2};
  });
- return {tiles,textBottom:heroLeft.getBoundingClientRect().bottom,textTop:heroLeft.getBoundingClientRect().top,headerBottom:mainHeader.getBoundingClientRect().bottom,scale:orbitGroup.scale.x,origin:orbitGroup.position.toArray()};
+ let rockTop=innerHeight;
+ for(const rock of m.rocks)for(const v of rock.userData.silhouette||[]){
+  const p=v.clone().applyMatrix4(rock.matrixWorld).project(m.camera);
+  if(p.x>=-1.08&&p.x<=1.08&&p.z<1)rockTop=Math.min(rockTop,(1-p.y)*innerHeight/2);
+ }
+ return {tiles,rockTop,textBottom:heroLeft.getBoundingClientRect().bottom,textTop:heroLeft.getBoundingClientRect().top,headerBottom:mainHeader.getBoundingClientRect().bottom,scale:orbitGroup.scale.x,origin:orbitGroup.position.toArray()};
 }'''
 with sync_playwright() as p:
     browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--enable-unsafe-swiftshader'])
@@ -40,10 +45,16 @@ with sync_playwright() as p:
             assert a['left']>=8 and a['right']<=w-8,(w,h,i,r)
             assert abs(a['x']-w/2)<10,(w,h,i,r)
             assert a['bottom']<h-95,(w,h,i,r)
+            assert max(t['bottom'] for t in r['tiles'])<r['rockTop']-16,(w,h,i,r)
             if (w,h)==(400,680) and i==1:
                 page.evaluate('__MB.slateObjects[1].architectureDemo.seek(16)');page.wait_for_timeout(200)
                 page.screenshot(path='/workspace/artifacts/max-beshli-mobile-centered-final.png')
-        print(f'PASS {w}x{h}: all three tiles centered, fully visible and clear of text',flush=True)
+        for progress in [.5,1.5,2.5]:
+            page.evaluate('(v)=>{currentProgress=targetProgress=v;velocity=coastVelocity=0;lastOrbitInput=performance.now()+10000}',progress)
+            page.wait_for_timeout(200)
+            r=page.evaluate(BOUNDS)
+            assert max(t['bottom'] for t in r['tiles'])<r['rockTop']-16,(w,h,progress,r)
+        print(f'PASS {w}x{h}: centered tiles clear text and retain a gap above the rock throughout orbit',flush=True)
     # Desktop and wide landscape retain the original orbit transformation.
     for w,h in [(1440,900),(844,390)]:
         page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(250)
@@ -60,7 +71,8 @@ with sync_playwright() as p:
     page.touchscreen.tap(a['x'],a['y']);page.wait_for_function("__MB.state.phase==='section'")
     page.locator('#modalCloseBtn').click();page.wait_for_function("__MB.state.phase==='focused'")
     page.locator('#webgl-canvas').focus();page.keyboard.press('Escape');page.wait_for_function("__MB.state.phase==='orbit'")
-    page.wait_for_timeout(1800)
+    page.evaluate('mouseX=mouseY=0')
+    page.wait_for_function('__MB.state.zoomFactor<.001 && camera.position.distanceTo(BASE_CAM_POS)<.002')
     r=page.evaluate(BOUNDS);assert r['tiles'][1]['top']>r['textBottom']+12,r
     assert not errors,errors
     print('PASS focus after tap, portrait/landscape resize, section entry and return; no JS errors',flush=True)

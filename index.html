@@ -3866,6 +3866,18 @@ window.MBEnvironment={
       };
     }
 
+    // Cache opaque mesh samples for responsive clearance against the real silhouette.
+    function rememberRockSilhouette(mesh,pixels,width,height){
+      const p=mesh.geometry.attributes.position,uv=mesh.geometry.attributes.uv,points=[];
+      for(let i=0;i<p.count;i++){
+        const x=THREE.MathUtils.clamp(Math.round(uv.getX(i)*(width-1)),0,width-1);
+        const y=THREE.MathUtils.clamp(Math.round((1-uv.getY(i))*(height-1)),0,height-1);
+        if(pixels[(y*width+x)*4+3]>=32)points.push(new THREE.Vector3().fromBufferAttribute(p,i));
+      }
+      mesh.userData.silhouette=points;
+      refreshComposition();
+    }
+
     // A photographic cutout on a shallow relief mesh: fixed in world space,
     // so camera travel and the existing water reflection use the same geometry.
     function createPedestalRock() {
@@ -3909,6 +3921,7 @@ window.MBEnvironment={
           positions.setZ(i,.2-height*.3+Math.sin(Math.PI*u)*Math.sin(Math.PI*height)*.07);
         }
         positions.needsUpdate=true;geo.computeVertexNormals();geo.computeBoundingSphere();
+        rememberRockSilhouette(rockMesh,pixels,image.width,image.height);
         window.MBLoading.island=true;
       },undefined,()=>{throw new Error('Unable to load basalt island texture')});
       map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
@@ -3968,6 +3981,7 @@ window.MBEnvironment={
           pos.setZ(i,-height*.65+Math.sin(Math.PI*u)*Math.sin(Math.PI*height)*.15);
         }
         pos.needsUpdate=true;geo.computeVertexNormals();geo.computeBoundingSphere();
+        rememberRockSilhouette(rockMesh,data,c.width,c.height);
         window.MBLoading.foreground=true;
       },undefined,()=>{throw new Error('Unable to load foreground rock texture')});
       map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
@@ -4427,10 +4441,20 @@ window.MBEnvironment={
         reflectionGroup.position.set(ORBIT_ORIGIN.x,2*FLOOR_Y-ORBIT_ORIGIN.y+.18,ORBIT_ORIGIN.z);
         return;
       }
-      // Reserve real space for the text and caption, including short phones.
+      // Fit above the actual opaque rock silhouette, not just above the caption.
+      const layoutCamera=camera.clone();layoutCamera.position.copy(BASE_CAM_POS);layoutCamera.lookAt(BASE_LOOK_AT);layoutCamera.updateMatrixWorld(true);
+      let rockTop=innerHeight;
+      for(const rock of [rightPedestalRock,foregroundRockBottomLeft]){
+        rock.updateMatrixWorld(true);
+        for(const point of rock.userData.silhouette||[]){
+          const p=point.clone().applyMatrix4(rock.matrixWorld).project(layoutCamera);
+          if(p.x>=-1.08&&p.x<=1.08&&p.z<1)rockTop=Math.min(rockTop,(1-p.y)*innerHeight/2);
+        }
+      }
+      // Leave room for floating, rotation and the original camera parallax.
       const top=heroLeft.offsetTop+heroLeft.offsetHeight+20;
-      const bottom=innerHeight-18-Math.max(88,bottomWrap.offsetHeight)-58;
-      const height=Math.max(80,Math.min(innerHeight*.33,bottom-top));
+      const bottom=Math.min(rockTop-36,innerHeight-18-Math.max(88,bottomWrap.offsetHeight)-58);
+      const height=Math.max(40,Math.min(innerHeight*.33,bottom-top));
       const width=innerWidth-48,tan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
       let scale=.65;
       for(let n=0;n<4;n++){
@@ -4440,7 +4464,6 @@ window.MBEnvironment={
       }
       const planeZ=ORBIT_ORIGIN.z+1.1*scale,unit=2*(BASE_CAM_POS.z-planeZ)*tan/innerHeight;
       const centreY=top+3.55*scale/unit/2;
-      const layoutCamera=camera.clone();layoutCamera.position.copy(BASE_CAM_POS);layoutCamera.lookAt(BASE_LOOK_AT);layoutCamera.updateMatrixWorld(true);
       const ray=new THREE.Vector3(0,1-2*centreY/innerHeight,.5).unproject(layoutCamera).sub(layoutCamera.position);
       const y=layoutCamera.position.y+ray.y*(planeZ-layoutCamera.position.z)/ray.z;
       orbitGroup.scale.setScalar(scale);orbitGroup.position.set(.92*scale,y,ORBIT_ORIGIN.z);
