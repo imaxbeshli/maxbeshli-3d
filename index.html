@@ -4332,7 +4332,7 @@ window.MBEnvironment={
     function tileFocusPose(index){
       const entry=slateObjects[index],size=SLATES_DATA[index].size;
       orbitGroup.updateMatrixWorld(true);
-      const centre=orbitGroup.localToWorld(new THREE.Vector3(-.92+Math.sin(poseTime*.73+entry.phase)*.045,Math.sin(poseTime*(.95+index*.13)+entry.phase)*.14,1.1+Math.cos(poseTime*.61+entry.phase)*.045));
+      const centre=orbitGroup.localToWorld(new THREE.Vector3(-.92+Math.sin(poseTime*.73+entry.phase)*.045,Math.sin(poseTime*(.95+index*.13)+entry.phase)*(isMobilePortrait()?0:.14),1.1+Math.cos(poseTime*.61+entry.phase)*.045));
       const normal=new THREE.Vector3(0,0,1),halfTan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),scale=orbitGroup.scale.x*mobileCardScales[index];
       const distance=(Math.max(size[1]/(2*halfTan),size[0]/(2*halfTan*camera.aspect))*1.12+.3)*scale;
       const to=centre.clone().addScaledVector(normal,distance),tmp=camera.clone();tmp.position.copy(to);tmp.lookAt(centre);
@@ -4457,20 +4457,18 @@ window.MBEnvironment={
         const samples=Array.from({length:96},()=>[]);
         const mesh=obj.holder.children[0];mesh.updateMatrix();mesh.geometry.computeBoundingBox();
         const b=mesh.geometry.boundingBox;
-        // Sample the existing orbit, including its float and pointer tilt limits.
+        // Sample the mobile orbit; its frames stay level while the scene keeps moving.
         for(let n=0;n<96;n++){
           const angle=n*Math.PI*2/96,depth=(Math.cos(angle)+1)/2;
           const holderScale=.84+depth*.16;
-          for(const pitch of [-.04,.04])for(const roll of [-.022,.022])for(const yawDelta of [-.035,.035]){
-            const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch,safeOrbitYaw(angle)+yawDelta,roll));
+          const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(0,safeOrbitYaw(angle),0));
             for(const x of [b.min.x,b.max.x])for(const y of [b.min.y,b.max.y])for(const z of [b.min.z,b.max.z])for(const dz of [-.045,.045]){
               const v=new THREE.Vector3(x,y,z).applyMatrix4(mesh.matrix).applyQuaternion(q).multiplyScalar(holderScale);
               const centre=new THREE.Vector3(-.92+Math.sin(angle)*2.05+(1-Math.cos(angle))*.65+Math.sign(x)*.045,
-                Math.sign(y)*.14,Math.cos(angle)*1.65-.55+dz);
+                0,Math.cos(angle)*1.65-.55+dz);
               const point={shape:v,centre};
               samples[n].push(point);
             }
-          }
         }
         cards.push(samples);
       });
@@ -4496,8 +4494,9 @@ window.MBEnvironment={
       }
       // Enlarge only the mobile orbit; keep the copy, rocks and background in place.
       const textBottom=heroLeft.offsetTop+heroLeft.offsetHeight;
-      const captionTop=innerHeight-18-Math.max(88,bottomWrap.offsetHeight)-58;
-      const oldTop=textBottom+20,oldBottom=Math.min(rockTop-36,captionTop);
+      const oldCaptionTop=innerHeight-18-Math.max(88,bottomWrap.offsetHeight)-58;
+      const captionTop=innerHeight-18-Math.max(88,bottomWrap.offsetHeight)-16;
+      const oldTop=textBottom+20,oldBottom=Math.min(rockTop-36,oldCaptionTop);
       const oldHeight=Math.max(40,Math.min(innerHeight*.33,oldBottom-oldTop));
       const tan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
       function fitScale(width,height,limit){
@@ -4512,7 +4511,7 @@ window.MBEnvironment={
       // Keep the collision-safe orbit spacing. Each frame fills its own available
       // rectangle, so the portrait phone no longer limits the two landscape frames.
       const scale=oldScale*1.6;
-      const top=textBottom+12,bottom=Math.min(rockTop-12,captionTop);
+      const top=textBottom+9,bottom=Math.min(rockTop-9,captionTop);
       const centreY=(top+bottom)/2,planeZ=ORBIT_ORIGIN.z+1.1*scale;
       const ray=new THREE.Vector3(0,1-2*centreY/innerHeight,.5).unproject(layoutCamera).sub(layoutCamera.position);
       const y=layoutCamera.position.y+ray.y*(planeZ-layoutCamera.position.z)/ray.z;
@@ -4536,6 +4535,10 @@ window.MBEnvironment={
         }
         return low;
       }));
+      // Limit slope without increasing any sample beyond its safe size.
+      for(const curve of curves)for(let pass=0;pass<3;pass++)for(let i=0;i<curve.length;i++){
+        curve[i]=Math.min(curve[i],curve[(i+1)%curve.length]+.04,curve[(i+curve.length-1)%curve.length]+.04);
+      }
       setMobileCardScales(curves);
       orbitGroup.scale.setScalar(scale);orbitGroup.position.set(.92*scale,y,ORBIT_ORIGIN.z);
       reflectionGroup.scale.set(scale,-scale,scale);
@@ -4674,8 +4677,9 @@ window.MBEnvironment={
         // ГЛУБОКИЙ РАСФОКУС для задних плиток при наезде (defocus -> 1 для всех неактивных плиток)
         const defocus = zoomFactor * (1 - isFrontMask);
 
-        const floatY = Math.sin(poseTime*(.95+i*.13)+obj.phase)*.14;
-        const floatRoll=Math.cos(poseTime*(.81+i*.04)+obj.phase)*.022;
+        // Keep mobile frames level so their full height can fill the available gap.
+        const floatY = Math.sin(poseTime*(.95+i*.13)+obj.phase)*(isMobilePortrait()?0:.14);
+        const floatRoll=Math.cos(poseTime*(.81+i*.04)+obj.phase)*(isMobilePortrait()?0:.022);
         // Align roll/pitch and inset throughout the existing camera approach.
         const focusAlign = i!==selectedIndex ? 0 : phase==='focusing'
           ? easeTravel(Math.min(1,(travel.elapsed+dt)/travel.duration)) : zoomFactor;
@@ -4689,8 +4693,8 @@ window.MBEnvironment={
         if(phase==='orbit'||phase==='focusing')obj.holder.position.set(localX+Math.sin(poseTime*.73+obj.phase)*.045,floatY,localZ+Math.cos(poseTime*.61+obj.phase)*.045);
 
         const baseYaw=safeOrbitYaw(angle);
-        const rotX=-mouseY*.015-obj.hoverLocal.y*.025*obj.hover;
-        const rotY=baseYaw+mouseX*.015+obj.hoverLocal.x*.020*obj.hover;
+        const rotX=isMobilePortrait()?0:-mouseY*.015-obj.hoverLocal.y*.025*obj.hover;
+        const rotY=baseYaw+(isMobilePortrait()?0:mouseX*.015+obj.hoverLocal.x*.020*obj.hover);
         const rotZ = floatRoll;
 
         if(phase==='orbit'||phase==='focusing'){

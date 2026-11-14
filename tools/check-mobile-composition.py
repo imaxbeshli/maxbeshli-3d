@@ -46,6 +46,10 @@ with sync_playwright() as p:
             assert abs(a['x']-w/2)<10,(w,h,i,r)
             assert a['bottom']<h-95,(w,h,i,r)
             assert max(t['bottom'] for t in r['tiles'])<r['rockTop']-8,(w,h,i,r)
+            if (w,h)==(400,680):
+                # Prevent a visually tiny layout from passing only clearance checks.
+                if i in (0,1):assert a['right']-a['left']>=260,(i,r)
+                else:assert a['bottom']-a['top']>=170,(i,r)
             if (w,h)==(400,680) and i==1:
                 page.evaluate('__MB.slateObjects[1].architectureDemo.seek(16)');page.wait_for_timeout(200)
                 page.screenshot(path='/workspace/artifacts/max-beshli-mobile-centered-final.png')
