@@ -4270,6 +4270,7 @@ window.MBEnvironment={
         reflHolder,
         reflScreenMat,
         reflEdgesMat: reflEdges.material,
+        hoverLocal: new THREE.Vector2(),
         phase: index * 2.1
       });
     });
@@ -4325,7 +4326,9 @@ window.MBEnvironment={
     const easeTravel=p=>p*p*p*(p*(p*6-15)+10);
     function cameraJourney(to,qTo){return {elapsed:0,duration:Math.max(.16,camera.position.distanceTo(to)/CAMERA_SPEED),from:camera.position.clone(),to,qFrom:camera.quaternion.clone(),qTo};}
     let mouseX=0,mouseY=0,isDragging=false,prevX=0,dragDelta=0,lastPointerTime=0,releaseVelocity=0;
-    const raycaster=new THREE.Raycaster(),mouseNDC=new THREE.Vector2(5,5);
+    let parallaxX=0,parallaxY=0,waterStroke=null;
+    const raycaster=new THREE.Raycaster(),mouseNDC=new THREE.Vector2(5,5),hoverLocal=new THREE.Vector2();
+    function waterPointerActive(){return studioEntered&&['orbit','focusing','focused'].includes(phase);}
     const mainHeader=document.getElementById('mainHeader'),bottomCaption=document.getElementById('bottomCaption');
     const bottomWrap=document.querySelector('.bottom-wrap'),capTitle=document.getElementById('capTitle'),capText=document.getElementById('capText');
     const ecosystemModal=document.getElementById('ecosystem-modal'),veil=document.getElementById('travelVeil');
@@ -4389,16 +4392,17 @@ window.MBEnvironment={
     canvas.addEventListener('click',e=>{if(!studioEntered||dragDelta>=6||['entering','diving','section','returning'].includes(phase))return;const hit=hitAt(e);if(!hit){if(zoomState)returnToOrbit();return}const idx=hit.object.userData.slateIndex;if(zoomState&&idx===selectedIndex)startDive();else focusTile(idx)});
     canvas.addEventListener('wheel',e=>{if(!studioEntered||['entering','diving','section','returning'].includes(phase))return;e.preventDefault();if(zoomState){returnToOrbit();return}lastOrbitInput=performance.now();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?innerHeight:1);coastVelocity=THREE.MathUtils.clamp(coastVelocity+delta*.012,-3.8,3.8)},{passive:false});
     canvas.addEventListener('pointerdown',e=>{if(!studioEntered||e.button!==0||phase!=='orbit')return;isDragging=true;lastOrbitInput=performance.now();prevX=e.clientX;lastPointerTime=performance.now();dragDelta=0;releaseVelocity=0;coastVelocity=0;canvas.setPointerCapture(e.pointerId)});
-    canvas.addEventListener('pointerdown',e=>{if(studioEntered&&phase==='orbit'){hitAt(e);water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft])}});
-    window.addEventListener('pointerdown',e=>{if(studioEntered&&phase==='orbit'&&e.button===0&&heroLeft.contains(e.target)){hitAt(e);water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft])}});
+    canvas.addEventListener('pointerdown',e=>{if(waterPointerActive()){if(phase!=='orbit'&&e.button===0){waterStroke={id:e.pointerId,x:e.clientX,y:e.clientY};dragDelta=0;canvas.setPointerCapture(e.pointerId)}hitAt(e);water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft])}});
+    window.addEventListener('pointerdown',e=>{if(waterPointerActive()&&e.button===0&&heroLeft.contains(e.target)){hitAt(e);water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft])}});
     window.addEventListener('pointermove',e=>{
       customCursor.style.transform=`translate3d(${e.clientX}px,${e.clientY}px,0) translate(-50%,-50%)`;
       mouseX=e.clientX/innerWidth*2-1;mouseY=e.clientY/innerHeight*2-1;mouseNDC.set(mouseX,-mouseY);
-      if(studioEntered&&phase==='orbit'&&!isDragging&&(e.target===canvas||heroLeft.contains(e.target)))water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft]);
+      if(waterPointerActive()&&!isDragging&&(e.target===canvas||heroLeft.contains(e.target)))water.interact(mouseNDC,camera,[...hitMeshes,rightPedestalRock,foregroundRockBottomLeft]);
+      if(waterStroke?.id===e.pointerId)dragDelta=Math.max(dragDelta,Math.hypot(e.clientX-waterStroke.x,e.clientY-waterStroke.y));
       if(!isDragging)return;lastOrbitInput=performance.now();const now=performance.now(),dt=Math.max(.008,(now-lastPointerTime)/1000),dx=e.clientX-prevX;prevX=e.clientX;lastPointerTime=now;dragDelta+=Math.abs(dx);
       const delta=-dx*.0038;targetProgress+=delta;releaseVelocity=THREE.MathUtils.lerp(releaseVelocity,THREE.MathUtils.clamp(delta/dt,-5,5),.4);
     });
-    function release(e){if(!isDragging)return;lastOrbitInput=performance.now();isDragging=false;coastVelocity=performance.now()-lastPointerTime<100?releaseVelocity:0;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId)}
+    function release(e){if(waterStroke?.id===e.pointerId){waterStroke=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId)}if(!isDragging)return;lastOrbitInput=performance.now();isDragging=false;coastVelocity=performance.now()-lastPointerTime<100?releaseVelocity:0;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId)}
     canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',e=>{releaseVelocity=0;release(e)});
     canvas.addEventListener('pointerleave',()=>{if(!isDragging){mouseNDC.set(5,5);hoverIndex=-1}});
     window.addEventListener('keydown',e=>{if(!studioEntered||document.getElementById('aboutDialog').open||document.getElementById('infoDialog').open)return;if(e.key==='Escape'){if(phase==='section')closeEcosystemModal();else returnToOrbit()}if(e.target!==canvas)return;if(e.key==='Enter'){e.preventDefault();zoomState?startDive():focusTile(activeIndex)}if(phase==='orbit'&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();coastVelocity=0;targetProgress=Math.round(targetProgress)+(e.key==='ArrowRight'?1:-1)}});
@@ -4611,6 +4615,7 @@ window.MBEnvironment={
       }
       // Interior sections own their media loop; do not render the hidden lake.
       if(phase==='section'||document.getElementById('infoDialog').open){clock.getDelta();return;}
+      if(phase==='orbit'&&!zoomState){parallaxX=mouseX;parallaxY=mouseY;}
       const dt=Math.min(clock.getDelta(),.05);elapsed+=dt;const t=elapsed;if(phase==='orbit')poseTime+=dt;updateGlitch();updateSoundWave(dt);
 
       // Плавное зажигание света в виртуальной студии
@@ -4630,7 +4635,7 @@ window.MBEnvironment={
       hoverIndex=-1;
       if(studioEntered&&phase==='orbit'&&!isDragging&&!customCursor.classList.contains('hover-ui')){
         raycaster.setFromCamera(mouseNDC,camera);const hit=raycaster.intersectObjects(hitMeshes)[0];
-        if(hit){hoverIndex=hit.object.userData.slateIndex;hoverLightTarget.copy(hit.point).add(new THREE.Vector3(0,.3,1));}
+        if(hit){hoverIndex=hit.object.userData.slateIndex;const point=hit.object.worldToLocal(hit.point.clone());const size=SLATES_DATA[hoverIndex].size;hoverLocal.set(THREE.MathUtils.clamp(point.x/(size[0]/2),-1,1),THREE.MathUtils.clamp(point.y/(size[1]/2),-1,1));hoverLightTarget.copy(hit.point).add(new THREE.Vector3(0,.3,1));}
       }
       customCursor.classList.toggle('hover-3d',hoverIndex>=0||(phase==='focused'&&mouseNDC.length()<1.5));
       hoverLight.position.lerp(hoverLightTarget,1-Math.exp(-10*dt));
@@ -4690,12 +4695,13 @@ window.MBEnvironment={
         obj.reflectedInset.position.copy(obj.inset.group.position);
         obj.reflectedInset.quaternion.copy(obj.inset.group.quaternion);
         obj.hover=THREE.MathUtils.lerp(obj.hover||0,hoverIndex===i?1:0,1-Math.exp(-8*dt));
+        if(hoverIndex===i)obj.hoverLocal.lerp(hoverLocal,1-Math.exp(-12*dt));
 
         if(phase==='orbit'||phase==='focusing')obj.holder.position.set(localX+Math.sin(poseTime*.73+obj.phase)*.045,floatY,localZ+Math.cos(poseTime*.61+obj.phase)*.045);
 
         const baseYaw=safeOrbitYaw(angle);
-        const rotX=0;
-        const rotY=baseYaw;
+        const rotX=isMobilePortrait()?0:-parallaxY*.015-obj.hoverLocal.y*.025*obj.hover;
+        const rotY=baseYaw+(isMobilePortrait()?0:parallaxX*.015+obj.hoverLocal.x*.020*obj.hover);
         const rotZ = floatRoll;
 
         if(phase==='orbit'||phase==='focusing'){
@@ -4759,6 +4765,12 @@ window.MBEnvironment={
       foregroundRockBottomLeft.material.userData.defocus.amount.value=studioEntered
         ? 7.0*THREE.MathUtils.smoothstep(entryElapsed/ENTRY_DURATION,0.12,1.0):0;
 
+      // Only the home orbit follows the pointer; selection freezes these offsets.
+      if(phase==='orbit'&&!zoomState){
+        const follow=1-Math.exp(-10*dt);
+        foregroundRockBottomLeft.position.x=THREE.MathUtils.lerp(foregroundRockBottomLeft.position.x,-4.3-parallaxX*.24,follow);
+        foregroundRockBottomLeft.position.z=THREE.MathUtils.lerp(foregroundRockBottomLeft.position.z,4.85+parallaxY*.12,follow);
+      }
       if(phase==='entering'){
         entryElapsed+=dt;const p=Math.min(1,entryElapsed/ENTRY_DURATION),e=easeTravel(p);
         camera.position.copy(BASE_CAM_POS).add(new THREE.Vector3(0,0,8*(1-e)));camera.lookAt(BASE_LOOK_AT);currentLookAt.copy(BASE_LOOK_AT);
@@ -4771,8 +4783,8 @@ window.MBEnvironment={
         else if(phase==='diving'){veil.style.opacity=THREE.MathUtils.smoothstep(p,.2,.76).toFixed(4);if(p===1)openEcosystemModal()}
         else {veil.style.opacity=(1-THREE.MathUtils.smoothstep(p,.12,.8)).toFixed(4);if(p===1){travel=null;phase='focused';canvas.focus({preventScroll:true})}}
       }else if(phase==='orbit'){
-        // Return from tile selection without following the pointer.
-        camera.position.lerp(BASE_CAM_POS,1-Math.exp(-4.5*dt));currentLookAt.lerp(BASE_LOOK_AT,1-Math.exp(-5*dt));camera.lookAt(currentLookAt);
+        const targetCam=new THREE.Vector3(BASE_CAM_POS.x+parallaxX*.22,BASE_CAM_POS.y-parallaxY*.14,BASE_CAM_POS.z),targetLook=new THREE.Vector3(BASE_LOOK_AT.x+parallaxX*.08,BASE_LOOK_AT.y-parallaxY*.06,BASE_LOOK_AT.z);
+        camera.position.lerp(targetCam,1-Math.exp(-4.5*dt));currentLookAt.lerp(targetLook,1-Math.exp(-5*dt));camera.lookAt(currentLookAt);
       }
       updateSpatialUI();
       fitBackdropToCamera();
