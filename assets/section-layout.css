@@ -24,7 +24,8 @@
  #ecosystem-modal.is-scroll-story .section-layout{margin-top:20px}
  #ecosystem-modal.is-scroll-story .scroll-chapter,#ecosystem-modal.is-scroll-story #webScene .web-opening{grid-template-columns:1fr;gap:24px;min-height:calc(100dvh - 174px);padding:14px 0;align-items:start}
  #ecosystem-modal.is-scroll-story #webScene .web-opening{display:grid}
- #ecosystem-modal.is-scroll-story .scroll-copy,#ecosystem-modal.is-scroll-story .web-hero-copy{max-width:600px}
+ #ecosystem-modal.is-scroll-story .scroll-copy,#ecosystem-modal.is-scroll-story .web-hero-copy{width:100%;max-width:600px;margin-inline:auto;text-align:center}
+ #ecosystem-modal.is-scroll-story .scroll-copy p,#ecosystem-modal.is-scroll-story .web-hero-lead{margin-inline:auto}
  #ecosystem-modal.is-scroll-story .scroll-story{gap:72px}
  #ecosystem-modal.is-scroll-story #webScene .web-ready{margin-top:72px;padding-top:28px}
 }

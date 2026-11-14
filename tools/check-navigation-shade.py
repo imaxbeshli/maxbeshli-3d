@@ -1,4 +1,4 @@
-"""Check viewport-wide navigation shading in the full animated 3D app.
+"""Check unshaded fixed navigation and mobile section copy in the full 3D app.
 
 Requires Python Playwright and /usr/bin/chromium. Reduced motion must remain
 unset: an isolated sections harness missed the sticky-header clipping bug.
@@ -37,11 +37,8 @@ with sync_playwright() as p:
             for y in [0,300]:
                 page.locator('#ecosystem-modal').evaluate('(e,y)=>e.scrollTop=y',y)
                 page.wait_for_timeout(150)
-                r=page.locator('.section-top-shade').bounding_box()
-                assert r['x']==0 and r['y']==0 and r['width']==w and r['height']==(140 if w<=540 else 160),(w,scene,y,r)
-                assert page.locator('.section-header .section-top-shade').count()==0
+                assert page.locator('.section-top-shade').count()==0
                 assert page.locator('.section-header').evaluate("e=>getComputedStyle(e,'::before').content")=='none'
-                assert page.locator('.section-top-shade').evaluate('e=>getComputedStyle(e).pointerEvents')=='none'
                 assert page.locator('#ecosystem-modal').evaluate('e=>e.scrollWidth<=e.clientWidth+1')
                 back=page.locator('#modalCloseBtn').bounding_box();assert 0<=back['y']<80
                 cta=page.locator('#sectionContact').bounding_box()
@@ -54,9 +51,19 @@ with sync_playwright() as p:
                     scroll=page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop')
                     assert abs(brand['y']-(start_brand-scroll))<1,(w,scene,y,brand)
                     assert abs(back['y']-start_back)<1 and abs(cta['y']-start_cta)<1
-                # The solid portion of the fade extends below the entire back button.
-                assert back['y']+back['height']<=r['height']*.45+1
-                if scene==0 and w in [1600,390]:
+                if y==0:
+                    copies=page.locator('.section-content:not([hidden]) .scroll-copy,.section-content:not([hidden]) .web-hero-copy')
+                    assert copies.count()==(2 if scene==1 else 3)
+                    for copy in copies.all():
+                        if w<=900:
+                            assert copy.evaluate("e=>getComputedStyle(e).textAlign")=='center'
+                            for text in copy.locator('h2,p').all():
+                                r=text.bounding_box();assert abs(r['x']+r['width']/2-w/2)<2,(w,scene,r)
+                            bounds=copy.evaluate('''e=>{const media=e.nextElementSibling;return [e.getBoundingClientRect().bottom,media.getBoundingClientRect().top]}''')
+                            assert bounds[0]<=bounds[1]+1,(w,scene,bounds)
+                        else:
+                            assert copy.evaluate("e=>getComputedStyle(e).textAlign")!='center'
+                if w in [1600,390]:
                     page.wait_for_timeout(1500)
                     page.screenshot(path=f'/tmp/navigation-shade-{w}-{y}.png')
         print(f'PASS full app at {w}x{h}: all three sections, top and scrolled, viewport bounds and no clipping',flush=True)
@@ -67,7 +74,7 @@ with sync_playwright() as p:
     page.keyboard.press('Escape')
     page.wait_for_function('!infoDialog.open')
     assert page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop')==scroll
-    # Back navigation remains clickable through the decorative layer.
+    # Back navigation remains clickable after scrolling.
     page.locator('#modalCloseBtn').click()
     page.wait_for_function("__MB.state.phase==='focused'")
     assert not errors,errors

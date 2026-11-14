@@ -2,9 +2,6 @@
 #ecosystem-modal.is-scroll-story{display:block;overflow-y:auto;overflow-x:hidden;padding:24px clamp(20px,3vw,48px) 110px;scroll-padding-top:100px;scrollbar-width:thin;scrollbar-color:#aab5c540 transparent}
 #ecosystem-modal.is-scroll-story .section-header{position:relative;z-index:10;max-width:1600px;min-height:66px;margin:auto;padding:10px 0}
 #ecosystem-modal.is-scroll-story #modalCloseBtn{position:fixed;z-index:10;top:26px;right:max(clamp(20px,3vw,48px),calc((100% - 1600px)/2))}
-/* A separate viewport layer avoids clipping inside sticky-header compositor layers. */
-#ecosystem-modal.is-scroll-story .section-top-shade{position:fixed;inset:0 0 auto;height:160px;z-index:9;pointer-events:none;background:linear-gradient(to bottom,rgba(9,14,19,.72),rgba(9,14,19,.56) 45%,rgba(9,14,19,.12) 80%,rgba(9,14,19,0));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);mask-image:linear-gradient(to bottom,#000 0%,#000 45%,rgba(0,0,0,.6) 65%,rgba(0,0,0,.12) 82%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 45%,rgba(0,0,0,.6) 65%,rgba(0,0,0,.12) 82%,transparent 100%)}
-@media(max-width:540px){#ecosystem-modal.is-scroll-story .section-top-shade{height:140px}}
 #ecosystem-modal.is-scroll-story .section-layout{display:block;max-width:1520px;width:100%;margin:clamp(32px,5vw,76px) auto 0;min-height:0}
 #ecosystem-modal.is-scroll-story .section-layout>.section-intro{max-width:760px;margin-bottom:52px}
 #ecosystem-modal.is-scroll-story .section-intro h2{font-size:clamp(36px,4.5vw,64px);max-width:760px;margin-bottom:20px}
