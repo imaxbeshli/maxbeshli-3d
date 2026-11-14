@@ -4270,7 +4270,6 @@ window.MBEnvironment={
         reflHolder,
         reflScreenMat,
         reflEdgesMat: reflEdges.material,
-        hoverLocal: new THREE.Vector2(),
         phase: index * 2.1
       });
     });
@@ -4299,7 +4298,7 @@ window.MBEnvironment={
         entry.depth=glassSortPoint.z;
       }
       if(firstPass)glassSortEntries.sort((a,b)=>a.depth-b.depth||a.obj.holder.id-b.obj.holder.id);
-      // Near-equal rear-card depths must not flip order with tiny cursor parallax.
+      // Near-equal rear-card depths must not flip order with tiny camera movements.
       for(let pass=0;pass<glassSortEntries.length;pass++)for(let i=1;i<glassSortEntries.length;i++){
         if(glassSortEntries[i-1].depth-glassSortEntries[i].depth>.18)
           [glassSortEntries[i-1],glassSortEntries[i]]=[glassSortEntries[i],glassSortEntries[i-1]];
@@ -4326,7 +4325,7 @@ window.MBEnvironment={
     const easeTravel=p=>p*p*p*(p*(p*6-15)+10);
     function cameraJourney(to,qTo){return {elapsed:0,duration:Math.max(.16,camera.position.distanceTo(to)/CAMERA_SPEED),from:camera.position.clone(),to,qFrom:camera.quaternion.clone(),qTo};}
     let mouseX=0,mouseY=0,isDragging=false,prevX=0,dragDelta=0,lastPointerTime=0,releaseVelocity=0;
-    const raycaster=new THREE.Raycaster(),mouseNDC=new THREE.Vector2(5,5),hoverLocal=new THREE.Vector2();
+    const raycaster=new THREE.Raycaster(),mouseNDC=new THREE.Vector2(5,5);
     const mainHeader=document.getElementById('mainHeader'),bottomCaption=document.getElementById('bottomCaption');
     const bottomWrap=document.querySelector('.bottom-wrap'),capTitle=document.getElementById('capTitle'),capText=document.getElementById('capText');
     const ecosystemModal=document.getElementById('ecosystem-modal'),veil=document.getElementById('travelVeil');
@@ -4631,7 +4630,7 @@ window.MBEnvironment={
       hoverIndex=-1;
       if(studioEntered&&phase==='orbit'&&!isDragging&&!customCursor.classList.contains('hover-ui')){
         raycaster.setFromCamera(mouseNDC,camera);const hit=raycaster.intersectObjects(hitMeshes)[0];
-        if(hit){hoverIndex=hit.object.userData.slateIndex;const point=hit.object.worldToLocal(hit.point.clone());const size=SLATES_DATA[hoverIndex].size;hoverLocal.set(THREE.MathUtils.clamp(point.x/(size[0]/2),-1,1),THREE.MathUtils.clamp(point.y/(size[1]/2),-1,1));hoverLightTarget.copy(hit.point).add(new THREE.Vector3(0,.3,1));}
+        if(hit){hoverIndex=hit.object.userData.slateIndex;hoverLightTarget.copy(hit.point).add(new THREE.Vector3(0,.3,1));}
       }
       customCursor.classList.toggle('hover-3d',hoverIndex>=0||(phase==='focused'&&mouseNDC.length()<1.5));
       hoverLight.position.lerp(hoverLightTarget,1-Math.exp(-10*dt));
@@ -4691,14 +4690,12 @@ window.MBEnvironment={
         obj.reflectedInset.position.copy(obj.inset.group.position);
         obj.reflectedInset.quaternion.copy(obj.inset.group.quaternion);
         obj.hover=THREE.MathUtils.lerp(obj.hover||0,hoverIndex===i?1:0,1-Math.exp(-8*dt));
-        // Each card keeps its own hover point while its tilt fades out.
-        if(hoverIndex===i)obj.hoverLocal.lerp(hoverLocal,1-Math.exp(-12*dt));
 
         if(phase==='orbit'||phase==='focusing')obj.holder.position.set(localX+Math.sin(poseTime*.73+obj.phase)*.045,floatY,localZ+Math.cos(poseTime*.61+obj.phase)*.045);
 
         const baseYaw=safeOrbitYaw(angle);
-        const rotX=isMobilePortrait()?0:-mouseY*.015-obj.hoverLocal.y*.025*obj.hover;
-        const rotY=baseYaw+(isMobilePortrait()?0:mouseX*.015+obj.hoverLocal.x*.020*obj.hover);
+        const rotX=0;
+        const rotY=baseYaw;
         const rotZ = floatRoll;
 
         if(phase==='orbit'||phase==='focusing'){
@@ -4761,9 +4758,6 @@ window.MBEnvironment={
       // Мягкий расфокус переднего камня нарастает только при входе и сохраняется.
       foregroundRockBottomLeft.material.userData.defocus.amount.value=studioEntered
         ? 7.0*THREE.MathUtils.smoothstep(entryElapsed/ENTRY_DURATION,0.12,1.0):0;
-      // Параллакс камней
-      foregroundRockBottomLeft.position.x = -4.3 - mouseX * 0.24;
-      foregroundRockBottomLeft.position.z = 4.85 + mouseY * 0.12;
 
       if(phase==='entering'){
         entryElapsed+=dt;const p=Math.min(1,entryElapsed/ENTRY_DURATION),e=easeTravel(p);
@@ -4777,8 +4771,8 @@ window.MBEnvironment={
         else if(phase==='diving'){veil.style.opacity=THREE.MathUtils.smoothstep(p,.2,.76).toFixed(4);if(p===1)openEcosystemModal()}
         else {veil.style.opacity=(1-THREE.MathUtils.smoothstep(p,.12,.8)).toFixed(4);if(p===1){travel=null;phase='focused';canvas.focus({preventScroll:true})}}
       }else if(phase==='orbit'){
-        const targetCam=new THREE.Vector3(BASE_CAM_POS.x+mouseX*.22,BASE_CAM_POS.y-mouseY*.14,BASE_CAM_POS.z),targetLook=new THREE.Vector3(BASE_LOOK_AT.x+mouseX*.08,BASE_LOOK_AT.y-mouseY*.06,BASE_LOOK_AT.z);
-        camera.position.lerp(targetCam,1-Math.exp(-4.5*dt));currentLookAt.lerp(targetLook,1-Math.exp(-5*dt));camera.lookAt(currentLookAt);
+        // Return from tile selection without following the pointer.
+        camera.position.lerp(BASE_CAM_POS,1-Math.exp(-4.5*dt));currentLookAt.lerp(BASE_LOOK_AT,1-Math.exp(-5*dt));camera.lookAt(currentLookAt);
       }
       updateSpatialUI();
       fitBackdropToCamera();
