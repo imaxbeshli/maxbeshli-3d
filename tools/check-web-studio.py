@@ -43,10 +43,11 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
   t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(200);assert page.evaluate('MBWebStudio.state.time')==t
   r=player.bounding_box();assert r['x']>=0 and r['x']+r['width']<=width+1 and r['y']+r['height']<height
   page.screenshot(path=f'/tmp/avtolab-ready-{width}.png')
- print('PASS FORMA then AVTOLAB on five sizes, separate visibility playback, fixed contact and no extra controls',flush=True)
+ print('PASS FORMA then AVTOLAB on five sizes, separate visibility playback, scrolling contact and no extra controls',flush=True)
  page.locator('#sectionContact').click();page.wait_for_function('webReadyVideo.paused')
  t=player.evaluate('v=>v.currentTime');page.wait_for_timeout(300);assert player.evaluate('v=>v.currentTime')==t
- page.keyboard.press('Escape');page.wait_for_function('!webReadyVideo.paused')
+ page.keyboard.press('Escape');page.wait_for_function('!infoDialog.open')
+ page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop=e.scrollHeight');page.wait_for_function('!webReadyVideo.paused')
  page.evaluate("Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'))")
  page.wait_for_function('webReadyVideo.paused')
  page.evaluate("delete document.hidden;document.dispatchEvent(new Event('visibilitychange'))")
