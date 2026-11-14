@@ -49,7 +49,8 @@ with sync_playwright() as p:
             if (w,h)==(400,680) and i==1:
                 page.evaluate('__MB.slateObjects[1].architectureDemo.seek(16)');page.wait_for_timeout(200)
                 page.screenshot(path='/workspace/artifacts/max-beshli-mobile-centered-final.png')
-        for progress in [.25,.5,.75,1.25,1.5,1.75,2.25,2.5,2.75]:
+        assert page.evaluate('mobileCardScaleCurves.every(c=>c.every((v,i)=>Math.abs(v-c[(i+1)%c.length])<.06))'),(w,h,'abrupt size change')
+        for progress in [.073,.25,.5,.75,1.125,1.25,1.5,1.75,2.25,2.5,2.917]:
             page.evaluate('(v)=>{currentProgress=targetProgress=v;velocity=coastVelocity=0;lastOrbitInput=performance.now()+10000}',progress)
             page.wait_for_timeout(200)
             r=page.evaluate(BOUNDS)

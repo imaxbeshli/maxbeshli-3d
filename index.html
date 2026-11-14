@@ -4333,7 +4333,7 @@ window.MBEnvironment={
       const entry=slateObjects[index],size=SLATES_DATA[index].size;
       orbitGroup.updateMatrixWorld(true);
       const centre=orbitGroup.localToWorld(new THREE.Vector3(-.92+Math.sin(poseTime*.73+entry.phase)*.045,Math.sin(poseTime*(.95+index*.13)+entry.phase)*.14,1.1+Math.cos(poseTime*.61+entry.phase)*.045));
-      const normal=new THREE.Vector3(0,0,1),halfTan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),scale=orbitGroup.scale.x;
+      const normal=new THREE.Vector3(0,0,1),halfTan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),scale=orbitGroup.scale.x*mobileCardScales[index];
       const distance=(Math.max(size[1]/(2*halfTan),size[0]/(2*halfTan*camera.aspect))*1.12+.3)*scale;
       const to=centre.clone().addScaledVector(normal,distance),tmp=camera.clone();tmp.position.copy(to);tmp.lookAt(centre);
       return {centre,normal,to,qTo:tmp.quaternion.clone()};
@@ -4435,32 +4435,50 @@ window.MBEnvironment={
 
     function isMobilePortrait(){return innerWidth<=760&&innerHeight>=innerWidth;}
     let mobileOrbitEnvelope=null;
+    const mobileCardScales=[1,1,1];
+    let mobileCardScaleCurves=null;
+    function mobileFrameScale(index,angle){
+      if(!mobileCardScaleCurves)return 1;
+      const curve=mobileCardScaleCurves[index],t=((angle/(Math.PI*2))%1+1)%1*curve.length;
+      const n=Math.floor(t);return THREE.MathUtils.lerp(curve[n],curve[(n+1)%curve.length],t-n);
+    }
+    function setMobileCardScales(curves){
+      mobileCardScaleCurves=curves;
+      slateObjects.forEach((obj,i)=>{
+        mobileCardScales[i]=curves?curves[i][0]:1;
+        const angle=(i-currentProgress)*Math.PI*2/SLATES_DATA.length;
+        obj.holder.scale.setScalar((.84+(Math.cos(angle)+1)*.08)*mobileFrameScale(i,angle));
+      });
+    }
     function getMobileOrbitEnvelope(){
       if(mobileOrbitEnvelope)return mobileOrbitEnvelope;
-      const points=[],front=[];
+      const cards=[];
       slateObjects.forEach((obj,i)=>{
+        const samples=Array.from({length:96},()=>[]);
         const mesh=obj.holder.children[0];mesh.updateMatrix();mesh.geometry.computeBoundingBox();
         const b=mesh.geometry.boundingBox;
         // Sample the existing orbit, including its float and pointer tilt limits.
-        for(let n=0;n<48;n++){
-          const angle=n*Math.PI*2/48,depth=(Math.cos(angle)+1)/2;
+        for(let n=0;n<96;n++){
+          const angle=n*Math.PI*2/96,depth=(Math.cos(angle)+1)/2;
           const holderScale=.84+depth*.16;
           for(const pitch of [-.04,.04])for(const roll of [-.022,.022])for(const yawDelta of [-.035,.035]){
             const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch,safeOrbitYaw(angle)+yawDelta,roll));
             for(const x of [b.min.x,b.max.x])for(const y of [b.min.y,b.max.y])for(const z of [b.min.z,b.max.z])for(const dz of [-.045,.045]){
               const v=new THREE.Vector3(x,y,z).applyMatrix4(mesh.matrix).applyQuaternion(q).multiplyScalar(holderScale);
-              v.x+=-.92+Math.sin(angle)*2.05+(1-Math.cos(angle))*.65+Math.sign(x)*.045;
-              v.y+=Math.sign(y)*.14;
-              v.z+=Math.cos(angle)*1.65-.55+dz;
-              points.push(v);if(n===0)front.push(v);
+              const centre=new THREE.Vector3(-.92+Math.sin(angle)*2.05+(1-Math.cos(angle))*.65+Math.sign(x)*.045,
+                Math.sign(y)*.14,Math.cos(angle)*1.65-.55+dz);
+              const point={shape:v,centre};
+              samples[n].push(point);
             }
           }
         }
+        cards.push(samples);
       });
-      return mobileOrbitEnvelope={points,front};
+      return mobileOrbitEnvelope=cards;
     }
     function layoutOrbit(){
       if(!isMobilePortrait()){
+        setMobileCardScales(null);
         orbitGroup.scale.setScalar(1);orbitGroup.position.copy(ORBIT_ORIGIN);
         reflectionGroup.scale.set(1,-1,1);
         reflectionGroup.position.set(ORBIT_ORIGIN.x,2*FLOOR_Y-ORBIT_ORIGIN.y+.18,ORBIT_ORIGIN.z);
@@ -4491,40 +4509,34 @@ window.MBEnvironment={
         return scale;
       }
       const oldScale=fitScale(innerWidth-48,oldHeight,1);
-      const oldUnit=2*(BASE_CAM_POS.z-(ORBIT_ORIGIN.z+1.1*oldScale))*tan/innerHeight;
-      const oldCentre=oldTop+3.55*oldScale/oldUnit/2;
+      // Keep the collision-safe orbit spacing. Each frame fills its own available
+      // rectangle, so the portrait phone no longer limits the two landscape frames.
+      const scale=oldScale*1.6;
       const top=textBottom+12,bottom=Math.min(rockTop-12,captionTop);
-      const {points,front}=getMobileOrbitEnvelope(),v=new THREE.Vector3();
-      function measure(scale,y){
-        let minY=Infinity,maxY=-Infinity,minX=Infinity,maxX=-Infinity;
-        const origin=new THREE.Vector3(.92*scale,y,ORBIT_ORIGIN.z);
-        for(const point of points){
-          v.copy(point).multiplyScalar(scale).add(origin).project(layoutCamera);
-          const py=(1-v.y)*innerHeight/2;minY=Math.min(minY,py);maxY=Math.max(maxY,py);
+      const centreY=(top+bottom)/2,planeZ=ORBIT_ORIGIN.z+1.1*scale;
+      const ray=new THREE.Vector3(0,1-2*centreY/innerHeight,.5).unproject(layoutCamera).sub(layoutCamera.position);
+      const y=layoutCamera.position.y+ray.y*(planeZ-layoutCamera.position.z)/ray.z;
+      const origin=new THREE.Vector3(.92*scale,y,ORBIT_ORIGIN.z),v=new THREE.Vector3();
+      const projection=new THREE.Matrix4().multiplyMatrices(layoutCamera.projectionMatrix,layoutCamera.matrixWorldInverse);
+      const curves=getMobileOrbitEnvelope().map(samples=>samples.map(points=>{
+        function fits(factor){
+          let minX=Infinity,maxX=-Infinity;
+          for(const point of points){
+            v.copy(point.shape).multiplyScalar(factor).add(point.centre).multiplyScalar(scale).add(origin).applyMatrix4(projection);
+            const py=(1-v.y)*innerHeight/2;
+            if(py<top||py>bottom)return false;
+            const px=(1+v.x)*innerWidth/2;minX=Math.min(minX,px);maxX=Math.max(maxX,px);
+          }
+          return maxX-minX<=innerWidth-32;
         }
-        for(const point of front){
-          v.copy(point).multiplyScalar(scale).add(origin).project(layoutCamera);
-          const px=(1+v.x)*innerWidth/2;minX=Math.min(minX,px);maxX=Math.max(maxX,px);
+        let low=.2,high=1;
+        for(let n=0;n<10;n++){
+          const middle=(low+high)/2;
+          if(fits(middle))low=middle;else high=middle;
         }
-        return {minY,maxY,minX,maxX};
-      }
-      function place(scale){
-        const planeZ=ORBIT_ORIGIN.z+1.1*scale,unit=2*(BASE_CAM_POS.z-planeZ)*tan/innerHeight;
-        const ray=new THREE.Vector3(0,1-2*oldCentre/innerHeight,.5).unproject(layoutCamera).sub(layoutCamera.position);
-        let y=layoutCamera.position.y+ray.y*(planeZ-layoutCamera.position.z)/ray.z;
-        for(let n=0;n<2;n++){
-          const b=measure(scale,y),shift=THREE.MathUtils.clamp(0,top-b.minY,bottom-b.maxY);
-          y-=shift*unit;
-        }
-        const b=measure(scale,y);
-        return {y,fits:b.minY>=top-.5&&b.maxY<=bottom+.5&&b.minX>=12&&b.maxX<=innerWidth-12};
-      }
-      let low=oldScale*.8,high=oldScale*1.3;
-      for(let n=0;n<9;n++){
-        const middle=(low+high)/2;
-        if(place(middle).fits)low=middle;else high=middle;
-      }
-      const scale=low,y=place(scale).y;
+        return low;
+      }));
+      setMobileCardScales(curves);
       orbitGroup.scale.setScalar(scale);orbitGroup.position.set(.92*scale,y,ORBIT_ORIGIN.z);
       reflectionGroup.scale.set(scale,-scale,scale);
       reflectionGroup.position.set(orbitGroup.position.x,2*FLOOR_Y-y+.18,ORBIT_ORIGIN.z);
@@ -4692,7 +4704,7 @@ window.MBEnvironment={
         const depthFactor = (Math.cos(angle) + 1) * 0.5;
         // При наезде задние плитки чуть уменьшаются и уходят в глубокий боке, чтобы вообще не спорить с главной
         const scale=.84+depthFactor*.16;
-        if(phase==='orbit'||phase==='focusing')obj.holder.scale.setScalar(scale);
+        if(phase==='orbit'||phase==='focusing')obj.holder.scale.setScalar(scale*mobileFrameScale(i,angle));
 
         const baseOp = 0.32 + depthFactor * 0.66;
 
