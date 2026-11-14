@@ -554,6 +554,19 @@
     #webgl-canvas{touch-action:none}
     @media(max-width:1050px){.ui-layer{padding:26px 28px}#mainHeader{gap:16px}.header-right{gap:8px}.sound-btn{padding:9px}.hero-left{left:28px}}
     @media(max-width:760px){.ui-layer{padding:18px}#mainHeader{gap:6px}.cta-btn{padding:10px 12px;font-size:10px}.sound-btn{font-size:9px}.hero-left{left:24px;top:31%;width:85vw;max-width:390px}.hero-title{font-size:38px;margin-bottom:15px}.hero-subtitle{font-size:16px;margin-bottom:12px}.hero-desc{font-size:12px}.bottom-caption{padding:12px 16px;max-width:90vw}.caption-title{font-size:14px}.caption-text{font-size:11px}#ecosystem-modal{padding:24px}.modal-grid{grid-template-columns:1fr;gap:12px}.modal-body{margin:26px 0}.modal-close{font-size:10px;padding:10px 12px}}
+    /* Portrait composition: centered copy above the centered 3D orbit. */
+    @media(max-width:760px) and (orientation:portrait){
+      .hero-left{left:24px;top:max(clamp(84px,12dvh,104px),calc(env(safe-area-inset-top) + 76px));width:calc(100% - 48px);max-width:none;text-align:center;transform-origin:center center}
+      .hero-title{font-size:clamp(32px,5.5dvh,38px);padding-left:.28em;margin-bottom:12px}
+      .hero-subtitle{margin-bottom:10px}
+      .hero-desc{margin-inline:auto}
+    }
+    @media(max-width:760px) and (orientation:portrait) and (max-height:600px){
+      .hero-left{top:max(76px,calc(env(safe-area-inset-top) + 70px))}
+      .hero-title{font-size:30px;margin-bottom:10px}
+      .hero-subtitle{font-size:14px;margin-bottom:8px}
+      .hero-desc{font-size:11px;line-height:1.55}
+    }
     @media(pointer:coarse){#custom-cursor{display:none}html,body,a,button,.interactive-el{cursor:auto}}
     @media(prefers-reduced-motion:reduce){.hero-left-inner.glitching{animation:none;filter:drop-shadow(2px 0 #e45064) drop-shadow(-2px 0 #4ce0ec)}}
 .modal-body{opacity:0;transform:translateY(12px);transition:opacity .55s ease,transform .55s ease}#ecosystem-modal.active .modal-body{opacity:1;transform:none}
@@ -3673,7 +3686,7 @@ window.MBEnvironment={
         halfWidth = Math.max(halfWidth, Math.abs(camera.position.x + backdropRay.x * distance));
         top = Math.max(top, camera.position.y + backdropRay.y * distance);
       }
-      const shift = THREE.MathUtils.lerp(.15, .07, THREE.MathUtils.smoothstep(camera.aspect, .65, 1.3));
+      const shift = THREE.MathUtils.lerp(isMobilePortrait() ? .12 : .15, .07, THREE.MathUtils.smoothstep(camera.aspect, .65, 1.3));
       const scale = Math.max(1, halfWidth * 2 * 1.06 / (46 * (1-2*shift)),
         (top - FLOOR_Y) * 1.06 / (26.6 * window.MBWaterfall.shore));
       backdropMesh.scale.set(scale, scale, 1);
@@ -4302,19 +4315,24 @@ window.MBEnvironment={
     let captionTimer;
     function updateCaption(newIndex){const idx=((newIndex%3)+3)%3;if(idx===activeIndex)return;activeIndex=idx;clearTimeout(captionTimer);bottomCaption.classList.add('switching');captionTimer=setTimeout(()=>{capTitle.textContent=SLATES_DATA[idx].title;capText.textContent=SLATES_DATA[idx].text;bottomCaption.classList.remove('switching')},160)}
     function fillSection(index){window.MBSections.open(index)}
+    function tileFocusPose(index){
+      const entry=slateObjects[index],size=SLATES_DATA[index].size;
+      orbitGroup.updateMatrixWorld(true);
+      const centre=orbitGroup.localToWorld(new THREE.Vector3(-.92+Math.sin(poseTime*.73+entry.phase)*.045,Math.sin(poseTime*(.95+index*.13)+entry.phase)*.14,1.1+Math.cos(poseTime*.61+entry.phase)*.045));
+      const normal=new THREE.Vector3(0,0,1),halfTan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),scale=orbitGroup.scale.x;
+      const distance=(Math.max(size[1]/(2*halfTan),size[0]/(2*halfTan*camera.aspect))*1.12+.3)*scale;
+      const to=centre.clone().addScaledVector(normal,distance),tmp=camera.clone();tmp.position.copy(to);tmp.lookAt(centre);
+      return {centre,normal,to,qTo:tmp.quaternion.clone()};
+    }
     function focusTile(index){
       if(!studioEntered||['entering','diving','section','returning'].includes(phase))return;
       initAudio();selectedIndex=index;
       targetProgress=currentProgress;velocity=coastVelocity=0;phase='focusing';zoomState=1;pendingDive=false;cursorLabel.textContent='ВОЙТИ';
-      const entry=slateObjects[index];
       const initialProgress=currentProgress,finalProgress=index+SLATES_DATA.length*Math.round((currentProgress-index)/SLATES_DATA.length);
       // The selected card follows the safe orbit to the front while the camera
       // approaches. Only the final front-facing part is allowed to straighten.
-      const centre=ORBIT_ORIGIN.clone().add(new THREE.Vector3(-.92+Math.sin(poseTime*.73+entry.phase)*.045,Math.sin(poseTime*(.95+index*.13)+entry.phase)*.14,1.1+Math.cos(poseTime*.61+entry.phase)*.045));
-      const normal=new THREE.Vector3(0,0,1),size=SLATES_DATA[index].size,halfTan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
-      const distance=Math.max(size[1]/(2*halfTan),size[0]/(2*halfTan*camera.aspect))*1.12+.3;
-      const to=centre.clone().addScaledVector(normal,distance),tmp=camera.clone();tmp.position.copy(to);tmp.lookAt(centre);
-      travel={...cameraJourney(to,tmp.quaternion.clone()),centre,normal,initialZoom:zoomFactor,initialProgress,finalProgress};
+      const {centre,normal,to,qTo}=tileFocusPose(index);
+      travel={...cameraJourney(to,qTo),centre,normal,initialZoom:zoomFactor,initialProgress,finalProgress};
       playWhooshSound(travel.duration);
     }
     function returnToOrbit(){if(['entering','diving','returning','section'].includes(phase))return;if(zoomState)playWhooshSound(.85,'return');phase='orbit';zoomState=0;travel=null;pendingDive=false;coastVelocity=0;cursorLabel.textContent='ОТКРЫТЬ'}
@@ -4401,6 +4419,46 @@ window.MBEnvironment={
     let baseAnchorScreenX = null;
     let baseAnchorScreenY = null;
 
+    function isMobilePortrait(){return innerWidth<=760&&innerHeight>=innerWidth;}
+    function layoutOrbit(){
+      if(!isMobilePortrait()){
+        orbitGroup.scale.setScalar(1);orbitGroup.position.copy(ORBIT_ORIGIN);
+        reflectionGroup.scale.set(1,-1,1);
+        reflectionGroup.position.set(ORBIT_ORIGIN.x,2*FLOOR_Y-ORBIT_ORIGIN.y+.18,ORBIT_ORIGIN.z);
+        return;
+      }
+      // Reserve real space for the text and caption, including short phones.
+      const top=heroLeft.offsetTop+heroLeft.offsetHeight+20;
+      const bottom=innerHeight-18-Math.max(88,bottomWrap.offsetHeight)-58;
+      const height=Math.max(80,Math.min(innerHeight*.33,bottom-top));
+      const width=innerWidth-48,tan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+      let scale=.65;
+      for(let n=0;n<4;n++){
+        const depth=BASE_CAM_POS.z-(ORBIT_ORIGIN.z+1.1*scale);
+        const unit=2*depth*tan/innerHeight;
+        scale=Math.min(width*unit/5.05,height*unit/3.55,1);
+      }
+      const planeZ=ORBIT_ORIGIN.z+1.1*scale,unit=2*(BASE_CAM_POS.z-planeZ)*tan/innerHeight;
+      const centreY=top+3.55*scale/unit/2;
+      const layoutCamera=camera.clone();layoutCamera.position.copy(BASE_CAM_POS);layoutCamera.lookAt(BASE_LOOK_AT);layoutCamera.updateMatrixWorld(true);
+      const ray=new THREE.Vector3(0,1-2*centreY/innerHeight,.5).unproject(layoutCamera).sub(layoutCamera.position);
+      const y=layoutCamera.position.y+ray.y*(planeZ-layoutCamera.position.z)/ray.z;
+      orbitGroup.scale.setScalar(scale);orbitGroup.position.set(.92*scale,y,ORBIT_ORIGIN.z);
+      reflectionGroup.scale.set(scale,-scale,scale);
+      reflectionGroup.position.set(orbitGroup.position.x,2*FLOOR_Y-y+.18,ORBIT_ORIGIN.z);
+    }
+    function refreshComposition(){
+      layoutOrbit();
+      if(!zoomState)return;
+      const pose=tileFocusPose(selectedIndex);
+      if(phase==='focused'){
+        camera.position.copy(pose.to);camera.quaternion.copy(pose.qTo);currentLookAt.copy(pose.centre);
+      }else if(travel&&(phase==='focusing'||phase==='returning')){
+        travel.to.copy(pose.to);travel.qTo.copy(pose.qTo);travel.centre.copy(pose.centre);
+      }
+      if(travel?.focusPosition){travel.focusPosition.copy(pose.to);travel.focusQuaternion.copy(pose.qTo);}
+    }
+
     function updateSpatialUI() {
       camera.updateMatrixWorld();
 
@@ -4427,7 +4485,9 @@ window.MBEnvironment={
       const blurPx = zoomFactor * 8;
 
       // 1. Левая надпись MAX BESHLI остаётся в пространстве слева и уходит при наезде
-      heroLeft.style.transform = `translate3d(${dx.toFixed(1)}px, calc(-50% + ${dy.toFixed(1)}px), 0) scale(${scale.toFixed(3)})`;
+      heroLeft.style.transform = isMobilePortrait()
+        ? `scale(${scale.toFixed(3)})`
+        : `translate3d(${dx.toFixed(1)}px, calc(-50% + ${dy.toFixed(1)}px), 0) scale(${scale.toFixed(3)})`;
       heroLeft.style.opacity = opacity.toFixed(3);
       heroLeft.style.filter = blurPx > 0.2 ? `blur(${blurPx.toFixed(1)}px)` : 'none';
       heroLeft.style.pointerEvents = opacity < 0.2 ? 'none' : 'auto';
@@ -4630,6 +4690,9 @@ window.MBEnvironment={
     }
 
     window.__MB={scene,camera,slateObjects,water,lanternBoat,backdrop:backdropMesh,rocks:[rightPedestalRock,foregroundRockBottomLeft],focusTile,startDive,returnToOrbit,closeEcosystemModal,get state(){return {phase,selectedIndex,activeIndex,currentProgress,targetProgress,velocity,coastVelocity,zoomFactor,hoverIndex,studioEntered,isMuted,glitchActive:glitchStart!==null,audioState:audioCtx?.state,cameraSpeed:CAMERA_SPEED,travelDistance:travel?.from.distanceTo(travel.to),travelDuration:travel?.duration}}};
+    refreshComposition();
+    document.fonts.ready.then(refreshComposition);
+    document.fonts.addEventListener('loadingdone',refreshComposition);
     animate();
 
     window.addEventListener('resize', () => {
@@ -4638,6 +4701,7 @@ window.MBEnvironment={
       renderer.setSize(window.innerWidth, window.innerHeight);
       baseAnchorScreenX = null;
       baseAnchorScreenY = null;
+      refreshComposition();
     });
 </script>
 </body>
