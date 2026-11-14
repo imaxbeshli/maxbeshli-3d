@@ -4383,7 +4383,7 @@ window.MBEnvironment={
     }
     const CAMERA_SPEED=(5.4+.85)/1.7;
     const easeTravel=p=>p*p*p*(p*(p*6-15)+10);
-    // Short approaches to wide cards need the same soft start/stop as the phone.
+    // Section transitions retain their existing timing.
     function cameraJourney(to,qTo){return {elapsed:0,duration:Math.max(1.9,camera.position.distanceTo(to)/CAMERA_SPEED),from:camera.position.clone(),to,qFrom:camera.quaternion.clone(),qTo};}
     let mouseX=0,mouseY=0,isDragging=false,prevX=0,dragDelta=0,lastPointerTime=0,releaseVelocity=0;
     let parallaxX=0,parallaxY=0,waterStroke=null;
@@ -4404,6 +4404,16 @@ window.MBEnvironment={
       const to=centre.clone().addScaledVector(normal,distance),tmp=camera.clone();tmp.position.copy(to);tmp.lookAt(centre);
       return {centre,normal,to,qTo:tmp.quaternion.clone()};
     }
+    function tileCameraJourney(to,qTo){
+      const home=BASE_CAM_POS.clone().add(new THREE.Vector3(parallaxX*.22,-parallaxY*.14,0));
+      const referenceDistance=home.distanceTo(tileFocusPose(2).to);
+      const referenceDuration=Math.max(1.9,referenceDistance/CAMERA_SPEED);
+      const journey=cameraJourney(to,qTo);
+      // Match the Telegram card's travel speed, not a fixed duration per shape.
+      // Both directions use the same reference and retain the eased start/stop.
+      journey.duration=Math.max(.35,journey.from.distanceTo(to)*referenceDuration/Math.max(.001,referenceDistance));
+      return journey;
+    }
     function focusTile(index){
       if(!studioEntered||['entering','diving','section','returning','unfocusing'].includes(phase))return;
       initAudio();selectedIndex=index;
@@ -4412,7 +4422,7 @@ window.MBEnvironment={
       // The selected card follows the safe orbit to the front while the camera
       // approaches. Only the final front-facing part is allowed to straighten.
       const {centre,normal,to,qTo}=tileFocusPose(index);
-      travel={...cameraJourney(to,qTo),centre,normal,initialZoom:zoomFactor,initialProgress,finalProgress};
+      travel={...tileCameraJourney(to,qTo),centre,normal,initialZoom:zoomFactor,initialProgress,finalProgress};
       playWhooshSound(travel.duration);
     }
     function returnToOrbit(){
@@ -4421,7 +4431,7 @@ window.MBEnvironment={
       const to=BASE_CAM_POS.clone().add(new THREE.Vector3(parallaxX*.22,-parallaxY*.14,0));
       const orbitLookAt=BASE_LOOK_AT.clone().add(new THREE.Vector3(parallaxX*.08,-parallaxY*.06,0));
       const tmp=camera.clone();tmp.position.copy(to);tmp.lookAt(orbitLookAt);
-      travel={...cameraJourney(to,tmp.quaternion.clone()),initialZoom:zoomFactor,orbitLookAt};
+      travel={...tileCameraJourney(to,tmp.quaternion.clone()),initialZoom:zoomFactor,orbitLookAt};
       phase='unfocusing';zoomState=0;pendingDive=false;cursorLabel.textContent='ОТКРЫТЬ';
       playWhooshSound(travel.duration,'return');
     }
