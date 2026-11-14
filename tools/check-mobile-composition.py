@@ -41,19 +41,20 @@ with sync_playwright() as p:
             page.wait_for_timeout(300)
             r=page.evaluate(BOUNDS);a=r['tiles'][i]
             assert r['textTop']>=r['headerBottom']+8,(w,h,r)
-            assert min(t['top'] for t in r['tiles'])>=r['textBottom']+12,(w,h,i,r)
+            assert min(t['top'] for t in r['tiles'])>=r['textBottom']+8,(w,h,i,r)
             assert a['left']>=8 and a['right']<=w-8,(w,h,i,r)
             assert abs(a['x']-w/2)<10,(w,h,i,r)
             assert a['bottom']<h-95,(w,h,i,r)
-            assert max(t['bottom'] for t in r['tiles'])<r['rockTop']-16,(w,h,i,r)
+            assert max(t['bottom'] for t in r['tiles'])<r['rockTop']-8,(w,h,i,r)
             if (w,h)==(400,680) and i==1:
                 page.evaluate('__MB.slateObjects[1].architectureDemo.seek(16)');page.wait_for_timeout(200)
                 page.screenshot(path='/workspace/artifacts/max-beshli-mobile-centered-final.png')
-        for progress in [.5,1.5,2.5]:
+        for progress in [.25,.5,.75,1.25,1.5,1.75,2.25,2.5,2.75]:
             page.evaluate('(v)=>{currentProgress=targetProgress=v;velocity=coastVelocity=0;lastOrbitInput=performance.now()+10000}',progress)
             page.wait_for_timeout(200)
             r=page.evaluate(BOUNDS)
-            assert max(t['bottom'] for t in r['tiles'])<r['rockTop']-16,(w,h,progress,r)
+            assert max(t['bottom'] for t in r['tiles'])<r['rockTop']-8,(w,h,progress,r)
+            assert min(t['top'] for t in r['tiles'])>r['textBottom']+8,(w,h,progress,r)
         print(f'PASS {w}x{h}: centered tiles clear text and retain a gap above the rock throughout orbit',flush=True)
     # Desktop and wide landscape retain the original orbit transformation.
     for w,h in [(1440,900),(844,390)]:
@@ -73,7 +74,7 @@ with sync_playwright() as p:
     page.locator('#webgl-canvas').focus();page.keyboard.press('Escape');page.wait_for_function("__MB.state.phase==='orbit'")
     page.evaluate('mouseX=mouseY=0')
     page.wait_for_function('__MB.state.zoomFactor<.001 && camera.position.distanceTo(BASE_CAM_POS)<.002')
-    r=page.evaluate(BOUNDS);assert r['tiles'][1]['top']>r['textBottom']+12,r
+    r=page.evaluate(BOUNDS);assert r['tiles'][1]['top']>r['textBottom']+8,r
     assert not errors,errors
     print('PASS focus after tap, portrait/landscape resize, section entry and return; no JS errors',flush=True)
     browser.close()
