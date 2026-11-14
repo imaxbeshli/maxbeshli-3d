@@ -72,8 +72,8 @@ with sync_playwright() as p:
             r=media.bounding_box()
             assert r['y']>=70 and r['y']+r['height']<=height-65,(name,width,height,r)
             assert page.locator('#ecosystem-modal').evaluate('e=>e.scrollWidth<=e.clientWidth+1')
-            title=scene.locator('.section-hero-title')
-            expected=max(32,min(width*.032,48))
+            title=scene.locator('.scroll-chapter h2').first
+            expected=max(28,min(width*.027,38))
             assert abs(float(title.evaluate('e=>parseFloat(getComputedStyle(e).fontSize)'))-expected)<.1
             if width==1561:page.screenshot(path=f'/tmp/layout-{name}-desktop.png')
         page.screenshot(path=f'/tmp/sections-{name}-desktop.png')

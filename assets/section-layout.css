@@ -1,5 +1,5 @@
 /* Shared editorial scale and viewport budget for every service section. */
-#ecosystem-modal.is-scroll-story{--section-title:clamp(32px,3.2vw,48px);--chapter-title:clamp(28px,2.7vw,38px);--section-body:15px;padding-top:16px}
+#ecosystem-modal.is-scroll-story{--chapter-title:clamp(28px,2.7vw,38px);--section-body:15px;padding-top:16px}
 #ecosystem-modal.is-scroll-story .section-layout{max-width:1520px;margin:16px auto 0;min-height:0}
 #ecosystem-modal.is-scroll-story .section-layout>.section-intro{display:none}
 #ecosystem-modal.is-scroll-story .section-presentation{max-width:none}
@@ -7,10 +7,8 @@
 #ecosystem-modal.is-scroll-story .scroll-chapter,#ecosystem-modal.is-scroll-story #webScene .web-opening{grid-template-columns:minmax(250px,.72fr) minmax(0,1.65fr);gap:clamp(28px,4vw,64px);min-height:calc(100dvh - 174px);padding:20px 0;align-items:center}
 #ecosystem-modal.is-scroll-story #webScene .scroll-chapter{min-height:0;padding:0}
 #ecosystem-modal.is-scroll-story .scroll-copy,#ecosystem-modal.is-scroll-story .web-hero-copy{max-width:420px}
-#ecosystem-modal.is-scroll-story .scroll-copy h2,#ecosystem-modal.is-scroll-story .web-ready h2{font-size:var(--chapter-title);font-weight:450;line-height:1.12;letter-spacing:-.035em;margin:0 0 20px;text-wrap:balance}
-#ecosystem-modal.is-scroll-story .section-hero-title,#ecosystem-modal.is-scroll-story .scroll-copy .section-hero-title{font-size:var(--section-title);font-weight:450;line-height:1.12;letter-spacing:-.035em;margin:0 0 20px;text-wrap:balance}
+#ecosystem-modal.is-scroll-story .scroll-copy h2,#ecosystem-modal.is-scroll-story .web-hero h2{font-size:var(--chapter-title);font-weight:450;line-height:1.12;letter-spacing:-.035em;margin:0 0 20px;text-wrap:balance}
 #ecosystem-modal.is-scroll-story .scroll-copy p,#ecosystem-modal.is-scroll-story .web-hero-lead{font-size:var(--section-body);font-weight:400;line-height:1.65;color:#c1c8cd;margin:0;max-width:420px}
-#ecosystem-modal.is-scroll-story .section-eyebrow,#ecosystem-modal.is-scroll-story .web-eyebrow{font-size:10px;font-weight:500;letter-spacing:.16em;line-height:1.5;text-transform:uppercase;color:#a7b3ba;margin:0 0 18px}
 #ecosystem-modal.is-scroll-story #webScene .web-ready{margin-top:64px;padding-top:0}
 @media(min-width:901px){
  #webScene .web-live-site{max-width:min(100%,calc((100dvh - 230px)*1.6));margin:auto}
@@ -22,13 +20,12 @@
  #telegramApp .flow-step h3{font-size:16px}
 }
 @media(max-width:900px){
- #ecosystem-modal.is-scroll-story{--section-title:34px;--chapter-title:28px;--section-body:14px}
+ #ecosystem-modal.is-scroll-story{--chapter-title:28px;--section-body:14px}
  #ecosystem-modal.is-scroll-story .section-layout{margin-top:20px}
  #ecosystem-modal.is-scroll-story .scroll-chapter,#ecosystem-modal.is-scroll-story #webScene .web-opening{grid-template-columns:1fr;gap:24px;min-height:calc(100dvh - 174px);padding:14px 0;align-items:start}
  #ecosystem-modal.is-scroll-story #webScene .web-opening{display:grid}
  #ecosystem-modal.is-scroll-story .scroll-copy,#ecosystem-modal.is-scroll-story .web-hero-copy{max-width:600px}
  #ecosystem-modal.is-scroll-story .scroll-story{gap:72px}
  #ecosystem-modal.is-scroll-story #webScene .web-ready{margin-top:72px;padding-top:28px}
- #ecosystem-modal.is-scroll-story .web-hero h1 em{display:inline}
- #ecosystem-modal.is-scroll-story .section-eyebrow,#ecosystem-modal.is-scroll-story .web-eyebrow{margin-bottom:12px}
 }
+#ecosystem-modal.is-scroll-story .web-hero-lead + .web-hero-lead{margin-top:10px}
