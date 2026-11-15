@@ -3761,26 +3761,39 @@ window.MBEnvironment={
     }
     function stopGlitchSound(){if(!glitchVoice)return;const v=glitchVoice;glitchVoice=null;ramp(v.bus.gain,0,.055);v.sources.forEach(s=>{try{s.stop(audioCtx.currentTime+.07)}catch(e){}})}
     function playGlitchSound(duration){
-      stopGlitchSound();if(!audioCtx||isMuted||audioCtx.state!=='running')return;
+      stopGlitchSound();if(!audioCtx||isMuted||document.hidden||audioCtx.state!=='running')return;
       const now=audioCtx.currentTime,bus=audioCtx.createGain(),filter=audioCtx.createBiquadFilter();
-      bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(.38,now+.06);bus.gain.setValueAtTime(.38,now+duration-.65);bus.gain.linearRampToValueAtTime(0,now+duration);
-      filter.type='lowpass';filter.frequency.value=4400;filter.Q.value=.45;filter.connect(bus);bus.connect(masterGain);
-      const noise=audioCtx.createBufferSource(),buffer=audioCtx.createBuffer(2,Math.ceil(audioCtx.sampleRate*duration),audioCtx.sampleRate);
-      for(let channel=0;channel<2;channel++){
-        const data=buffer.getChannelData(channel);let low=0,hold=0,phase=0,grain=0,next=0,grainEnd=0,grainStart=0;
-        for(let i=0;i<data.length;i++){
-          const t=i/audioCtx.sampleRate,white=Math.random()*2-1;low+=.045*(white-low);
-          if(i%9===0)hold=white;
-          if(t>=next){grainStart=t;grainEnd=t+.018+Math.random()*.075;next=grainEnd+.025+Math.random()*.07;grain=.4+Math.random()*.5}
-          const attack=Math.min(1,(t-grainStart)/.004),release=Math.max(0,Math.min(1,(grainEnd-t)/.02));
-          const packet=grain*attack*release;
-          phase+=2*Math.PI*(64-18*t/duration)/audioCtx.sampleRate;
-          const texture=.4*low+.16*white+.48*hold*packet+.13*Math.sin(phase)*(1-t/duration);
-          data[i]=Math.tanh(texture*1.8)*Math.min(1,t/.008,(duration-t)/.025);
+      bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(.38,now+.012);
+      bus.gain.setValueAtTime(.38,now+Math.max(.02,duration-.45));bus.gain.linearRampToValueAtTime(0,now+duration);
+      filter.type='lowpass';filter.frequency.value=5200;filter.Q.value=.55;filter.connect(bus);bus.connect(masterGain);
+      const source=audioCtx.createBufferSource(),buffer=audioCtx.createBuffer(2,Math.ceil(audioCtx.sampleRate*duration),audioCtx.sampleRate);
+      const rate=audioCtx.sampleRate,notes=[392,523.25,783.99,1046.5,1567.98,1174.66];
+      // Discrete FM data tones replace the broadband rustle. Each packet has
+      // a smooth envelope, a small stereo offset and a clean harmonic tail.
+      function packet(start,length,frequency,level,pan,modulation=1.3){
+        const first=Math.round(start*rate),count=Math.min(Math.round(length*rate),buffer.length-first);
+        for(let channel=0;channel<2;channel++){
+          const data=buffer.getChannelData(channel),balance=channel===0?1-pan:1+pan;
+          for(let n=0;n<count;n++){
+            const t=n/rate,u=n/Math.max(1,count-1),envelope=Math.pow(Math.sin(Math.PI*u),2);
+            const phase=2*Math.PI*frequency*t+modulation*(1-u)*Math.sin(2*Math.PI*frequency*1.5*t);
+            const tone=.72*Math.sin(phase)+.18*Math.sin(phase*2)+.06*Math.sin(phase*4);
+            data[first+n]+=tone*envelope*level*balance;
+          }
         }
       }
-      noise.buffer=buffer;noise.connect(filter);const v={bus,sources:[noise]};glitchVoice=v;noise.start(now);noise.stop(now+duration+.025);
-      noise.onended=()=>{noise.disconnect();filter.disconnect();bus.disconnect();if(glitchVoice===v)glitchVoice=null};
+      packet(0,.14,261.63,.55,0,2.2);
+      let time=.06,index=0;
+      while(time<duration-.42){
+        const progress=time/duration,length=.035+(index%4)*.012;
+        packet(time,length,notes[(index*5+Math.floor(index/3))%notes.length],.48*(1-progress*.65),Math.sin(index*2.1)*.28);
+        time+=.055+(index%3)*.027+progress*.085;index++;
+      }
+      packet(Math.max(.1,duration-.4),.36,523.25,.2,-.12,.18);
+      packet(Math.max(.1,duration-.33),.29,783.99,.13,.12,.12);
+      source.buffer=buffer;source.connect(filter);const voice={bus,sources:[source]};glitchVoice=voice;
+      source.start(now);source.stop(now+duration+.025);
+      source.onended=()=>{source.disconnect();filter.disconnect();bus.disconnect();if(glitchVoice===voice)glitchVoice=null};
     }
     const soundButton=document.getElementById('soundToggle');
     const soundWave=document.getElementById('soundWave');
@@ -3889,32 +3902,35 @@ window.MBEnvironment={
     const backdropCorners = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
     const backdropRay = new THREE.Vector3();
     function fitBackdropToCamera() {
-      let halfWidth = 0, top = FLOOR_Y;
+      let halfWidth = 0, left = Infinity, right = -Infinity, top = FLOOR_Y;
       for (const [x, y] of backdropCorners) {
         backdropRay.set(x, y, .5).unproject(camera).sub(camera.position);
         if (backdropRay.z >= -1e-6) continue;
         const distance = (backdropMesh.position.z - camera.position.z) / backdropRay.z;
-        halfWidth = Math.max(halfWidth, Math.abs(camera.position.x + backdropRay.x * distance));
+        const edgeX = camera.position.x + backdropRay.x * distance;
+        left = Math.min(left, edgeX);right = Math.max(right, edgeX);
+        halfWidth = Math.max(halfWidth, Math.abs(edgeX));
         top = Math.max(top, camera.position.y + backdropRay.y * distance);
       }
       const shift = THREE.MathUtils.lerp(isMobilePortrait() ? .102 : .132, .052, THREE.MathUtils.smoothstep(camera.aspect, .65, 1.3));
       const scale = Math.max(1, halfWidth * 2 * 1.06 / (46 * (1-2*shift)),
         (top - FLOOR_Y) * 1.06 / (26.6 * window.MBWaterfall.shore));
-      // On desktop fit the upper composition between the waterline and the
-      // viewport top; width coverage must not crop away the generated sky.
-      // Narrow screens retain their existing photographic crop.
-      const verticalScale = innerWidth > 900
+      // Fit the complete reference composition on wide screens, including
+      // its right edge. Do not reuse the portrait crop/sideways offset here.
+      const desktopFraming = innerWidth > 900 || (innerWidth >= 760 && matchMedia('(hover: hover) and (pointer: fine)').matches);
+      const horizontalScale = desktopFraming ? (right-left)*1.006/46 : scale;
+      const verticalScale = desktopFraming
         ? Math.max(.01, (top - FLOOR_Y) * 1.006 / (26.6 * window.MBWaterfall.shore))
         : scale;
-      backdropMesh.scale.set(scale, verticalScale, 1);
-      backdropMesh.position.x = 46 * scale * shift;
+      backdropMesh.scale.set(horizontalScale, verticalScale, 1);
+      backdropMesh.position.x = desktopFraming ? (left+right)/2 : 46*scale*shift;
       // Keep the same photographic shoreline exactly on the reflective surface.
-      backdropMesh.position.y = FLOOR_Y + 26.6 * verticalScale * (window.MBWaterfall.shore - .5);
+      backdropMesh.position.y = FLOOR_Y + 26.6*verticalScale*(window.MBWaterfall.shore-.5);
       backdropMesh.updateMatrixWorld();
-      shorelineBlend.scale.x = Math.min(60, 46 * scale);
-      shorelineBlend.material.uniforms.uBackdropWidth.value = 46 * scale;
+      shorelineBlend.scale.x = Math.min(60,46*horizontalScale);
+      shorelineBlend.material.uniforms.uBackdropWidth.value = 46*horizontalScale;
       shorelineBlend.material.uniforms.uBackdropX.value = backdropMesh.position.x;
-      water.material.uniforms.uFallSource.value.set(backdropMesh.position.x+(window.MBWaterfall.center-.5)*46*scale, -23.8);
+      water.material.uniforms.uFallSource.value.set(backdropMesh.position.x+(window.MBWaterfall.center-.5)*46*horizontalScale,-23.8);
     }
 
     // Мягкие облака тумана в глубине сцены
