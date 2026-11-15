@@ -4389,7 +4389,7 @@ window.MBEnvironment={
       const c=ORBIT_YAW_COEFFICIENTS;
       return 1.55*Math.tanh(c[0]+c[1]*Math.sin(angle)+c[2]*Math.cos(angle)+c[3]*Math.sin(2*angle)+c[4]*Math.cos(2*angle)+c[5]*Math.sin(3*angle)+c[6]*Math.cos(3*angle));
     }
-    const TILE_TRAVEL_DURATION=.65,SECTION_TRAVEL_DURATION=.55;
+    const TILE_TRAVEL_DURATION=3,SECTION_TRAVEL_DURATION=2;
     const easeTravel=p=>p*p*p*(p*(p*6-15)+10);
     // Camera transitions use wall time, independently of the capped simulation delta.
     function cameraJourney(to,qTo,duration=SECTION_TRAVEL_DURATION){return {elapsed:0,startedAt:performance.now(),duration,from:camera.position.clone(),to,qFrom:camera.quaternion.clone(),qTo};}

@@ -33,9 +33,9 @@ with sync_playwright() as p:
           else document.getElementById('modalCloseBtn').click();
           const journey=travel, from=journey.from.clone(), distance=from.distanceTo(journey.to);
           const moving=phase;
-          window.cameraCheck={duration:journey.duration,samples:[{time:0,position:0}],done:false};
+          window.cameraCheck={duration:journey.duration,samples:[{time:0,motionTime:0,position:0}],done:false};
           function sample(){
-            cameraCheck.samples.push({time:(performance.now()-started)/1000,position:camera.position.distanceTo(from)/distance});
+            cameraCheck.samples.push({time:(performance.now()-started)/1000,motionTime:journey.elapsed,position:camera.position.distanceTo(from)/distance});
             if(phase===moving)requestAnimationFrame(sample);
             else {cameraCheck.phase=phase;cameraCheck.done=true;}
           }
@@ -52,7 +52,9 @@ with sync_playwright() as p:
         assert abs(samples[-1]['position']-1) < .001, data
         for a,b in zip(samples,samples[1:]):
             step=b['position']-a['position']
-            assert -.001 <= step <= 1.875*(b['time']-a['time'])/seconds+.025, data
+            # Position is updated before rendering, while this callback runs
+            # after it. Use the position's timestamp for the easing bound.
+            assert -.001 <= step <= 1.875*(b['motionTime']-a['motionTime'])/seconds+.025, data
         return round(samples[-1]['time'], 3)
 
     for width,height in [(1280,800),(400,680)]:
@@ -61,17 +63,17 @@ with sync_playwright() as p:
             page.evaluate('(i)=>{mouseX=mouseY=0;currentProgress=targetProgress=i;velocity=coastVelocity=0}', index)
             page.wait_for_timeout(250)
             timings = {}
-            timings['approach'] = transition('in',index,'focused',.65)
-            timings['enter'] = transition('enter',index,'section',.55)
+            timings['approach'] = transition('in',index,'focused',3)
+            timings['enter'] = transition('enter',index,'section',2)
             assert page.locator('#ecosystem-modal').get_attribute('data-scene') == str(index)
             page.wait_for_function('getComputedStyle(document.getElementById("ecosystem-modal")).opacity==="1"')
-            timings['exit'] = transition('exit',index,'focused',.55)
-            timings['retreat'] = transition('out',index,'orbit',.65)
+            timings['exit'] = transition('exit',index,'focused',2)
+            timings['retreat'] = transition('out',index,'orbit',3)
             assert page.evaluate('__MB.state.zoomFactor===0')
             print('PASS', width, 'tile', index, 'wall-time seconds', timings, flush=True)
         page.evaluate('__MB.focusTile(0)')
         page.wait_for_function('__MB.state.zoomFactor>.2 && __MB.state.phase==="focusing"')
-        transition('out',0,'orbit',.65)
+        transition('out',0,'orbit',3)
         assert page.evaluate('__MB.state.zoomFactor===0 && camera.position.distanceTo(BASE_CAM_POS)<.001')
         print('PASS', width, 'interrupted approach returns home without slowing down', flush=True)
     page.evaluate('clock.getDelta=originalCameraTestDelta')
