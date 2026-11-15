@@ -5,22 +5,34 @@
   let demo=null,view=-1,playing=false;
   video.muted=video.defaultMuted=true;
   const surface=video.closest('.web-video-surface');
-  let firstFrameCallback=0,fallbackFrame=0;
+  let firstFrameCallback=0,fallbackFrame=0,decodedFrames=0,firstFrameAt=0;
   function showFrame(){surface.classList.add('has-frame')}
+  function presented(now){
+    decodedFrames++;if(!firstFrameAt)firstFrameAt=now;
+    // Safari needs time to present its native video layer, not just decode it.
+    return decodedFrames>=3&&now-firstFrameAt>=120;
+  }
   function waitForFirstFrame(){
-    surface.classList.remove('has-frame');
+    surface.classList.remove('has-frame');decodedFrames=0;firstFrameAt=0;
     if(video.requestVideoFrameCallback){
       if(firstFrameCallback)video.cancelVideoFrameCallback(firstFrameCallback);
-      firstFrameCallback=video.requestVideoFrameCallback(()=>{firstFrameCallback=0;showFrame()});
+      const frame=now=>{
+        firstFrameCallback=0;
+        if(presented(now))showFrame();
+        else firstFrameCallback=video.requestVideoFrameCallback(frame);
+      };
+      firstFrameCallback=video.requestVideoFrameCallback(frame);
     }
   }
   video.addEventListener('emptied',()=>{cancelAnimationFrame(fallbackFrame);waitForFirstFrame()});
   if(!video.requestVideoFrameCallback)video.addEventListener('playing',()=>{
-    // Older browsers: allow the decoded frame to reach the compositor first.
-    cancelAnimationFrame(fallbackFrame);
-    fallbackFrame=requestAnimationFrame(()=>{fallbackFrame=requestAnimationFrame(()=>{
-      if(video.readyState>=2&&video.videoWidth)showFrame();
-    })});
+    cancelAnimationFrame(fallbackFrame);const startTime=video.currentTime;
+    const frame=now=>{
+      if(surface.classList.contains('has-frame')||video.paused)return;
+      if(video.readyState>=2&&video.videoWidth&&video.currentTime>startTime+.12&&presented(now))showFrame();
+      else fallbackFrame=requestAnimationFrame(frame);
+    };
+    fallbackFrame=requestAnimationFrame(frame);
   });
   waitForFirstFrame();
   function playback(active,retry=false){
