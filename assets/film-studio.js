@@ -11,7 +11,7 @@
   const aiStages=['Ввод запроса','Изображение готово','Изображение оживает'];
   function rewindEdit(){editingStarted=false;if(video){video.pause();video.currentTime=0}}
   function resume(){
-    if(!video||document.hidden||$('infoDialog').open)return;
+    if(!video||document.hidden||$('infoDialog').open||window.MBFilmPlayer?.workOpen)return;
     if(view===0){video.play().catch(()=>{});return}
     if(view!==1||paused[1]||clocks[1]<editStart)return;
     if(!editingStarted){video.currentTime=0;editingStarted=true}
@@ -42,6 +42,7 @@
   function setView(n,v){
     const previous=view;if(v)video=v;
     if(previous===n)return;
+    window.MBFilmPlayer?.setActive(n===0);
     if(previous<0&&n===0){
       visited.fill(false);clocks[1]=clocks[2]=0;editingPosition=0;editingStarted=false;
       paused[1]=paused[2]=reduced.matches;
@@ -63,7 +64,7 @@
       video.pause();
       const restore=(n===0||n===-1)&&(previous===1||previous===2)&&shootingTime!==null;
       const position=restore?shootingTime:n===1?editingPosition:video.currentTime;
-      if(n===0||n===1){$(n===0?'sectionVideoSlot':'editVideoSlot').append(video);video.controls=n===0;video.currentTime=position;resume()}
+      if(n===0||n===1){$(n===0?'sectionVideoSlot':'editVideoSlot').append(video);video.controls=false;video.currentTime=position;resume()}
       else if(restore)video.currentTime=position;
     }
     render();

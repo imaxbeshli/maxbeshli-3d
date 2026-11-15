@@ -35,7 +35,7 @@ with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() 
         page.evaluate('''([n,t])=>{const s=MBFilmStudio.state,key=n===1?'editingTime':'aiTime',duration=n===1?22:18;MBFilmStudio.update(performance.now()+40,(t-s[key]+duration)%duration)}''',[n,t])
         page.wait_for_timeout(100)
     assert page.locator('#editChapters,#aiChapters,.edit-preview-title,.edit-title-clip').count()==0
-    assert page.locator('#filmScene .section-note,#filmChapters span,.ai-topline>span').count()==0
+    assert page.locator('#filmScene .section-note,.ai-topline>span').count()==0
     assert 'Sequence 01' not in page.locator('#filmEditing').text_content()
     assert page.locator('.edit-timeline .edit-audio').count()==1
     original=page.evaluate('__MB.slateObjects[0].video.currentTime')

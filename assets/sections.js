@@ -63,7 +63,8 @@
     $('sectionOptions').replaceChildren(...d.tabs.map((label,i)=>{const b=document.createElement('button');b.type='button';b.role='tab';b.textContent=label;b.addEventListener('click',()=>setTab(i));return b}));
     ['filmScene','webScene','telegramScene'].forEach((id,i)=>$(id).hidden=i!==n);
     if(n===0){
-      video=tiles()[0].video;video.controls=true;video.muted=true;video.playsInline=true;video.setAttribute('aria-label','Showreel MAX BESHLI');$('sectionVideoSlot').append(video);
+      video=tiles()[0].video;video.controls=false;video.muted=true;video.playsInline=true;video.setAttribute('aria-label','Showreel MAX BESHLI');$('sectionVideoSlot').append(video);
+      window.MBFilmPlayer.open(video);
       video.onplay=()=>{$('filmStart').hidden=true};video.onpause=()=>{$('filmStart').hidden=false};
       $('filmStart').hidden=false;video.play().catch(()=>{$('filmStart').hidden=false});
     }
@@ -72,6 +73,7 @@
     window.MBSectionScroll.open(n,applyTab);if(!window.MBSectionScroll.active)applyTab(0);last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
   }
   function close(){
+    window.MBFilmPlayer.close();
     window.MBSectionScroll.close();cancelTabTransition();active=false;cancelAnimationFrame(raf);stopMedia();document.body.classList.remove('section-open');
     window.MBFilmStudio.setView(-1);
     if(video){video.controls=false;video.onplay=video.onpause=null;video.remove()}
@@ -111,8 +113,7 @@
       buttons[n].click();buttons[n].focus();
     }
   });
-  $('filmStart').addEventListener('click',()=>video?.play().catch(()=>{}));
-  document.querySelectorAll('[data-film-time]').forEach(b=>b.addEventListener('click',async()=>{if(!video)return;if(window.MBSectionScroll.active&&tab!==0&&!await setTab(0))return;video.currentTime=Math.min(+b.dataset.filmTime,Number.isFinite(video.duration)?video.duration-.1:Infinity);video.play().catch(()=>{})}));
+  $('filmStart').addEventListener('click',()=>{window.MBFilmPlayer.reveal();window.MBFilmPlayer.play()});
   function openContact(){
     if(contact.open)return;
     contactReturn=document.activeElement;resumeVideo=Boolean(active&&index===0&&video&&!video.paused);

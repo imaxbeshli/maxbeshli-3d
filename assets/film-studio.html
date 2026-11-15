@@ -2,7 +2,17 @@
   <div class="film-viewport">
     <div id="filmShooting" class="film-view">
       <div id="sectionVideoSlot"></div>
+      <button class="film-reveal" id="filmReveal" aria-label="Показать управление видео" aria-controls="filmControls" aria-expanded="false"></button>
       <button class="film-start" id="filmStart" aria-label="Воспроизвести showreel">Смотреть showreel</button>
+      <div class="film-controls" id="filmControls" hidden>
+        <input id="filmSeek" class="film-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Позиция видео">
+        <div class="film-control-row">
+          <button id="filmPlay" type="button" aria-label="Пауза"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
+          <output id="filmTime" aria-label="Время видео">0:00 / 0:00</output>
+          <button id="filmMute" type="button" aria-label="Включить звук"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4Z M16 9l5 6m0-6-5 6"/></svg></button>
+          <button id="filmExpand" type="button" aria-label="На весь экран"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/></svg></button>
+        </div>
+      </div>
     </div>
     <div id="filmEditing" class="film-view edit-workspace" hidden aria-label="Анимированная монтажная сцена">
       <header class="edit-toolbar"><span class="edit-mark">M</span><span>SHOWREEL</span><div class="edit-workspaces" aria-hidden="true"><span>Монтаж</span><span>Звук</span><span>Цвет</span></div></header>
@@ -40,8 +50,13 @@
     </div>
   </div>
 </div></div>
-<div id="filmChapters" class="film-chapters" aria-label="Фрагменты showreel">
-  <button data-film-time="1" aria-label="Смотреть фрагмент 1"><img data-section-image="film-0" alt="Кадр из showreel"></button>
-  <button data-film-time="16" aria-label="Смотреть фрагмент 2"><img data-section-image="film-1" alt="Кадр из showreel"></button>
-  <button data-film-time="34" aria-label="Смотреть фрагмент 3"><img data-section-image="film-2" alt="Кадр из showreel"></button>
+<div id="filmChapters" class="film-chapters" aria-label="Другие работы">
+  <button class="film-work" data-film-work="0" type="button" disabled aria-label="Работа 01 — скоро"><img data-section-image="film-0" alt=""><svg class="film-work-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg><span class="film-work-caption"><b>Работа 01</b><small>Скоро</small></span></button>
+  <button class="film-work" data-film-work="1" type="button" disabled aria-label="Работа 02 — скоро"><img data-section-image="film-1" alt=""><svg class="film-work-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg><span class="film-work-caption"><b>Работа 02</b><small>Скоро</small></span></button>
+  <button class="film-work" data-film-work="2" type="button" disabled aria-label="Работа 03 — скоро"><img data-section-image="film-2" alt=""><svg class="film-work-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg><span class="film-work-caption"><b>Работа 03</b><small>Скоро</small></span></button>
 </div>
+<dialog id="filmFullscreen" class="film-fullscreen" aria-label="Полноэкранный просмотр видео">
+  <div id="filmFullscreenStage" class="film-fullscreen-stage"></div>
+  <button id="filmFullscreenClose" class="film-fullscreen-close" type="button" aria-label="Закрыть полноэкранный просмотр" autofocus><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+  <p id="filmPlayerMessage" class="film-player-message" role="status" hidden></p>
+</dialog>

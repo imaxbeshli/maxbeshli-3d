@@ -400,7 +400,7 @@ WhatsApp и Instagram — сценарные данные, а не подклю�
 
 Исходники интерфейса: `assets/sections.html`, `assets/sections.css`,
 `assets/sections.js`, `assets/contact.css`, `assets/film-studio.html`,
-`assets/film-studio.css`, `assets/film-studio.js`, `assets/section-scroll.css`,
+`assets/film-studio.css`, `assets/film-studio.js`, `assets/film-player.js`, `assets/section-scroll.css`,
 `assets/section-scroll.js`, `assets/web-studio.html`, `assets/web-studio.css`,
 `assets/web-studio.js`; изображения — `assets/section-*.webp`.
 После изменения исходников выполнить `python tools/embed-sections.py`:
@@ -464,6 +464,24 @@ canvas с частотой не более 30 кадров/с. Блок за п�
 В поддерживающих ImageBitmap браузерах сохранённый кадр передаётся в canvas
 асинхронно. Блоки проявляются без дополнительного сдвига, а непрозрачные
 видеорамки не размывают фон за собой — это снижает задержки при прокрутке.
+
+Панель плеера съёмки скрыта до нажатия на изображение; браузерные controls
+не включаются при входе или переносе общего video в монтаж. Доступны
+пауза, перемотка, звук и раскрытие на весь экран. Полноэкранное окно на базе
+`dialog` использует тот же video без смены источника и анимацию transform
+на 520 мс; Escape, крестик и «Свернуть видео» возвращают его в исходную рамку.
+При reduced motion переход мгновенный. Это полноэкранный просмотр внутри
+окна браузера, совместимый с inline-видео на iPhone.
+
+Три карточки под showreel теперь предназначены для отдельных работ.
+Пока `src` пустой, видны превью и «Скоро», нажатие отключено и файл не загружается.
+Заполнить `src`, `title`, `poster` в `defaults` файла `assets/film-player.js`;
+также поддерживаются `window.MB_FILM_WORKS` до инициализации и
+`MBFilmPlayer.setWorks(items)` после неё. Новый ролик открывается в том же
+плавном окне, приостанавливает showreel, а после закрытия возвращает его
+предыдущую позицию и состояние воспроизведения. Тест `python tools/check-film-player.py`
+проверяет управление, переходы, отдельную работу, возврат, мобильную ширину,
+reduced motion и очистку при выходе.
 
 `python tools/check-film-studio.py` проверяет настоящий встроенный интерфейс:
 единый видеоплеер, запуск с нуля после переноса клипа, сохранение позиции
