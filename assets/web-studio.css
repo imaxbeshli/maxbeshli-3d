@@ -1,6 +1,6 @@
 /* The website recording uses the existing floating frame without cropping. */
 #ecosystem-modal[data-scene="1"]{background:#0b1015}
-[data-scene="1"] .section-environment{background:radial-gradient(ellipse at 75% 30%,#35443e80,transparent 62%),linear-gradient(140deg,#12191e,#0b1015 70%);transform:none}
+[data-scene="1"] .section-environment{transform:none}
 [data-scene="1"] .section-light{background:radial-gradient(ellipse at 70% 20%,#c8ba8f25,transparent 60%);filter:blur(35px);opacity:.6}
 #ecosystem-modal[data-scene="1"] .section-layout{max-width:1520px;margin:30px auto 0}
 #ecosystem-modal[data-scene="1"] .section-layout>.section-intro{display:none}
