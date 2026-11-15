@@ -3708,6 +3708,21 @@ window.MBEnvironment={
       else{const v=param.value;param.cancelScheduledValues(now);param.setValueAtTime(v,now)}
       param.linearRampToValueAtTime(value,now+seconds);
     }
+    let approvedGlitchBuffer=null,approvedGlitchLoading=null;
+    function loadApprovedGlitchSound(){
+      if(approvedGlitchBuffer)return Promise.resolve(approvedGlitchBuffer);
+      if(!audioCtx)return Promise.resolve(null);
+      if(!approvedGlitchLoading){
+        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);
+        approvedGlitchLoading=fetch('assets/mb-original-noise-v1.wav',{signal:controller.signal})
+          .then(response=>{if(!response.ok)throw Error('MB sound unavailable');return response.arrayBuffer()})
+          .then(bytes=>audioCtx.decodeAudioData(bytes))
+          .then(buffer=>approvedGlitchBuffer=buffer)
+          .catch(()=>null)
+          .finally(()=>{clearTimeout(timer);approvedGlitchLoading=null});
+      }
+      return approvedGlitchLoading;
+    }
     async function initAudio(){
       try{
         if(!audioCtx){
@@ -3717,6 +3732,7 @@ window.MBEnvironment={
           musicSource.connect(masterGain);
 
         }
+        if(!isMuted&&!document.hidden)loadApprovedGlitchSound();
         // Start from the entry click so browser autoplay rules allow playback.
         if(studioEntered&&!isMuted&&!document.hidden){
           if(backgroundMusic.paused)backgroundMusic.play().catch(()=>{});
@@ -3761,7 +3777,19 @@ window.MBEnvironment={
     }
     function stopGlitchSound(){if(!glitchVoice)return;const v=glitchVoice;glitchVoice=null;ramp(v.bus.gain,0,.055);v.sources.forEach(s=>{try{s.stop(audioCtx.currentTime+.07)}catch(e){}})}
     function playGlitchSound(duration){
-      stopGlitchSound();if(!audioCtx||isMuted||audioCtx.state!=='running')return;
+      stopGlitchSound();if(!audioCtx||isMuted||document.hidden||audioCtx.state!=='running')return;
+      if(approvedGlitchBuffer){
+        const now=audioCtx.currentTime,bus=audioCtx.createGain(),source=audioCtx.createBufferSource();
+        // The approved recording already includes the original .65 master gain.
+        // Compensate once so its level matches the file the user listened to.
+        bus.gain.value=1/.65;bus.connect(masterGain);
+        source.buffer=approvedGlitchBuffer;source.connect(bus);
+        const voice={bus,sources:[source]};glitchVoice=voice;
+        source.start(now);source.stop(now+Math.min(duration,approvedGlitchBuffer.duration));
+        source.onended=()=>{source.disconnect();bus.disconnect();if(glitchVoice===voice)glitchVoice=null};
+        return;
+      }
+      // Keep the original noise generator as an offline/network-failure fallback.
       const now=audioCtx.currentTime,bus=audioCtx.createGain(),filter=audioCtx.createBiquadFilter();
       bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(.38,now+.06);bus.gain.setValueAtTime(.38,now+duration-.65);bus.gain.linearRampToValueAtTime(0,now+duration);
       filter.type='lowpass';filter.frequency.value=4400;filter.Q.value=.45;filter.connect(bus);bus.connect(masterGain);
@@ -4704,7 +4732,7 @@ window.MBEnvironment={
     const heroGlitch=MBHeroGlitch.create([heroTitle,heroSubtitle,heroDesc],heroLeftInner),GLITCH_DURATION=MBHeroGlitch.duration;
     let glitchToken=0;
     function finishGlitch(){heroGlitch.finish();stopGlitchSound()}
-    logoGlitch?.addEventListener('click',async e=>{e.preventDefault();const token=++glitchToken;finishGlitch();await initAudio();if(token!==glitchToken)return;heroGlitch.start(performance.now());playGlitchSound(GLITCH_DURATION)});
+    logoGlitch?.addEventListener('click',async e=>{e.preventDefault();const token=++glitchToken;finishGlitch();await initAudio();if(!isMuted&&!document.hidden)await loadApprovedGlitchSound();if(token!==glitchToken||document.hidden)return;heroGlitch.start(performance.now());playGlitchSound(GLITCH_DURATION)});
     function updateGlitch(){const active=heroGlitch.active;heroGlitch.update(performance.now());if(active&&!heroGlitch.active)stopGlitchSound()}
     const clock=new THREE.Clock(),currentLookAt=BASE_LOOK_AT.clone();let elapsed=0,poseTime=0;
 
