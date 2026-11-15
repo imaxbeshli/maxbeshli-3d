@@ -79,7 +79,7 @@
 .automation-flow{gap:62px}
 .automation-flow .tg-glass-panel{transform:rotateY(-17deg) rotateX(1deg) rotateZ(-1.5deg)}
 .tg-glass-host.glass-ready .tg-glass-panel{background:transparent!important}
-.tg-glass-host.glass-ready .tg-glass-panel:before{content:'';position:absolute;inset:var(--glass-inset,7px);border-radius:var(--glass-fill-radius,12px);background:linear-gradient(135deg,#182d4248,#10263a66);z-index:-1;pointer-events:none}
+.tg-glass-host.glass-ready .tg-glass-panel:before{content:'';position:absolute;inset:var(--glass-inset,7px);border-radius:var(--glass-fill-radius,12px);background:linear-gradient(135deg,#182d4248,#10263a66);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:-1;pointer-events:none}
 .tg-glass-host.glass-ready .flow-step.is-current:before{background:linear-gradient(135deg,#66334330,#142a4050)}
 .tg-chat{--glass-inset:12px;--glass-fill-radius:18px}.crm-app{--glass-inset:16px;--glass-fill-radius:24px}
 .tg-glass-host.glass-ready .tg-chat:before,.tg-glass-host.glass-ready .crm-app:before{background:linear-gradient(135deg,#1c3144b0,#102033c0)}

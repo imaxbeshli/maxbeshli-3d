@@ -35,7 +35,11 @@ with tempfile.TemporaryDirectory(prefix='mb-telegram-') as folder, sync_playwrig
 
     def state(): return page.evaluate('MBTelegramStudio.state')
     def click(loc):
-        loc.focus();page.wait_for_timeout(100);loc.click()
+        # Floating panels never become "stable" for Locator.click; exercise a
+        # real pointer click at the visible control, then assert its behavior.
+        loc.focus();page.wait_for_timeout(100)
+        box=loc.bounding_box();assert box is not None
+        page.mouse.click(box['x']+box['width']/2,box['y']+box['height']/2)
     def choice(text):
         page.wait_for_function('!MBTelegramStudio.state.typing')
         click(page.locator('#botActions').get_by_role('button',name=text,exact=True))

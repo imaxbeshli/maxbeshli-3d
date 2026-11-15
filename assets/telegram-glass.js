@@ -1,10 +1,23 @@
-/* One shared WebGL renderer paints the MAIN-page glass geometry behind HTML.
-   The helper createAboutFramedGlass is already embedded by embed-about.py and
-   shares the main tile's rounded bevel, .36 depth and physical face/edge setup.
-   Per-panel 2D canvases receive the result; no extra WebGL context per tile. */
+/* Cache the main tile's beveled geometry and highlights behind each HTML panel.
+   The browser composites the live background through CSS glass; never copy a
+   viewport-dependent background into a canvas while the page is scrolling.
+   One shared WebGL context renders only when panel geometry changes. */
 window.createTelegramGlass=function(root){
-  let engine=null,loading=false,failed=false,lastPaint=0,dirty=true;
+  let engine=null,loading=false,failed=false;
   const records=new Map(),hosts=[...root.querySelectorAll('.tg-glass-host')];
+  const pending=new Set(hosts),visible=new Set();
+  const intersection=new IntersectionObserver(entries=>{
+    for(const entry of entries){if(entry.isIntersecting){visible.add(entry.target);pending.add(entry.target)}else visible.delete(entry.target)}
+  },{root:document.getElementById('ecosystem-modal'),rootMargin:'80px'});
+  const resize=new ResizeObserver(entries=>{
+    for(const entry of entries){
+      const host=entry.target.closest('.tg-glass-host'),record=records.get(host);
+      if(record&&(record.w!==entry.target.offsetWidth||record.h!==entry.target.offsetHeight))host.classList.remove('glass-ready');
+      pending.add(host);
+    }
+  });
+  hosts.forEach(host=>{intersection.observe(host);resize.observe(host.querySelector('.tg-glass-panel'))});
+  window.addEventListener('resize',()=>hosts.forEach(host=>pending.add(host)),{passive:true});
   function hull(points){
     points.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
     const lower=[],upper=[];for(const p of points){while(lower.length>1&&cross(lower.at(-2),lower.at(-1),p)<=0)lower.pop();lower.push(p)}
@@ -19,25 +32,26 @@ window.createTelegramGlass=function(root){
       const scene=new T.Scene(),camera=new T.PerspectiveCamera(36,1,.01,1000),environment=createAboutFrameEnvironment(T);scene.environment=environment;
       scene.add(new T.AmbientLight(0x9aaec5,.48));const key=new T.DirectionalLight(0xe5f4ff,3.2);key.position.set(6.5,7.5,5.5);scene.add(key);
       const rim=new T.DirectionalLight(0xffffff,3);rim.position.set(-5,3,6);scene.add(rim);
-      const world=document.querySelector('.section-environment'),url=getComputedStyle(world).backgroundImage.match(/url\(["']?(.*?)["']?\)/)?.[1];
-      if(!url)throw new Error('Section environment unavailable');
-      const background=await new T.TextureLoader().loadAsync(url);background.encoding=T.sRGBEncoding;
-      const backdrop=new T.Mesh(new T.PlaneGeometry(1,1),new T.MeshBasicMaterial({map:background,toneMapped:false}));scene.add(backdrop);
-      engine={T,renderer,scene,camera,environment,world,background,backdrop,key,flip:new T.Matrix4().makeScale(1,-1,1)};
+      engine={T,renderer,scene,camera,environment,flip:new T.Matrix4().makeScale(1,-1,1)};
       renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();failed=true;hosts.forEach(h=>h.classList.remove('glass-ready'))});
-      renderer.domElement.addEventListener('webglcontextrestored',()=>{failed=false;dirty=true});
-      root.dataset.glass='ready';dirty=true;
+      renderer.domElement.addEventListener('webglcontextrestored',()=>{failed=false;records.forEach(r=>r.signature=null);hosts.forEach(h=>pending.add(h))});
+      root.dataset.glass='ready';hosts.forEach(h=>pending.add(h));
     }catch(e){failed=true;root.dataset.glass='fallback';console.warn('Telegram glass fallback:',e.message)}finally{loading=false}
   }
   function disposeRecord(record){record.pane.geometry.dispose();record.pane.material.forEach(m=>m.dispose())}
-  function paint(host,now){
+  function paint(host){
     const e=engine,panel=host.querySelector('.tg-glass-panel'),canvas=host.querySelector('.tg-glass-canvas'),w=panel.offsetWidth,h=panel.offsetHeight;
     if(!w||!h)return;
     const css=getComputedStyle(panel),pad=innerWidth<901?14:32,unit=w/6,cw=w+pad*2,ch=h+pad*2,perspective=parseFloat(getComputedStyle(host).perspective)||1400;
     let r=records.get(host);
+    const signature=[w,h,pad,perspective,css.transform].join('|');
+    if(r?.signature===signature){host.classList.add('glass-ready');return}
     if(!r||r.w!==w||r.h!==h||r.pad!==pad){
       if(r)disposeRecord(r);
       const pane=createAboutFramedGlass(e.T,{width:6,height:h/unit,environment:e.environment});pane.matrixAutoUpdate=false;
+      // Keep reflective faces and bevels, with true alpha over the live CSS backdrop.
+      // Transmission would render an opaque snapshot and require per-scroll redraws.
+      pane.material.forEach((material,index)=>{material.opacity*=index===0?.2:.4;material.transmission=0});
       const positions=pane.geometry.attributes.position,unique=new Map();
       for(let i=0;i<positions.count;i++){const v=new e.T.Vector3().fromBufferAttribute(positions,i);unique.set(v.toArray().map(n=>n.toFixed(4)).join(','),v)}
       r={w,h,pad,pane,vertices:[...unique.values()],transform:null,outline:null};records.set(host,r);
@@ -52,21 +66,15 @@ window.createTelegramGlass=function(root){
       r.pane.matrix.copy(matrix);r.pane.updateMatrixWorld(true);
       r.outline=hull(r.vertices.map(v=>{const p=v.clone().applyMatrix4(matrix).project(e.camera);return [(p.x+1)*cw/2,(1-p.y)*ch/2]}));r.transform=css.transform;
     }
-    // Use the background's actual cover/crop and parallax position for refraction.
-    const world=e.world.getBoundingClientRect(),box=host.getBoundingClientRect(),img=e.background.image,cover=Math.max(world.width/img.width,world.height/img.height),depth=8,factor=1+depth/e.camera.position.z;
-    e.backdrop.position.set(((world.left+world.width/2)-(box.left+w/2))/unit*factor,-((world.top+world.height/2)-(box.top+h/2))/unit*factor,-depth);
-    e.backdrop.scale.set(img.width*cover/unit*factor,img.height*cover/unit*factor,1);
-    e.key.position.x=6.5+(matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.sin(now*.00018)*.8);
     e.scene.add(r.pane);e.renderer.render(e.scene,e.camera);e.scene.remove(r.pane);
-    const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cw,ch);ctx.save();ctx.beginPath();r.outline.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.clip();ctx.drawImage(e.renderer.domElement,0,0,cw,ch);ctx.restore();host.classList.add('glass-ready');
+    const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cw,ch);ctx.save();ctx.beginPath();r.outline.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.clip();ctx.drawImage(e.renderer.domElement,0,0,cw,ch);ctx.restore();r.signature=signature;host.classList.add('glass-ready');
   }
-  return {invalidate(){dirty=true;init()},update(now){
-    if(!engine){init();return}if(failed||document.hidden||(!dirty&&now-lastPaint<(innerWidth<541?66:42)))return;
-    lastPaint=now;dirty=false;hosts.forEach(h=>{
-      const panel=h.querySelector('.tg-glass-panel'),record=records.get(h);
-      // A hidden desktop canvas must not widen the mobile scroll container.
-      if(record&&(record.w!==panel.offsetWidth||record.h!==panel.offsetHeight))h.classList.remove('glass-ready');
-      const r=h.getBoundingClientRect();if(r.bottom>0&&r.top<innerHeight&&h.getClientRects().length&&!h.closest('[hidden]'))paint(h,now);
-    });
+  return {invalidate(){hosts.forEach(h=>pending.add(h));init()},update(){
+    if(!engine){init();return}if(failed||document.hidden||!pending.size)return;
+    // Scrolling and CSS float/parallax need no WebGL renders or canvas readbacks.
+    for(const host of pending){
+      if(!visible.has(host)||host.closest('[hidden]'))continue;
+      paint(host);pending.delete(host);
+    }
   }};
 };
