@@ -1108,6 +1108,12 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 #ecosystem-modal.is-scroll-story .section-footer button{pointer-events:auto;background-color:#121923b8}
 #ecosystem-modal.is-scroll-story #telegramBot,#ecosystem-modal.is-scroll-story #telegramCRM{width:100%;height:auto;max-width:800px;margin:0 auto}
 #ecosystem-modal.is-scroll-story #telegramBot{max-width:600px}
+/* Keep the glass frame stable while reply buttons and chat history change. */
+#ecosystem-modal.is-scroll-story #telegramBot .tg-chat{height:620px;min-height:0;display:flex;flex-direction:column}
+#ecosystem-modal.is-scroll-story #telegramBot .tg-chat-header{flex-shrink:0}
+#ecosystem-modal.is-scroll-story #telegramBot .tg-chat-history{height:auto;min-height:0;flex:1;overflow-y:auto}
+#ecosystem-modal.is-scroll-story #telegramBot .tg-chat-history>*{flex-shrink:0}
+#ecosystem-modal.is-scroll-story #telegramBot .tg-chat-bottom{flex:0 0 auto;max-height:60%;overflow-y:auto;overscroll-behavior:contain}
 #ecosystem-modal.is-scroll-story #telegramCRM .crm-app{height:auto;max-height:none;min-height:550px}
 #ecosystem-modal.is-scroll-story .crm-view{overflow:visible;flex:none}
 #ecosystem-modal.is-scroll-story .crm-lead-detail.is-highlighted{animation:crmArrival 1.6s ease}
@@ -1130,9 +1136,7 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
  .scroll-copy h2{font-size:27px}.scroll-copy p{font-size:13px}.scroll-chapter{gap:26px}
  #ecosystem-modal.is-scroll-story .section-footer{right:18px;bottom:max(14px,env(safe-area-inset-bottom))}
  #ecosystem-modal.is-scroll-story #telegramApp{height:460px;grid-template-rows:minmax(0,1fr) 86px;gap:28px}
- #ecosystem-modal.is-scroll-story #telegramBot .tg-chat{height:auto}
- #ecosystem-modal.is-scroll-story #telegramBot .tg-chat-history{height:280px;flex:none}
- #ecosystem-modal.is-scroll-story #telegramBot .tg-chat-bottom{max-height:none;overflow:visible;flex:none}
+ #ecosystem-modal.is-scroll-story #telegramBot .tg-chat{height:600px}
  #ecosystem-modal.is-scroll-story #telegramCRM .crm-app{height:auto;min-height:0}
  #ecosystem-modal.is-scroll-story .tg-chat-history,#ecosystem-modal.is-scroll-story .crm-lead-list,#ecosystem-modal.is-scroll-story .crm-history{overscroll-behavior:auto}
  #ecosystem-modal.is-scroll-story .tg-workspace-host .tg-glass-panel{transform:none}
