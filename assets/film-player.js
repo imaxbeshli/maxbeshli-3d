@@ -47,7 +47,7 @@
     if(!active||!main||dialog.open)return;
     const rect=(origin.matches('[data-film-work]')?origin:shooting).getBoundingClientRect();
     home=shooting.parentElement;float=home.closest('.section-float');float?.classList.add('is-player-expanded');returnFocus=origin;
-    dialog.classList.remove('is-closing');dialog.showModal();stage.append(shooting);reveal();expandedLabel(true);
+    dialog.classList.remove('is-closing');$('filmFullscreenClose').hidden=false;dialog.showModal();stage.append(shooting);reveal();expandedLabel(true);
     const token=++transition;
     await move(transformFor(rect),'none',false);
     if(token!==transition)return;
@@ -72,6 +72,8 @@
   }
   async function collapse(immediate=false,focus=true){
     if(!dialog.open)return;
+    // Remove the close control immediately, before the video starts shrinking.
+    $('filmFullscreenClose').hidden=true;
     const token=++transition;
     if(immediate){finishCollapse(focus);return}
     const from=getComputedStyle(shooting).transform;

@@ -37,6 +37,7 @@ with sync_playwright() as p:
   assert not page.evaluate('v.controls')
   assert page.locator('#filmChapters button:disabled').count()==3
   assert page.locator('[data-film-time]').count()==0
+  assert page.locator('#filmChapters svg').count()==0
   page.mouse.move(250,250);assert not page.locator('#filmControls').is_visible()
   page.screenshot(path=str(artifacts/f'film-player-{width}-entry.png'))
   tap('#filmReveal');assert page.locator('#filmControls').is_visible()
@@ -55,10 +56,20 @@ with sync_playwright() as p:
   assert page.evaluate('v.currentTime')>=before
   assert page.locator('#filmFullscreen video').count()==1
   assert not page.evaluate('v.controls')
+  assert page.locator('#filmFullscreenClose').is_visible()
+  close_style=page.locator('#filmFullscreenClose').evaluate('e=>{e.focus();const s=getComputedStyle(e);return [s.backgroundColor,s.borderTopWidth,s.outlineStyle,s.boxShadow]}')
+  assert close_style==['rgba(0, 0, 0, 0)','0px','none','none'],close_style
   page.screenshot(path=str(artifacts/f'film-player-{width}-fullscreen.png'))
   if mobile:tap('#filmFullscreenClose')
   else:page.keyboard.press('Escape')
+  # The video still animates home, but the close control must disappear at once.
+  assert page.locator('#filmFullscreenClose').is_hidden()
+  if mobile:
+   page.wait_for_timeout(80)
+   page.screenshot(path=str(artifacts/'film-player-mobile-closing.png'))
   page.wait_for_function('!filmFullscreen.open')
+  page.wait_for_timeout(650)
+  assert page.locator('#filmFullscreenClose').is_hidden()
   assert page.locator('#filmScene .film-frame #sectionVideoSlot video').count()==1
   assert page.evaluate('v.currentTime')>=before
   assert not page.evaluate('v.paused')
@@ -89,7 +100,7 @@ with sync_playwright() as p:
   assert page.locator('#filmScene video').count()==0
   page.evaluate('MBSections.open(0)');assert not page.locator('#filmControls').is_visible()
   assert not errors,errors
-  print('PASS',width,'hidden controls, playback/seek/audio, animated open/close, works, scroll, reduced motion, teardown',flush=True)
+  print('PASS',width,'clean cards/close icon, immediate close-button removal, playback, animated open/close, works, scroll, reduced motion',flush=True)
   context.close()
  browser.close()
 server.shutdown()
