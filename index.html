@@ -3761,42 +3761,26 @@ window.MBEnvironment={
     }
     function stopGlitchSound(){if(!glitchVoice)return;const v=glitchVoice;glitchVoice=null;ramp(v.bus.gain,0,.055);v.sources.forEach(s=>{try{s.stop(audioCtx.currentTime+.07)}catch(e){}})}
     function playGlitchSound(duration){
-      stopGlitchSound();if(!audioCtx||isMuted||document.hidden||audioCtx.state!=='running')return;
-      const now=audioCtx.currentTime,length=duration,bus=audioCtx.createGain();
-      const high=audioCtx.createBiquadFilter(),low=audioCtx.createBiquadFilter();
-      bus.gain.setValueAtTime(.48,now);bus.gain.setValueAtTime(.48,now+Math.max(0,length-.35));bus.gain.linearRampToValueAtTime(0,now+length);
-      high.type='highpass';high.frequency.value=180;high.Q.value=.5;
-      low.type='lowpass';low.frequency.value=3800;low.Q.value=.5;
-      high.connect(low);low.connect(bus);bus.connect(masterGain);
-      const source=audioCtx.createBufferSource(),buffer=audioCtx.createBuffer(2,Math.ceil(audioCtx.sampleRate*length),audioCtx.sampleRate);
-      const rate=audioCtx.sampleRate;
-      // Sparse, irregular bit-crushed transients with silent signal dropouts.
-      // No oscillator, pitched sequence or continuous noise bed.
-      const bursts=[[.008,.016,.9],[.049,.009,.5],[.106,.027,.75],[.145,.012,.48],
-        [.233,.031,.64],[.274,.01,.4],[.353,.024,.42],[.395,.012,.23]];
-      let seed=0x4d42;
-      function random(){seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296}
-      // Continue the same click pattern at its original speed for the full text effect.
-      for(let offset=0;offset<length;offset+=.46){
-        for(const [localStart,span,level] of bursts){
-          const start=offset+localStart;if(start>=length)continue;
-          const first=Math.round(start*rate),count=Math.min(Math.round(span*rate),buffer.length-first);
-          let held=0,next=0;
-          for(let n=0;n<count;n++){
-            const t=n/rate;
-            if(n>=next){held=(random()>.5?1:-1)*(.4+random()*.6);next=n+Math.max(1,Math.round(rate*(.0002+random()*.0011)))}
-            const attack=Math.min(1,t/.0012),release=Math.min(1,(count-1-n)/(rate*.0025));
-            const envelope=attack*release*Math.exp(-t/(span*.48));
-            const dropout=span>.02&&t>.009&&t<.013?0:1;
-            const sample=held*level*envelope*dropout;
-            buffer.getChannelData(0)[first+n]=sample;
-            buffer.getChannelData(1)[first+n]=sample;
-          }
+      stopGlitchSound();if(!audioCtx||isMuted||audioCtx.state!=='running')return;
+      const now=audioCtx.currentTime,bus=audioCtx.createGain(),filter=audioCtx.createBiquadFilter();
+      bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(.38,now+.06);bus.gain.setValueAtTime(.38,now+duration-.65);bus.gain.linearRampToValueAtTime(0,now+duration);
+      filter.type='lowpass';filter.frequency.value=4400;filter.Q.value=.45;filter.connect(bus);bus.connect(masterGain);
+      const noise=audioCtx.createBufferSource(),buffer=audioCtx.createBuffer(2,Math.ceil(audioCtx.sampleRate*duration),audioCtx.sampleRate);
+      for(let channel=0;channel<2;channel++){
+        const data=buffer.getChannelData(channel);let low=0,hold=0,phase=0,grain=0,next=0,grainEnd=0,grainStart=0;
+        for(let i=0;i<data.length;i++){
+          const t=i/audioCtx.sampleRate,white=Math.random()*2-1;low+=.045*(white-low);
+          if(i%9===0)hold=white;
+          if(t>=next){grainStart=t;grainEnd=t+.018+Math.random()*.075;next=grainEnd+.025+Math.random()*.07;grain=.4+Math.random()*.5}
+          const attack=Math.min(1,(t-grainStart)/.004),release=Math.max(0,Math.min(1,(grainEnd-t)/.02));
+          const packet=grain*attack*release;
+          phase+=2*Math.PI*(64-18*t/duration)/audioCtx.sampleRate;
+          const texture=.4*low+.16*white+.48*hold*packet+.13*Math.sin(phase)*(1-t/duration);
+          data[i]=Math.tanh(texture*1.8)*Math.min(1,t/.008,(duration-t)/.025);
         }
       }
-      source.buffer=buffer;source.connect(high);const voice={bus,sources:[source]};glitchVoice=voice;
-      source.start(now);source.stop(now+length+.025);
-      source.onended=()=>{source.disconnect();high.disconnect();low.disconnect();bus.disconnect();if(glitchVoice===voice)glitchVoice=null};
+      noise.buffer=buffer;noise.connect(filter);const v={bus,sources:[noise]};glitchVoice=v;noise.start(now);noise.stop(now+duration+.025);
+      noise.onended=()=>{noise.disconnect();filter.disconnect();bus.disconnect();if(glitchVoice===v)glitchVoice=null};
     }
     const soundButton=document.getElementById('soundToggle');
     const soundWave=document.getElementById('soundWave');
