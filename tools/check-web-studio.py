@@ -40,6 +40,7 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
  assert page.locator('#webScene button,#webScene input').count()==0
  player=page.locator('#webReadyVideo')
  assert player.evaluate('v=>v.muted&&v.defaultMuted&&v.loop&&v.playsInline&&!v.controls')
+ assert player.evaluate("v=>v.currentSrc.includes('intro-scroll-60fps.mp4')")
  assert page.locator('.web-ready .web-site-float').evaluate('e=>getComputedStyle(e).animationName')=='none'
  assert page.locator('.web-ready .scroll-media').evaluate('e=>getComputedStyle(e).transform')=='none'
  assert page.locator('#story-1-0 .web-site-float').evaluate('e=>getComputedStyle(e).animationName')!='none'
@@ -56,6 +57,7 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
   page.screenshot(path=f'/tmp/forma-{width}.png')
   page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop=e.scrollHeight')
   page.wait_for_function('!webReadyVideo.paused && webReadyVideo.currentTime>0')
+  assert page.locator('.section-light').evaluate("e=>getComputedStyle(e).animationName==='none'&&getComputedStyle(e).filter==='none'")
   assert player.evaluate('v=>v.videoWidth===1280 && v.videoHeight===720 && Math.abs(v.duration-34.966667)<.04')
   page.wait_for_function('!__MB.slateObjects[1].architectureDemo.state.active')
   t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(200);assert page.evaluate('MBWebStudio.state.time')==t
@@ -63,6 +65,7 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
   page.screenshot(path=f'/tmp/avtolab-ready-{width}.png')
  print('PASS FORMA then AVTOLAB on five sizes, separate visibility playback, scrolling contact and no extra controls',flush=True)
  page.locator('#sectionContact').click();page.wait_for_function('webReadyVideo.paused')
+ assert not page.locator('#ecosystem-modal').evaluate("e=>e.classList.contains('is-web-video-playing')")
  t=player.evaluate('v=>v.currentTime');page.wait_for_timeout(300);assert player.evaluate('v=>v.currentTime')==t
  page.keyboard.press('Escape');page.wait_for_function('!infoDialog.open')
  page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop=e.scrollHeight');page.wait_for_function('!webReadyVideo.paused')

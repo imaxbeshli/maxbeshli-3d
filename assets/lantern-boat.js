@@ -62,8 +62,8 @@ window.MBLanternBoat = (() => {
     const bracket=new T.CatmullRomCurve3([new T.Vector3(.43,.12,0),new T.Vector3(.44,.58,0),new T.Vector3(.41,.72,0),new T.Vector3(.28,.74,0),new T.Vector3(.23,.66,0)]);
     mesh(new T.TubeGeometry(bracket,32,.011,10,false),metal);
     const lamp=new T.Group();lamp.position.set(.23,.62,0);root.add(lamp);
-    const glass=new T.MeshBasicMaterial({color:0xffd383,transparent:true,depthWrite:false,fog:false,toneMapped:false});materials.push(glass);
-    const flame=new T.MeshBasicMaterial({color:0xfff2bf,transparent:true,depthWrite:false,fog:false,toneMapped:false});materials.push(flame);
+    const glass=new T.MeshBasicMaterial({color:0xffd383,transparent:true,depthWrite:false,fog:true,toneMapped:false});materials.push(glass);
+    const flame=new T.MeshBasicMaterial({color:0xfff2bf,transparent:true,depthWrite:false,fog:true,toneMapped:false});materials.push(flame);
     const chimney=[new T.Vector2(.038,-.14),new T.Vector2(.053,-.12),new T.Vector2(.061,-.06),new T.Vector2(.053,.005),new T.Vector2(.034,.025)];
     mesh(new T.LatheGeometry(chimney,24),glass,0,0,0,lamp);
     mesh(new T.SphereGeometry(.026,16,12),flame,0,-.055,0,lamp).scale.set(.65,1.5,.65);
@@ -72,14 +72,15 @@ window.MBLanternBoat = (() => {
     const c=document.createElement('canvas');c.width=c.height=64;
     const ctx=c.getContext('2d'),g=ctx.createRadialGradient(32,32,0,32,32,32);
     g.addColorStop(0,'rgba(255,235,170,.95)');g.addColorStop(.18,'rgba(255,190,80,.5)');g.addColorStop(.5,'rgba(255,146,35,.10)');g.addColorStop(1,'rgba(255,130,30,0)');ctx.fillStyle=g;ctx.fillRect(0,0,64,64);
-    const haloMaterial=new T.SpriteMaterial({map:new T.CanvasTexture(c),color:0xffc36c,blending:T.AdditiveBlending,transparent:true,depthWrite:false,fog:false,toneMapped:false});
-    const halo=new T.Sprite(haloMaterial);halo.position.set(0,-.055,0);halo.scale.set(.9,.9,1);lamp.add(halo);
-    let elapsed=0,last=null,state=sample(0);
+    const haloMaterial=new T.SpriteMaterial({map:new T.CanvasTexture(c),color:0xffc36c,blending:T.AdditiveBlending,transparent:true,depthWrite:false,fog:true,toneMapped:false});
+    const halo=new T.Sprite(haloMaterial);halo.position.set(0,-.055,0);halo.scale.set(.65,.65,1);lamp.add(halo);
+    let elapsed=0,last=null,state=sample(0),wakeStrength=0;
     function update(now,active,backdrop) {
       const dt=last===null?0:Math.min(.05,Math.max(0,(now-last)/1000));last=now;
       if(active)elapsed+=dt;
       state=sample(elapsed);root.visible=state.visible;
       const source=water.material.uniforms.uFallSource.value;
+      // Stay behind all shoreline mist planes, in both the main and mirror views.
       root.position.set(source.x-3.5+state.progress*14.5,floor+.025+Math.sin(elapsed*1.2)*.008,-20.25+Math.sin(state.progress*Math.PI)*.25);
       root.rotation.set(Math.sin(elapsed*.85)*.009,-.18,Math.sin(elapsed*1.05)*.009);
       lamp.rotation.z=Math.sin(elapsed*.95+.5)*.025;
@@ -87,7 +88,9 @@ window.MBLanternBoat = (() => {
       materials.forEach(m=>{m.opacity=state.opacity;});
       const flicker=.96+.025*Math.sin(elapsed*1.7)+.015*Math.sin(elapsed*3.3);
       haloMaterial.opacity=state.opacity*.85*flicker;glass.color.setRGB(1,.79*flicker,.43*flicker);
-      water.material.uniforms.uBoat.value.set(root.position.x,root.position.z,state.visible?state.opacity:0);
+      // The wake lingers briefly after the hull fades into the distant haze.
+      if(active){const target=state.visible?state.opacity:0;wakeStrength+=(target-wakeStrength)*(1-Math.exp(-(target>wakeStrength?2.5:.45)*dt));}
+      water.material.uniforms.uBoat.value.set(root.position.x,root.position.z,wakeStrength);
     }
     return {root,update,get state(){return {...state,elapsed};}};
   }

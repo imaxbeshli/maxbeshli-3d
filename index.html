@@ -332,6 +332,10 @@
       will-change: transform, opacity, filter;
     }
 
+    .glitch-word{display:inline-block;white-space:nowrap}
+    .glitch-letter{display:inline-block;position:relative}
+    .glitch-noise{position:absolute;inset:0;pointer-events:none}
+
     .hero-left-inner.glitching {
       animation: none;
     }
@@ -1179,6 +1183,12 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
  #ecosystem-modal.is-scroll-story #webScene .web-ready .scroll-media{transition:none}
 }
 
+/* Give the 60 fps recording its own compositing surface. Freeze the large
+   ambient light while it plays; its radial gradient is already soft. */
+#webReadyVideo{transform:translateZ(0)}
+.web-ready .web-preview-stage{isolation:isolate}
+#ecosystem-modal[data-scene="1"].is-web-video-playing .section-light{animation:none;filter:none}
+
 /* Shared editorial scale and viewport budget for every service section. */
 #ecosystem-modal.is-scroll-story{--chapter-title:clamp(28px,2.7vw,38px);--section-body:15px;padding-top:16px}
 #ecosystem-modal.is-scroll-story .section-layout{max-width:1520px;margin:16px auto 0;min-height:0}
@@ -1305,7 +1315,7 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
         <p class="web-hero-lead">AVTOLAB77 — услуги, работы и запись в студию. Всё, что нужно клиенту для первого шага.</p>
       </div>
       <div class="web-live-site"><div class="web-site-float"><div class="web-preview-stage">
-        <video id="webReadyVideo" src="assets/avtolab77-intro-scroll.mp4?v=1" poster="assets/avtolab77-intro-poster.webp" muted loop playsinline preload="auto" disablepictureinpicture disableremoteplayback tabindex="-1" aria-label="Готовый сайт AVTOLAB77"></video>
+        <video id="webReadyVideo" src="assets/avtolab77-intro-scroll-60fps.mp4?v=2" poster="assets/avtolab77-intro-poster.webp" muted loop playsinline preload="auto" disablepictureinpicture disableremoteplayback tabindex="-1" aria-label="Готовый сайт AVTOLAB77"></video>
       </div></div></div>
     </div>
   </section>
@@ -1833,6 +1843,7 @@ window.createTelegramGlass=function(root){
   function playback(active,retry=false){
     if(active===playing&&!retry)return;
     playing=active;
+    document.getElementById('ecosystem-modal').classList.toggle('is-web-video-playing',active);
     if(active)video.play().catch(()=>{});else video.pause();
   }
   function visible(id){
@@ -3400,8 +3411,8 @@ window.MBLanternBoat = (() => {
     const bracket=new T.CatmullRomCurve3([new T.Vector3(.43,.12,0),new T.Vector3(.44,.58,0),new T.Vector3(.41,.72,0),new T.Vector3(.28,.74,0),new T.Vector3(.23,.66,0)]);
     mesh(new T.TubeGeometry(bracket,32,.011,10,false),metal);
     const lamp=new T.Group();lamp.position.set(.23,.62,0);root.add(lamp);
-    const glass=new T.MeshBasicMaterial({color:0xffd383,transparent:true,depthWrite:false,fog:false,toneMapped:false});materials.push(glass);
-    const flame=new T.MeshBasicMaterial({color:0xfff2bf,transparent:true,depthWrite:false,fog:false,toneMapped:false});materials.push(flame);
+    const glass=new T.MeshBasicMaterial({color:0xffd383,transparent:true,depthWrite:false,fog:true,toneMapped:false});materials.push(glass);
+    const flame=new T.MeshBasicMaterial({color:0xfff2bf,transparent:true,depthWrite:false,fog:true,toneMapped:false});materials.push(flame);
     const chimney=[new T.Vector2(.038,-.14),new T.Vector2(.053,-.12),new T.Vector2(.061,-.06),new T.Vector2(.053,.005),new T.Vector2(.034,.025)];
     mesh(new T.LatheGeometry(chimney,24),glass,0,0,0,lamp);
     mesh(new T.SphereGeometry(.026,16,12),flame,0,-.055,0,lamp).scale.set(.65,1.5,.65);
@@ -3410,14 +3421,15 @@ window.MBLanternBoat = (() => {
     const c=document.createElement('canvas');c.width=c.height=64;
     const ctx=c.getContext('2d'),g=ctx.createRadialGradient(32,32,0,32,32,32);
     g.addColorStop(0,'rgba(255,235,170,.95)');g.addColorStop(.18,'rgba(255,190,80,.5)');g.addColorStop(.5,'rgba(255,146,35,.10)');g.addColorStop(1,'rgba(255,130,30,0)');ctx.fillStyle=g;ctx.fillRect(0,0,64,64);
-    const haloMaterial=new T.SpriteMaterial({map:new T.CanvasTexture(c),color:0xffc36c,blending:T.AdditiveBlending,transparent:true,depthWrite:false,fog:false,toneMapped:false});
-    const halo=new T.Sprite(haloMaterial);halo.position.set(0,-.055,0);halo.scale.set(.9,.9,1);lamp.add(halo);
+    const haloMaterial=new T.SpriteMaterial({map:new T.CanvasTexture(c),color:0xffc36c,blending:T.AdditiveBlending,transparent:true,depthWrite:false,fog:true,toneMapped:false});
+    const halo=new T.Sprite(haloMaterial);halo.position.set(0,-.055,0);halo.scale.set(.65,.65,1);lamp.add(halo);
     let elapsed=0,last=null,state=sample(0),wakeStrength=0;
     function update(now,active,backdrop) {
       const dt=last===null?0:Math.min(.05,Math.max(0,(now-last)/1000));last=now;
       if(active)elapsed+=dt;
       state=sample(elapsed);root.visible=state.visible;
       const source=water.material.uniforms.uFallSource.value;
+      // Stay behind all shoreline mist planes, in both the main and mirror views.
       root.position.set(source.x-3.5+state.progress*14.5,floor+.025+Math.sin(elapsed*1.2)*.008,-20.25+Math.sin(state.progress*Math.PI)*.25);
       root.rotation.set(Math.sin(elapsed*.85)*.009,-.18,Math.sin(elapsed*1.05)*.009);
       lamp.rotation.z=Math.sin(elapsed*.95+.5)*.025;
@@ -3436,6 +3448,63 @@ window.MBLanternBoat = (() => {
 
 </script>
 <!-- WATERFALL_END -->
+<!-- HERO_GLITCH_START -->
+<script>
+/* Stable text layout, independent letter timing and a soft return to the original. */
+window.MBHeroGlitch = (() => {
+  const duration = 3.6, alphabet = '0123456789ABCDEF#%';
+  const smooth = (a,b,x) => {const p=Math.max(0,Math.min(1,(x-a)/(b-a)));return p*p*(3-2*p);};
+  function create(elements, container) {
+    const originals=elements.map(el=>({el,html:el.innerHTML,label:el.getAttribute('aria-label'),text:el.textContent}));
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+    let started=null,letters=[];
+    function finish(){
+      if(started===null)return;
+      started=null;letters=[];
+      originals.forEach(r=>{r.el.innerHTML=r.html;if(r.label===null)r.el.removeAttribute('aria-label');else r.el.setAttribute('aria-label',r.label)});
+      container.classList.remove('glitching');container.style.removeProperty('filter');
+    }
+    function start(now){
+      finish();started=now;container.classList.add('glitching');
+      if(reduced.matches)return;
+      originals.forEach(r=>{
+        const spread=Math.min(1,parseFloat(getComputedStyle(r.el).fontSize)/40);
+        r.el.setAttribute('aria-label',r.text);r.el.replaceChildren();
+        r.text.split(/(\s+)/).forEach(word=>{
+          if(/^\s+$/.test(word)){r.el.append(document.createTextNode(word));return}
+          const group=document.createElement('span');group.className='glitch-word';group.setAttribute('aria-hidden','true');
+          for(const ch of word){
+            const el=document.createElement('span'),base=document.createElement('span'),noise=document.createElement('span');
+            el.className='glitch-letter';base.textContent=ch;noise.className='glitch-noise';el.append(base,noise);group.append(el);
+            letters.push({el,base,noise,end:.52+Math.random()*.42,x:(Math.random()*2-1)*8*spread,y:(Math.random()*2-1)*5*spread,rotation:(Math.random()*2-1)*5,phase:Math.random()*Math.PI*2,rate:15+Math.random()*17,tick:-1});
+          }
+          r.el.append(group);
+        });
+      });
+      update(now);
+    }
+    function update(now){
+      if(started===null)return;
+      const age=Math.max(0,(now-started)/1000),p=age/duration;
+      if(p>=1){finish();return}
+      const strength=smooth(0,.04,p)*(1-smooth(.42,1,p));
+      container.style.filter=`drop-shadow(${3*strength}px 0 rgba(255,35,60,${.65*strength})) drop-shadow(${-3*strength}px 0 rgba(0,215,255,${.65*strength}))`;
+      letters.forEach(l=>{
+        const scatter=smooth(0,.045,p)*(1-smooth(l.end-.25,l.end,p));
+        // Each glyph fades onto its original, in random order, without changing width.
+        const noise=smooth(0,.025,p)*(1-smooth(l.end-.17,l.end,p));
+        const tick=Math.floor(l.rate*.8*Math.log1p(age/.8)+l.phase);
+        if(noise>0&&tick!==l.tick){l.tick=tick;l.noise.textContent=alphabet[Math.floor(Math.random()*alphabet.length)]}
+        l.noise.style.opacity=noise.toFixed(3);l.base.style.opacity=(1-noise).toFixed(3);
+        l.el.style.transform=`translate(${(l.x*scatter*Math.sin(age*8+l.phase)).toFixed(3)}px,${(l.y*scatter*Math.cos(age*7+l.phase)).toFixed(3)}px) rotate(${(l.rotation*scatter*Math.sin(age*6+l.phase)).toFixed(3)}deg)`;
+      });
+    }
+    return {start,update,finish,get active(){return started!==null}};
+  }
+  return {create,duration};
+})();
+</script>
+<!-- HERO_GLITCH_END -->
   <script>/* Main-screen cave and a shallow reflective water surface. No scroll route. */
 window.MBEnvironment={
  stoneMaps(T){
@@ -3789,11 +3858,14 @@ window.MBEnvironment={
           map: smokeTex, color: i < 2 ? 0xffc59a : 0x9abdd5,
           transparent: true, opacity: 0,
           depthWrite: false, fog: false, toneMapped: false,
-          blending: THREE.AdditiveBlending
+          // Alpha fog attenuates the hull and its reflection instead of only adding light.
+          blending: THREE.NormalBlending
         })
       );
       sMesh.name = 'Distant shoreline mist ' + (i + 1);
-      sMesh.position.set([-18, -8, 8, 18][i], -.65 + (i % 2) * .12, -22.3 + i * .25);
+      // Sort large transparent planes after the small hull, not by their centres.
+      sMesh.renderOrder = 1;
+      sMesh.position.set([-18, -8, 8, 18][i], -.65 + (i % 2) * .12, -18.8 + i * .25);
       scene.add(sMesh);
       smokeLayers.push({ mesh: sMesh, baseX: sMesh.position.x, baseY: sMesh.position.y,
         speed: .38 + i * .035, direction: i % 2 ? -1 : 1, phase: i * 1.7 });
@@ -4539,30 +4611,11 @@ window.MBEnvironment={
     document.querySelectorAll('.cta-btn').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();window.MBSections.openContact()}));
     const logoGlitch=document.getElementById('logoGlitch'),heroLeft=document.getElementById('heroLeft'),heroLeftInner=document.getElementById('heroLeftInner');
     const heroTitle=document.getElementById('heroTitle'),heroSubtitle=document.getElementById('heroSubtitle'),heroDesc=document.getElementById('heroDesc');
-    const originals=[heroTitle,heroSubtitle,heroDesc].map(el=>({el,text:el.textContent})),GLITCH_DURATION=3.6;
-    let glitchStart=null,glitchToken=0,lastGlitchFrame=0;
-    function finishGlitch(){glitchStart=null;originals.forEach(r=>r.el.textContent=r.text);heroLeftInner.classList.remove('glitching');heroLeftInner.style.transform='none';heroLeftInner.style.filter='none';stopGlitchSound()}
-    logoGlitch?.addEventListener('click',async e=>{e.preventDefault();const token=++glitchToken;finishGlitch();await initAudio();if(token!==glitchToken)return;glitchStart=audioCtx?.state==='running'?audioCtx.currentTime:performance.now()/1000;playGlitchSound(GLITCH_DURATION);heroLeftInner.classList.add('glitching');updateGlitch()});
-    function updateGlitch(){
-      if(glitchStart===null)return;
-      const now=audioCtx?.state==='running'?audioCtx.currentTime:performance.now()/1000,p=(now-glitchStart)/GLITCH_DURATION;
-      if(p>=1){finishGlitch();return}
-      const settle=THREE.MathUtils.smoothstep(p,.48,.98),strength=1-settle;
-      heroLeftInner.style.transform=`translate(${Math.sin(now*83)*3*strength}px,${Math.cos(now*67)*strength}px) skewX(${Math.sin(now*51)*strength}deg)`;
-      heroLeftInner.style.filter=`drop-shadow(${3*strength}px 0 rgba(255,35,60,${.8*strength})) drop-shadow(${-3*strength}px 0 rgba(0,215,255,${.8*strength}))`;
-      // Settled characters never scramble again. Each character has its own slower tick.
-      originals.forEach(r=>{
-        const chars=Array.from(r.text),count=chars.length;
-        r.el.textContent=chars.map((ch,i)=>{
-          if(/\s/.test(ch))return ch;
-          const end=.50+.46*(i+1)/count;
-          if(p>=end)return ch;
-          const tick=Math.floor(48*.72*Math.log(1+(now-glitchStart)/.72));
-          const key=tick*31+i*17;
-          return '01234567890123456789ABCDEF#%'[((key*13)^(key>>>2))%26];
-        }).join('');
-      });
-    }
+    const heroGlitch=MBHeroGlitch.create([heroTitle,heroSubtitle,heroDesc],heroLeftInner),GLITCH_DURATION=MBHeroGlitch.duration;
+    let glitchToken=0;
+    function finishGlitch(){heroGlitch.finish();stopGlitchSound()}
+    logoGlitch?.addEventListener('click',async e=>{e.preventDefault();const token=++glitchToken;finishGlitch();await initAudio();if(token!==glitchToken)return;heroGlitch.start(performance.now());playGlitchSound(GLITCH_DURATION)});
+    function updateGlitch(){const active=heroGlitch.active;heroGlitch.update(performance.now());if(active&&!heroGlitch.active)stopGlitchSound()}
     const clock=new THREE.Clock(),currentLookAt=BASE_LOOK_AT.clone();let elapsed=0,poseTime=0;
 
     // Фиксированный 3D-якорь левого текстового блока и верхней шапки в пространстве сцены
@@ -4934,7 +4987,7 @@ window.MBEnvironment={
       if(!window.MBLoading.ready)window.MBLoading.markFrame();
     }
 
-    window.__MB={scene,camera,slateObjects,water,lanternBoat,backdrop:backdropMesh,rocks:[rightPedestalRock,foregroundRockBottomLeft],focusTile,startDive,returnToOrbit,closeEcosystemModal,get state(){return {phase,selectedIndex,activeIndex,currentProgress,targetProgress,velocity,coastVelocity,zoomFactor,hoverIndex,studioEntered,isMuted,glitchActive:glitchStart!==null,audioState:audioCtx?.state,cameraSpeed:travel?travel.from.distanceTo(travel.to)/travel.duration:0,travelDistance:travel?.from.distanceTo(travel.to),travelDuration:travel?.duration}}};
+    window.__MB={scene,camera,slateObjects,water,lanternBoat,backdrop:backdropMesh,rocks:[rightPedestalRock,foregroundRockBottomLeft],focusTile,startDive,returnToOrbit,closeEcosystemModal,get state(){return {phase,selectedIndex,activeIndex,currentProgress,targetProgress,velocity,coastVelocity,zoomFactor,hoverIndex,studioEntered,isMuted,glitchActive:heroGlitch.active,audioState:audioCtx?.state,cameraSpeed:travel?travel.from.distanceTo(travel.to)/travel.duration:0,travelDistance:travel?.from.distanceTo(travel.to),travelDuration:travel?.duration}}};
     refreshComposition();
     document.fonts.ready.then(refreshComposition);
     document.fonts.addEventListener('loadingdone',refreshComposition);

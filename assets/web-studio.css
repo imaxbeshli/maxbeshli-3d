@@ -42,3 +42,9 @@
 @media(prefers-reduced-motion:reduce){
  #ecosystem-modal.is-scroll-story #webScene .web-ready .scroll-media{transition:none}
 }
+
+/* Give the 60 fps recording its own compositing surface. Freeze the large
+   ambient light while it plays; its radial gradient is already soft. */
+#webReadyVideo{transform:translateZ(0)}
+.web-ready .web-preview-stage{isolation:isolate}
+#ecosystem-modal[data-scene="1"].is-web-video-playing .section-light{animation:none;filter:none}

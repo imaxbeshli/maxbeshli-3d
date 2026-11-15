@@ -57,17 +57,26 @@ with sync_playwright() as p:
  images=[Image.open(io.BytesIO(base64.b64decode(f))).convert('RGB') for f in frames]
  diff=ImageChops.difference(*images);bbox=diff.getbbox();assert bbox,'Boat wake is invisible'
  visible=sum(max(px)>4 for px in diff.getdata());assert visible>30,visible
+ Path('/workspace/artifacts').mkdir(parents=True,exist_ok=True)
  images[0].save('/workspace/artifacts/boat-wake-desktop.png')
  diff.save('/workspace/artifacts/boat-wake-difference.png')
  print('PASS visible trailing wake:',visible,'pixels, bounds',bbox,flush=True)
+ # Haze must be physically between the boat and viewer, including the mirror pass.
+ assert page.evaluate("""()=>{
+   const b=__MB.lanternBoat.root,mists=__MB.scene.children.filter(o=>o.name.startsWith('Distant shoreline mist'));
+   return mists.length===4&&mists.every(m=>m.position.z>b.position.z+.5&&m.renderOrder>b.renderOrder&&m.material.blending===THREE.NormalBlending&&m.material.depthTest&&!m.material.depthWrite);
+ }"""),'Boat must remain behind alpha-composited shoreline fog'
+ assert page.evaluate("""()=>{let ok=true;__MB.lanternBoat.root.traverse(o=>{if(o.material&&!o.material.fog)ok=false});return ok}"""),'Lantern must share the distant atmospheric fog'
+ print('PASS boat and lantern lie behind animated, depth-tested fog',flush=True)
  print('PASS delayed passage, pause, fade and 65-second rest',flush=True)
  print('BOAT',page.evaluate('''()=>{const b=__MB.lanternBoat,v=b.root.position.clone().project(__MB.camera);return {state:b.state,position:b.root.position.toArray(),screen:[(v.x+1)*innerWidth/2,(1-v.y)*innerHeight/2]}}'''),flush=True)
  # Observe actual main/mirror passes during motion, not just a still screenshot.
  page.evaluate("""()=>{
   const b=__MB.lanternBoat;b.update=boatUpdate;boatUpdate(elapsed*1000,false,__MB.backdrop);
-  window.boatPasses=[];
+  window.boatPasses=[];window.mistPasses=[];window.drawSequence=0;
+  __MB.scene.children.filter(o=>o.name.startsWith('Distant shoreline mist')).forEach(o=>o.onBeforeRender=(_,scene,camera)=>{mistPasses.push({sequence:drawSequence++,mirror:camera===__MB.water.mirror,time:__MB.water.material.uniforms.uTime.value})});
   b.root.getObjectByName('Smooth planked wooden hull').onBeforeRender=(_,scene,camera)=>{
-   boatPasses.push({mirror:camera===__MB.water.mirror,time:__MB.water.material.uniforms.uTime.value,x:b.root.position.x});
+   boatPasses.push({sequence:drawSequence++,mirror:camera===__MB.water.mirror,time:__MB.water.material.uniforms.uTime.value,x:b.root.position.x});
   };
  }""")
  page.wait_for_function('new Set(boatPasses.filter(p=>!p.mirror).map(p=>p.time)).size>=12')
@@ -75,10 +84,30 @@ with sync_playwright() as p:
    const main=boatPasses.filter(p=>!p.mirror),mirror=boatPasses.filter(p=>p.mirror);
    const synchronous=main.every(p=>mirror.some(r=>r.time===p.time&&Math.abs(r.x-p.x)<1e-9));
    const xs=main.map(p=>p.x);
-   return synchronous&&xs.at(-1)>xs[0]&&xs.every((x,i)=>i===0||Math.abs(x-xs[i-1])<.04);
+   const fogAfterHull=main.concat(mirror).every(p=>mistPasses.some(m=>m.mirror===p.mirror&&m.time===p.time&&m.sequence>p.sequence));
+   return fogAfterHull&&synchronous&&xs.at(-1)>xs[0]&&xs.every((x,i)=>i===0||Math.abs(x-xs[i-1])<.04);
  }"""), 'Moving boat and mirror must share the same pose on every frame'
  page.evaluate("__MB.lanternBoat.root.getObjectByName('Smooth planked wooden hull').onBeforeRender=()=>{}")
  print('PASS moving hull and reflection remain synchronous across 12 frames',flush=True)
+ assert page.evaluate("""()=>{
+   const w=__MB.water,c=__MB.camera,y=w.mesh.position.y;w.prepare(c);
+   const lamp=__MB.lanternBoat.root.children.find(o=>o.isGroup).getWorldPosition(new THREE.Vector3());
+   const reflected=lamp.clone();reflected.y=2*y-lamp.y;
+   // Intersect the viewer-to-virtual-lamp ray with water. It must sample
+   // the same mirror texel as the real lamp (independent of texture orientation).
+   const ray=new THREE.Ray(c.position,reflected.sub(c.position).normalize());
+   const hit=ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),-y),new THREE.Vector3());
+   const matrix=w.material.uniforms.uMatrix.value;
+   const uv=p=>{const v=new THREE.Vector4(p.x,p.y,p.z,1).applyMatrix4(matrix);return v.divideScalar(v.w)};
+   const a=uv(lamp),b=uv(hit);
+   return Math.abs(w.mirror.position.y-(2*y-c.position.y))<1e-8&&Math.abs(a.x-b.x)<1e-6&&Math.abs(a.y-b.y)<1e-6;
+ }"""),'Lamp reflection must project to its geometric mirror below the waterline'
+ print('PASS lantern reflection maps to the mirrored world position',flush=True)
+ # Exercise the actual logo event and its full-scene animation clock.
+ page.locator('#logoGlitch').click();page.wait_for_function('__MB.state.glitchActive');
+ page.wait_for_function('!__MB.state.glitchActive');assert page.locator('.glitch-letter').count()==0
+ print('PASS MB logo animation completes in the main scene',flush=True)
+
  before=page.evaluate('__MB.water.ripples.map(v=>v.z)')
  for x in range(200,620,35):page.mouse.move(x,770);page.wait_for_timeout(80)
  assert page.evaluate('__MB.water.ripples.map(v=>v.z)')!=before

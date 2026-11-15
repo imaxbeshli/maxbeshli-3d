@@ -7,6 +7,7 @@
   function playback(active,retry=false){
     if(active===playing&&!retry)return;
     playing=active;
+    document.getElementById('ecosystem-modal').classList.toggle('is-web-video-playing',active);
     if(active)video.play().catch(()=>{});else video.pause();
   }
   function visible(id){
