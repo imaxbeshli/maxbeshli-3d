@@ -20,7 +20,7 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
  page=browser.new_page(**(p.devices['Pixel 7'] if args.mobile else {'viewport':{'width':1440,'height':960}}));page.set_default_timeout(45000)
  errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  # The intro must already be visible even when video bytes cannot load.
- page.route('**/avtolab77-intro-scroll-60fps.mp4*',lambda r:r.abort())
+ page.route('**/avtolab77-intro-scroll*.mp4*',lambda r:r.abort())
  page.goto(f'http://127.0.0.1:{server.server_port}/index.html')
  page.wait_for_function('MBSections.state.active')
  page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop=e.scrollHeight')
@@ -30,7 +30,7 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
  }""")
  page.wait_for_timeout(1600)
  page.screenshot(path=f'/tmp/avtolab-intro-loading-{"mobile" if args.mobile else "desktop"}.png')
- page.unroute('**/avtolab77-intro-scroll-60fps.mp4*')
+ page.unroute('**/avtolab77-intro-scroll*.mp4*')
  print('PASS intro poster remains visible while video loading is blocked',flush=True)
  page.goto(f'http://127.0.0.1:{server.server_port}/index.html')
  page.wait_for_function('MBSections.state.active && MBWebStudio.state.time>0')
@@ -40,6 +40,9 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
  assert page.locator('#webScene button,#webScene input').count()==0
  player=page.locator('#webReadyVideo')
  assert player.evaluate('v=>v.muted&&v.defaultMuted&&v.loop&&v.playsInline&&!v.controls')
+ assert page.locator('.web-ready .web-site-float').evaluate('e=>getComputedStyle(e).animationName')=='none'
+ assert page.locator('.web-ready .scroll-media').evaluate('e=>getComputedStyle(e).transform')=='none'
+ assert page.locator('#story-1-0 .web-site-float').evaluate('e=>getComputedStyle(e).animationName')!='none'
  assert player.evaluate('v=>v.paused')
  for width,height in [(1440,960),(1024,768),(768,1024),(390,844),(360,740)]:
   page.set_viewport_size({'width':width,'height':height})
@@ -53,6 +56,7 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
   page.screenshot(path=f'/tmp/forma-{width}.png')
   page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop=e.scrollHeight')
   page.wait_for_function('!webReadyVideo.paused && webReadyVideo.currentTime>0')
+  assert player.evaluate('v=>v.videoWidth===1280 && v.videoHeight===720 && Math.abs(v.duration-34.966667)<.04')
   page.wait_for_function('!__MB.slateObjects[1].architectureDemo.state.active')
   t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(200);assert page.evaluate('MBWebStudio.state.time')==t
   r=player.bounding_box();assert r['x']>=0 and r['x']+r['width']<=width+1 and r['y']+r['height']<height

@@ -34,3 +34,11 @@
 .web-eyebrow{font-size:10px;letter-spacing:.18em;color:#a7b3ba;margin:0 0 24px}
 #webReadyVideo{display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#000;border-radius:10px;pointer-events:none}
 @media(max-width:760px){#webScene .web-opening{justify-content:center}.web-ready h2{font-size:38px}.web-ready h2 br{display:none}#webScene .web-ready{margin-top:24px;padding-top:24px}}
+
+/* Keep the video on a stable surface instead of moving its clipping frame
+   on every display refresh. FORMA keeps its existing floating animation. */
+#ecosystem-modal.is-scroll-story #webScene .web-ready .web-site-float{animation:none;will-change:auto}
+#ecosystem-modal.is-scroll-story #webScene .web-ready .scroll-media{transform:none;transition:opacity .35s ease}
+@media(prefers-reduced-motion:reduce){
+ #ecosystem-modal.is-scroll-story #webScene .web-ready .scroll-media{transition:none}
+}

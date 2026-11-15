@@ -1171,6 +1171,14 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 #webReadyVideo{display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#000;border-radius:10px;pointer-events:none}
 @media(max-width:760px){#webScene .web-opening{justify-content:center}.web-ready h2{font-size:38px}.web-ready h2 br{display:none}#webScene .web-ready{margin-top:24px;padding-top:24px}}
 
+/* Keep the video on a stable surface instead of moving its clipping frame
+   on every display refresh. FORMA keeps its existing floating animation. */
+#ecosystem-modal.is-scroll-story #webScene .web-ready .web-site-float{animation:none;will-change:auto}
+#ecosystem-modal.is-scroll-story #webScene .web-ready .scroll-media{transform:none;transition:opacity .35s ease}
+@media(prefers-reduced-motion:reduce){
+ #ecosystem-modal.is-scroll-story #webScene .web-ready .scroll-media{transition:none}
+}
+
 /* Shared editorial scale and viewport budget for every service section. */
 #ecosystem-modal.is-scroll-story{--chapter-title:clamp(28px,2.7vw,38px);--section-body:15px;padding-top:16px}
 #ecosystem-modal.is-scroll-story .section-layout{max-width:1520px;margin:16px auto 0;min-height:0}
@@ -1297,7 +1305,7 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
         <p class="web-hero-lead">AVTOLAB77 — услуги, работы и запись в студию. Всё, что нужно клиенту для первого шага.</p>
       </div>
       <div class="web-live-site"><div class="web-site-float"><div class="web-preview-stage">
-        <video id="webReadyVideo" src="assets/avtolab77-intro-scroll-60fps.mp4?v=2" poster="assets/avtolab77-intro-poster.webp" muted loop playsinline preload="auto" disablepictureinpicture disableremoteplayback tabindex="-1" aria-label="Готовый сайт AVTOLAB77"></video>
+        <video id="webReadyVideo" src="assets/avtolab77-intro-scroll.mp4?v=1" poster="assets/avtolab77-intro-poster.webp" muted loop playsinline preload="auto" disablepictureinpicture disableremoteplayback tabindex="-1" aria-label="Готовый сайт AVTOLAB77"></video>
       </div></div></div>
     </div>
   </section>
