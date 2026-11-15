@@ -3900,10 +3900,16 @@ window.MBEnvironment={
       const shift = THREE.MathUtils.lerp(isMobilePortrait() ? .102 : .132, .052, THREE.MathUtils.smoothstep(camera.aspect, .65, 1.3));
       const scale = Math.max(1, halfWidth * 2 * 1.06 / (46 * (1-2*shift)),
         (top - FLOOR_Y) * 1.06 / (26.6 * window.MBWaterfall.shore));
-      backdropMesh.scale.set(scale, scale, 1);
+      // On desktop fit the upper composition between the waterline and the
+      // viewport top; width coverage must not crop away the generated sky.
+      // Narrow screens retain their existing photographic crop.
+      const verticalScale = innerWidth > 900
+        ? Math.max(.01, (top - FLOOR_Y) * 1.006 / (26.6 * window.MBWaterfall.shore))
+        : scale;
+      backdropMesh.scale.set(scale, verticalScale, 1);
       backdropMesh.position.x = 46 * scale * shift;
-      // Anchor the generated plate's actual shoreline to the reflective surface.
-      backdropMesh.position.y = FLOOR_Y + 26.6 * scale * (window.MBWaterfall.shore - .5);
+      // Keep the same photographic shoreline exactly on the reflective surface.
+      backdropMesh.position.y = FLOOR_Y + 26.6 * verticalScale * (window.MBWaterfall.shore - .5);
       backdropMesh.updateMatrixWorld();
       shorelineBlend.scale.x = Math.min(60, 46 * scale);
       shorelineBlend.material.uniforms.uBackdropWidth.value = 46 * scale;
