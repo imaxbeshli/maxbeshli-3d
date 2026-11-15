@@ -63,7 +63,7 @@ with sync_playwright() as p:
             page.evaluate('(i)=>{mouseX=mouseY=0;currentProgress=targetProgress=i;velocity=coastVelocity=0}', index)
             page.wait_for_timeout(250)
             timings = {}
-            timings['approach'] = transition('in',index,'focused',3)
+            timings['approach'] = transition('in',index,'focused',2)
             timings['enter'] = transition('enter',index,'section',2)
             assert page.locator('#ecosystem-modal').get_attribute('data-scene') == str(index)
             page.wait_for_function('getComputedStyle(document.getElementById("ecosystem-modal")).opacity==="1"')

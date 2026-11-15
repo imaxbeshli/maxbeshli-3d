@@ -4397,7 +4397,7 @@ window.MBEnvironment={
       const c=ORBIT_YAW_COEFFICIENTS;
       return 1.55*Math.tanh(c[0]+c[1]*Math.sin(angle)+c[2]*Math.cos(angle)+c[3]*Math.sin(2*angle)+c[4]*Math.cos(2*angle)+c[5]*Math.sin(3*angle)+c[6]*Math.cos(3*angle));
     }
-    const TILE_TRAVEL_DURATION=3,SECTION_TRAVEL_DURATION=2;
+    const TILE_APPROACH_DURATION=2,TILE_RETREAT_DURATION=3,SECTION_TRAVEL_DURATION=2;
     const easeTravel=p=>p*p*p*(p*(p*6-15)+10);
     // Camera transitions use wall time, independently of the capped simulation delta.
     function cameraJourney(to,qTo,duration=SECTION_TRAVEL_DURATION){return {elapsed:0,startedAt:performance.now(),duration,from:camera.position.clone(),to,qFrom:camera.quaternion.clone(),qTo};}
@@ -4420,9 +4420,9 @@ window.MBEnvironment={
       const to=centre.clone().addScaledVector(normal,distance),tmp=camera.clone();tmp.position.copy(to);tmp.lookAt(centre);
       return {centre,normal,to,qTo:tmp.quaternion.clone()};
     }
-    function tileCameraJourney(to,qTo){
+    function tileCameraJourney(to,qTo,duration=TILE_APPROACH_DURATION){
       // All three tiles take the same quick time, regardless of size or distance.
-      return cameraJourney(to,qTo,TILE_TRAVEL_DURATION);
+      return cameraJourney(to,qTo,duration);
     }
     function focusTile(index){
       if(!studioEntered||['entering','diving','section','returning','unfocusing'].includes(phase))return;
@@ -4441,7 +4441,7 @@ window.MBEnvironment={
       const to=BASE_CAM_POS.clone().add(new THREE.Vector3(parallaxX*.22,-parallaxY*.14,0));
       const orbitLookAt=BASE_LOOK_AT.clone().add(new THREE.Vector3(parallaxX*.08,-parallaxY*.06,0));
       const tmp=camera.clone();tmp.position.copy(to);tmp.lookAt(orbitLookAt);
-      travel={...tileCameraJourney(to,tmp.quaternion.clone()),initialZoom:zoomFactor,orbitLookAt};
+      travel={...tileCameraJourney(to,tmp.quaternion.clone(),TILE_RETREAT_DURATION),initialZoom:zoomFactor,orbitLookAt};
       phase='unfocusing';zoomState=0;pendingDive=false;cursorLabel.textContent='ОТКРЫТЬ';
       playWhooshSound(travel.duration,'return');
     }
