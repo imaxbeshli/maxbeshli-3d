@@ -37,10 +37,12 @@
   function reveal(){if(!active)return;controls.hidden=false;$('filmReveal').hidden=true;$('filmReveal').setAttribute('aria-expanded','true');sync()}
   function play(){return media?.play().catch(()=>{})}
   function expandedLabel(value){$('filmExpand').setAttribute('aria-label',value?'Свернуть видео':'На весь экран');$('filmExpand').setAttribute('aria-expanded',String(value))}
-  function transformFor(rect){const bounds=stage.getBoundingClientRect();return `translate(${rect.left-bounds.left}px,${rect.top-bounds.top}px) scale(${rect.width/bounds.width},${rect.height/bounds.height})`}
+  function boxFor(rect){const bounds=stage.getBoundingClientRect();return {left:(rect.left-bounds.left)+'px',top:(rect.top-bounds.top)+'px',width:rect.width+'px',height:rect.height+'px'}}
   function move(from,to,closing){
     animation?.cancel();
-    animation=shooting.animate([{transform:from,borderRadius:closing?'0px':'8px'},{transform:to,borderRadius:closing?'8px':'0px'}],{duration:reduced.matches?0:520,easing:'cubic-bezier(.22,1,.36,1)',fill:'both'});
+    // Resize only the isolated player box. object-fit keeps the video and
+    // its letterboxing proportional at every frame; controls stay undistorted.
+    animation=shooting.animate([{...boxFor(from),borderRadius:closing?'0px':'8px'},{...boxFor(to),borderRadius:closing?'8px':'0px'}],{duration:reduced.matches?0:520,easing:'cubic-bezier(.22,1,.36,1)',fill:'both'});
     return animation.finished.catch(()=>{});
   }
   async function expand(origin=$('filmExpand')){
@@ -49,7 +51,7 @@
     home=shooting.parentElement;float=home.closest('.section-float');float?.classList.add('is-player-expanded');returnFocus=origin;
     dialog.classList.remove('is-closing');$('filmFullscreenClose').hidden=false;dialog.showModal();stage.append(shooting);reveal();expandedLabel(true);
     const token=++transition;
-    await move(transformFor(rect),'none',false);
+    await move(rect,stage.getBoundingClientRect(),false);
     if(token!==transition)return;
     animation?.cancel();animation=null;
   }
@@ -76,9 +78,9 @@
     $('filmFullscreenClose').hidden=true;
     const token=++transition;
     if(immediate){finishCollapse(focus);return}
-    const from=getComputedStyle(shooting).transform;
+    const from=shooting.getBoundingClientRect();
     dialog.classList.add('is-closing');
-    await move(from==='none'?'none':from,transformFor(home.getBoundingClientRect()),true);
+    await move(from,home.getBoundingClientRect(),true);
     if(token===transition)finishCollapse(focus);
   }
   async function openWork(index,button){
