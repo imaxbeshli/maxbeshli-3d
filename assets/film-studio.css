@@ -131,3 +131,13 @@
   .ai-prompt-scene{gap:11px}.ai-prompt-heading{font-size:8px;letter-spacing:.12em}.ai-prompt-bar{width:90%;min-height:84px;gap:9px;padding:13px 11px;border-radius:11px}.ai-prompt-copy{font-size:10px;line-height:1.6}.ai-prompt-icon{width:13px;height:13px}.ai-prompt-send{width:22px;height:22px;border-radius:6px}.ai-prompt-send svg{width:14px;height:14px}
 }
 @media(prefers-reduced-motion:reduce){.ai-image,#filmScene>.section-float,#filmScene .film-chapters button{will-change:auto}}
+
+/* Opaque video/editor surfaces do not need a large moving backdrop blur.
+   Fade chapters in place so scrolling, reveal and float do not stack motion. */
+#filmScene .film-frame{backdrop-filter:none;-webkit-backdrop-filter:none}
+#ecosystem-modal.is-scroll-story #filmScene .scroll-media,
+#ecosystem-modal.is-scroll-story #filmScene .scroll-copy{transform:none;transition:opacity .35s ease}
+@media(prefers-reduced-motion:reduce){
+ #ecosystem-modal.is-scroll-story #filmScene .scroll-media,
+ #ecosystem-modal.is-scroll-story #filmScene .scroll-copy{transition:none}
+}

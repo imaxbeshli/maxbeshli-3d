@@ -1064,6 +1064,16 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 }
 @media(prefers-reduced-motion:reduce){.ai-image,#filmScene>.section-float,#filmScene .film-chapters button{will-change:auto}}
 
+/* Opaque video/editor surfaces do not need a large moving backdrop blur.
+   Fade chapters in place so scrolling, reveal and float do not stack motion. */
+#filmScene .film-frame{backdrop-filter:none;-webkit-backdrop-filter:none}
+#ecosystem-modal.is-scroll-story #filmScene .scroll-media,
+#ecosystem-modal.is-scroll-story #filmScene .scroll-copy{transform:none;transition:opacity .35s ease}
+@media(prefers-reduced-motion:reduce){
+ #ecosystem-modal.is-scroll-story #filmScene .scroll-media,
+ #ecosystem-modal.is-scroll-story #filmScene .scroll-copy{transition:none}
+}
+
 /* Free vertical scrolling inside the selected environment. */
 #ecosystem-modal.is-scroll-story{display:block;overflow-y:auto;overflow-x:hidden;padding:24px clamp(20px,3vw,48px) 110px;scroll-padding-top:100px;scrollbar-width:thin;scrollbar-color:#aab5c540 transparent}
 #ecosystem-modal.is-scroll-story .section-header{position:relative;z-index:10;max-width:1600px;min-height:66px;margin:auto;padding:10px 0}
@@ -1647,7 +1657,7 @@ window.createTelegramGlass=function(root){
 (()=>{
   const $=id=>document.getElementById(id), reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const edit=$('filmEditing'),ai=$('filmAI'),canvas=$('aiAtmosphere'),ctx=canvas.getContext('2d');
-  const clocks=[0,0,0],paused=[false,false,false];let view=-1,video=null,frame=0,texture=null,dragBounds=[],shootingTime=null,editingStarted=false;
+  const clocks=[0,0,0],paused=[false,false,false],visited=[false,false,false],captures=new WeakMap();let view=-1,video=null,frame=0,texture=null,dragBounds=[],shootingTime=null,editingStarted=false,editingPosition=0;
   const clamp=x=>Math.max(0,Math.min(1,x)),smooth=(a,b,t)=>{const x=clamp((t-a)/(b-a));return x*x*(3-2*x)};
   const editStages=['Перенос исходного материала','Добавление звука','Цветокоррекция','Предпросмотр секвенции'];
   const arrivals=[2.1,4.2,6.3,8.4],duration=[0,22,18];
@@ -1667,24 +1677,47 @@ window.createTelegramGlass=function(root){
     if(!slot||!['sectionVideoSlot','editVideoSlot'].includes(slot.id)||video.readyState<2)return;
     let still=slot.querySelector('canvas');
     if(!still){still=document.createElement('canvas');still.className='film-held-frame';still.setAttribute('aria-hidden','true');slot.prepend(still)}
-    still.width=800;still.height=Math.round(800*video.videoHeight/video.videoWidth);
-    try{still.getContext('2d').drawImage(video,0,0,still.width,still.height)}catch(e){}
+    const width=800,height=Math.round(width*video.videoHeight/video.videoWidth);
+    if(typeof createImageBitmap==='function'){
+      // Capture the source before moving/seeking it, but upload the held frame
+      // asynchronously so section activation never waits for a canvas readback.
+      const token=(captures.get(still)||0)+1;captures.set(still,token);
+      createImageBitmap(video,{resizeWidth:width,resizeHeight:height,resizeQuality:'low'}).then(bitmap=>{
+        if(captures.get(still)!==token){bitmap.close();return}
+        if(still.width!==width)still.width=width;if(still.height!==height)still.height=height;
+        const output=still.getContext('bitmaprenderer');
+        if(output)output.transferFromImageBitmap(bitmap);
+        else {still.getContext('2d').drawImage(bitmap,0,0);bitmap.close()}
+      }).catch(()=>{});
+    }else{
+      if(still.width!==width)still.width=width;if(still.height!==height)still.height=height;
+      try{still.getContext('2d').drawImage(video,0,0,width,height)}catch(e){}
+    }
   }
   function setView(n,v){
     const previous=view;if(v)video=v;
+    if(previous===n)return;
+    if(previous<0&&n===0){
+      visited.fill(false);clocks[1]=clocks[2]=0;editingPosition=0;editingStarted=false;
+      paused[1]=paused[2]=reduced.matches;
+      if(reduced.matches){clocks[1]=16;clocks[2]=14}
+      // Prepare the first visible frame before the offscreen chapters reveal.
+      renderEdit();renderAI();
+    }
+    if(video&&previous===1)editingPosition=video.currentTime;
     if(previous!==n)holdFrame();
     if(video&&previous===0&&n!==0)shootingTime=video.currentTime;
     view=n;frame=0;
     const scrolling=$('ecosystem-modal').classList.contains('is-scroll-story');
     ['filmShooting','filmEditing','filmAI'].forEach((id,i)=>$(id).hidden=scrolling?false:i!==n);
     $('filmChapters').hidden=scrolling?false:n!==0;$('filmScene').dataset.filmView=String(n);
-    if(n===1&&previous!==1){clocks[1]=reduced.matches?16:0;paused[1]=reduced.matches;rewindEdit()}
-    if(n===2&&previous!==2){clocks[2]=reduced.matches?14:0;paused[2]=reduced.matches}
+    if(n===1&&!visited[1]){visited[1]=true;rewindEdit()}
+    if(n===2)visited[2]=true;
     if(n===1)measureDrags();
     if(video){
       video.pause();
       const restore=(n===0||n===-1)&&(previous===1||previous===2)&&shootingTime!==null;
-      const position=restore?shootingTime:video.currentTime;
+      const position=restore?shootingTime:n===1?editingPosition:video.currentTime;
       if(n===0||n===1){$(n===0?'sectionVideoSlot':'editVideoSlot').append(video);video.controls=n===0;video.currentTime=position;resume()}
       else if(restore)video.currentTime=position;
     }

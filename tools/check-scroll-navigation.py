@@ -24,11 +24,28 @@ with tempfile.TemporaryDirectory(prefix='mb-scroll-') as folder,sync_playwright(
     assert page.evaluate('MBFilmStudio.state.editingTime')>0
     assert page.evaluate('MBFilmStudio.state.aiTime')==0
     assert page.locator('#sectionVideoSlot .film-held-frame').count()==1
+    page.wait_for_function('''()=>{
+      const still=document.querySelector('#sectionVideoSlot .film-held-frame');
+      if(!still||still.width!==800)return false;
+      const blank=document.createElement('canvas');blank.width=still.width;blank.height=still.height;
+      return still.toDataURL()!==blank.toDataURL();
+    }''')
+    assert page.locator('#story-0-1 .scroll-media').evaluate('e=>getComputedStyle(e).transform')=='none'
+    assert page.locator('#story-0-1 .film-frame').evaluate('e=>getComputedStyle(e).backdropFilter')=='none'
     page.mouse.wheel(0,900);page.wait_for_function('MBSections.state.tab===2');page.wait_for_timeout(200)
     time=page.evaluate('MBFilmStudio.state.editingTime');page.wait_for_timeout(300)
     assert page.evaluate('MBFilmStudio.state.editingTime')==time
     assert page.evaluate('__MB.slateObjects[0].video.paused')
     assert page.evaluate('MBFilmStudio.state.aiTime')>0
+    ai_time=page.evaluate('MBFilmStudio.state.aiTime')
+    # Revisiting a visible chapter must resume, not flash its first frame again.
+    page.evaluate('MBSections.selectTab(1)')
+    page.wait_for_function('MBSections.state.tab===1 && !document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
+    assert page.evaluate('MBFilmStudio.state.editingTime')>=time
+    page.evaluate('MBSections.selectTab(2)')
+    page.wait_for_function('MBSections.state.tab===2 && !document.getElementById("ecosystem-modal").hasAttribute("aria-busy")')
+    assert page.evaluate('MBFilmStudio.state.aiTime')>=ai_time
+    assert page.locator('#filmScene video').count()==1
     page.evaluate('MBSections.selectTab(0)');page.wait_for_function('!__MB.slateObjects[0].video.paused')
     page.set_viewport_size({'width':390,'height':844})
     page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop=0');page.wait_for_timeout(500)
