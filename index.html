@@ -4389,10 +4389,10 @@ window.MBEnvironment={
       const c=ORBIT_YAW_COEFFICIENTS;
       return 1.55*Math.tanh(c[0]+c[1]*Math.sin(angle)+c[2]*Math.cos(angle)+c[3]*Math.sin(2*angle)+c[4]*Math.cos(2*angle)+c[5]*Math.sin(3*angle)+c[6]*Math.cos(3*angle));
     }
-    const CAMERA_SPEED=(5.4+.85)/1.7;
+    const TILE_TRAVEL_DURATION=.65,SECTION_TRAVEL_DURATION=.55;
     const easeTravel=p=>p*p*p*(p*(p*6-15)+10);
-    // Section transitions retain their existing timing.
-    function cameraJourney(to,qTo){return {elapsed:0,duration:Math.max(1.9,camera.position.distanceTo(to)/CAMERA_SPEED),from:camera.position.clone(),to,qFrom:camera.quaternion.clone(),qTo};}
+    // Camera transitions use wall time, independently of the capped simulation delta.
+    function cameraJourney(to,qTo,duration=SECTION_TRAVEL_DURATION){return {elapsed:0,startedAt:performance.now(),duration,from:camera.position.clone(),to,qFrom:camera.quaternion.clone(),qTo};}
     let mouseX=0,mouseY=0,isDragging=false,prevX=0,dragDelta=0,lastPointerTime=0,releaseVelocity=0;
     let parallaxX=0,parallaxY=0,waterStroke=null;
     const raycaster=new THREE.Raycaster(),mouseNDC=new THREE.Vector2(5,5),hoverLocal=new THREE.Vector2();
@@ -4413,15 +4413,8 @@ window.MBEnvironment={
       return {centre,normal,to,qTo:tmp.quaternion.clone()};
     }
     function tileCameraJourney(to,qTo){
-      const home=BASE_CAM_POS.clone().add(new THREE.Vector3(parallaxX*.22,-parallaxY*.14,0));
-      const referenceDistance=home.distanceTo(tileFocusPose(2).to);
-      const referenceDuration=Math.max(1.9,referenceDistance/CAMERA_SPEED);
-      const journey=cameraJourney(to,qTo);
-      // Desktop video/web use Telegram's speed in both directions.
-      // Preserve portrait-mobile timing and proportional partial returns.
-      const durationScale=selectedIndex===2||!isMobilePortrait()?1/1.2:2;
-      journey.duration=Math.max(.35,journey.from.distanceTo(to)*referenceDuration/Math.max(.001,referenceDistance))*durationScale;
-      return journey;
+      // All three tiles take the same quick time, regardless of size or distance.
+      return cameraJourney(to,qTo,TILE_TRAVEL_DURATION);
     }
     function focusTile(index){
       if(!studioEntered||['entering','diving','section','returning','unfocusing'].includes(phase))return;
@@ -4454,7 +4447,7 @@ window.MBEnvironment={
       const end=centre.clone().addScaledVector(normal,1.6),aim=centre.clone();
       const tmp=camera.clone();tmp.position.copy(end);tmp.lookAt(aim);
       const journey=cameraJourney(end,tmp.quaternion.clone());
-      travel={...journey,duration:THREE.MathUtils.clamp(journey.duration,.95,1.35),centre,normal,focusPosition:camera.position.clone(),focusQuaternion:camera.quaternion.clone()};
+      travel={...journey,centre,normal,focusPosition:camera.position.clone(),focusQuaternion:camera.quaternion.clone()};
       veil.style.opacity='0';
       playWhooshSound(travel.duration);
     }
@@ -4705,6 +4698,8 @@ window.MBEnvironment={
       if(phase==='section'||document.getElementById('infoDialog').open){clock.getDelta();return;}
       if(phase==='orbit'&&!zoomState){parallaxX=mouseX;parallaxY=mouseY;}
       const dt=Math.min(clock.getDelta(),.05);elapsed+=dt;const t=elapsed;if(phase==='orbit')poseTime+=dt;updateGlitch();updateSoundWave(dt);
+      const travelElapsed=travel?Math.max(0,(performance.now()-travel.startedAt)/1000):0;
+      const travelProgress=travel?Math.min(1,travelElapsed/travel.duration):0;
 
       // Плавное зажигание света в виртуальной студии
       const targetReveal = studioEntered ? 1.0 : 0.22;
@@ -4720,7 +4715,7 @@ window.MBEnvironment={
 
       // Camera, card alignment and fading share the same gentle acceleration.
       if(phase==='focusing'||phase==='unfocusing'){
-        const p=Math.min(1,(travel.elapsed+dt)/travel.duration);
+        const p=travelProgress;
         zoomFactor=THREE.MathUtils.lerp(travel.initialZoom,phase==='focusing'?1:0,easeTravel(p));
       }else zoomFactor += (zoomState - zoomFactor) * (1-Math.exp(-4*dt));
 
@@ -4747,7 +4742,7 @@ window.MBEnvironment={
         }
       }
       if(phase==='focusing'){
-        const p=Math.min(1,(travel.elapsed+dt)/travel.duration);
+        const p=travelProgress;
         currentProgress=THREE.MathUtils.lerp(travel.initialProgress,travel.finalProgress,easeTravel(p));
         targetProgress=currentProgress;
       }
@@ -4782,7 +4777,7 @@ window.MBEnvironment={
         const floatRoll=Math.cos(poseTime*(.81+i*.04)+obj.phase)*(isMobilePortrait()?0:.022);
         // Align roll/pitch and inset throughout the existing camera approach.
         const focusAlign = i!==selectedIndex ? 0 : phase==='focusing'
-          ? easeTravel(Math.min(1,(travel.elapsed+dt)/travel.duration)) : zoomFactor;
+          ? easeTravel(travelProgress) : zoomFactor;
         window.MBTileArt.animateInset(obj.inset,poseTime,i,floatRoll,focusAlign);
         obj.reflectedInset.position.copy(obj.inset.group.position);
         obj.reflectedInset.quaternion.copy(obj.inset.group.quaternion);
@@ -4868,7 +4863,7 @@ window.MBEnvironment={
         camera.position.copy(BASE_CAM_POS).add(new THREE.Vector3(0,0,8*(1-e)));camera.lookAt(BASE_LOOK_AT);currentLookAt.copy(BASE_LOOK_AT);
         if(p===1){phase='orbit';preloader.hidden=true;preloader.classList.add('hidden');}
       }else if(['focusing','diving','returning','unfocusing'].includes(phase)){
-        travel.elapsed+=dt;const p=Math.min(1,travel.elapsed/travel.duration),ease=easeTravel(p);
+        travel.elapsed=travelElapsed;const p=travelProgress,ease=easeTravel(p);
         camera.position.lerpVectors(travel.from,travel.to,ease);camera.quaternion.slerpQuaternions(travel.qFrom,travel.qTo,ease);
         currentLookAt.copy(camera.position).add(new THREE.Vector3(0,0,-3).applyQuaternion(camera.quaternion));
         if(phase==='focusing'){zoomFactor=THREE.MathUtils.lerp(travel.initialZoom,1,ease);if(p===1){currentProgress=targetProgress=travel.finalProgress;phase='focused';zoomFactor=1;if(pendingDive)startDive()}}
@@ -4890,7 +4885,7 @@ window.MBEnvironment={
       if(!window.MBLoading.ready)window.MBLoading.markFrame();
     }
 
-    window.__MB={scene,camera,slateObjects,water,lanternBoat,backdrop:backdropMesh,rocks:[rightPedestalRock,foregroundRockBottomLeft],focusTile,startDive,returnToOrbit,closeEcosystemModal,get state(){return {phase,selectedIndex,activeIndex,currentProgress,targetProgress,velocity,coastVelocity,zoomFactor,hoverIndex,studioEntered,isMuted,glitchActive:glitchStart!==null,audioState:audioCtx?.state,cameraSpeed:CAMERA_SPEED,travelDistance:travel?.from.distanceTo(travel.to),travelDuration:travel?.duration}}};
+    window.__MB={scene,camera,slateObjects,water,lanternBoat,backdrop:backdropMesh,rocks:[rightPedestalRock,foregroundRockBottomLeft],focusTile,startDive,returnToOrbit,closeEcosystemModal,get state(){return {phase,selectedIndex,activeIndex,currentProgress,targetProgress,velocity,coastVelocity,zoomFactor,hoverIndex,studioEntered,isMuted,glitchActive:glitchStart!==null,audioState:audioCtx?.state,cameraSpeed:travel?travel.from.distanceTo(travel.to)/travel.duration:0,travelDistance:travel?.from.distanceTo(travel.to),travelDuration:travel?.duration}}};
     refreshComposition();
     document.fonts.ready.then(refreshComposition);
     document.fonts.addEventListener('loadingdone',refreshComposition);
