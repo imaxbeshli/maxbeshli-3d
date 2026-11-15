@@ -3762,9 +3762,9 @@ window.MBEnvironment={
     function stopGlitchSound(){if(!glitchVoice)return;const v=glitchVoice;glitchVoice=null;ramp(v.bus.gain,0,.055);v.sources.forEach(s=>{try{s.stop(audioCtx.currentTime+.07)}catch(e){}})}
     function playGlitchSound(duration){
       stopGlitchSound();if(!audioCtx||isMuted||document.hidden||audioCtx.state!=='running')return;
-      const now=audioCtx.currentTime,length=Math.min(duration,.46),bus=audioCtx.createGain();
+      const now=audioCtx.currentTime,length=duration,bus=audioCtx.createGain();
       const high=audioCtx.createBiquadFilter(),low=audioCtx.createBiquadFilter();
-      bus.gain.setValueAtTime(.48,now);bus.gain.setValueAtTime(.48,now+length*.75);bus.gain.linearRampToValueAtTime(0,now+length);
+      bus.gain.setValueAtTime(.48,now);bus.gain.setValueAtTime(.48,now+Math.max(0,length-.35));bus.gain.linearRampToValueAtTime(0,now+length);
       high.type='highpass';high.frequency.value=180;high.Q.value=.5;
       low.type='lowpass';low.frequency.value=3800;low.Q.value=.5;
       high.connect(low);low.connect(bus);bus.connect(masterGain);
@@ -3776,18 +3776,22 @@ window.MBEnvironment={
         [.233,.031,.64],[.274,.01,.4],[.353,.024,.42],[.395,.012,.23]];
       let seed=0x4d42;
       function random(){seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return(seed>>>0)/4294967296}
-      for(const [start,span,level] of bursts){
-        const first=Math.round(start*rate),count=Math.min(Math.round(span*rate),buffer.length-first);
-        let held=0,next=0;
-        for(let n=0;n<count;n++){
-          const t=n/rate;
-          if(n>=next){held=(random()>.5?1:-1)*(.4+random()*.6);next=n+Math.max(1,Math.round(rate*(.0002+random()*.0011)))}
-          const attack=Math.min(1,t/.0012),release=Math.min(1,(count-1-n)/(rate*.0025));
-          const envelope=attack*release*Math.exp(-t/(span*.48));
-          const dropout=span>.02&&t>.009&&t<.013?0:1;
-          const sample=held*level*envelope*dropout;
-          buffer.getChannelData(0)[first+n]=sample;
-          buffer.getChannelData(1)[first+n]=sample;
+      // Continue the same click pattern at its original speed for the full text effect.
+      for(let offset=0;offset<length;offset+=.46){
+        for(const [localStart,span,level] of bursts){
+          const start=offset+localStart;if(start>=length)continue;
+          const first=Math.round(start*rate),count=Math.min(Math.round(span*rate),buffer.length-first);
+          let held=0,next=0;
+          for(let n=0;n<count;n++){
+            const t=n/rate;
+            if(n>=next){held=(random()>.5?1:-1)*(.4+random()*.6);next=n+Math.max(1,Math.round(rate*(.0002+random()*.0011)))}
+            const attack=Math.min(1,t/.0012),release=Math.min(1,(count-1-n)/(rate*.0025));
+            const envelope=attack*release*Math.exp(-t/(span*.48));
+            const dropout=span>.02&&t>.009&&t<.013?0:1;
+            const sample=held*level*envelope*dropout;
+            buffer.getChannelData(0)[first+n]=sample;
+            buffer.getChannelData(1)[first+n]=sample;
+          }
         }
       }
       source.buffer=buffer;source.connect(high);const voice={bus,sources:[source]};glitchVoice=voice;
