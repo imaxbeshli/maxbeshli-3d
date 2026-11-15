@@ -70,10 +70,10 @@ with sync_playwright() as p:
   freeze(260);check('opening-middle')
   page.evaluate('filmShooting.getAnimations()[0].finish()');page.wait_for_function('!filmShooting.getAnimations().length')
   check('fullscreen')
-  page.locator('#filmFullscreenClose').click(force=True)
+  page.locator('#filmExpand').click(force=True)
   freeze(260);check('closing-middle')
   freeze(510);check('closing-end')
-  assert page.locator('#filmFullscreenClose').is_hidden()
+  assert page.locator('#filmFullscreenClose').count()==0
   page.evaluate('filmShooting.getAnimations()[0].finish()');page.wait_for_function('!filmFullscreen.open')
   check('returned')
   page.evaluate('geometryStream.getTracks().forEach(track=>track.stop())')

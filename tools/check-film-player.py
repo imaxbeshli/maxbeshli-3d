@@ -56,25 +56,34 @@ with sync_playwright() as p:
   assert page.evaluate('v.currentTime')>=before
   assert page.locator('#filmFullscreen video').count()==1
   assert not page.evaluate('v.controls')
-  assert page.locator('#filmFullscreenClose').is_visible()
-  close_style=page.locator('#filmFullscreenClose').evaluate('e=>{e.focus();const s=getComputedStyle(e);return [s.backgroundColor,s.borderTopWidth,s.outlineStyle,s.boxShadow]}')
-  assert close_style==['rgba(0, 0, 0, 0)','0px','none','none'],close_style
+  assert page.locator('#filmFullscreenClose').count()==0
   page.screenshot(path=str(artifacts/f'film-player-{width}-fullscreen.png'))
-  if mobile:tap('#filmFullscreenClose')
+  page.evaluate('''()=>{
+   window.returnFrames=[];const start=performance.now();
+   const rect=e=>{const r=e.getBoundingClientRect();return [r.x,r.y,r.width,r.height]};
+   function sample(){returnFrames.push({open:filmFullscreen.open,box:rect(filmShooting),bar:rect(filmControls)});if(performance.now()-start<1100)requestAnimationFrame(sample)}
+   sample();
+  }''')
+  if mobile:tap('#filmExpand')
   else:page.keyboard.press('Escape')
-  # The video still animates home, but the close control must disappear at once.
-  assert page.locator('#filmFullscreenClose').is_hidden()
+  assert page.locator('#filmFullscreenClose').count()==0
   if mobile:
    page.wait_for_timeout(80)
    page.screenshot(path=str(artifacts/'film-player-mobile-closing.png'))
   page.wait_for_function('!filmFullscreen.open')
   page.wait_for_timeout(650)
-  assert page.locator('#filmFullscreenClose').is_hidden()
+  assert page.locator('#filmFullscreenClose').count()==0
+  frames=page.evaluate('returnFrames');end=next(i for i,f in enumerate(frames) if not f['open'])
+  for key in ['box','bar']:
+   jump=max(abs(a-b) for a,b in zip(frames[end-1][key],frames[end][key]))
+   assert jump<.4,(width,key,'Jump when returning',jump)
+  offsets=[f['bar'][1]-f['box'][1] for f in frames[end:]]
+  assert max(offsets)-min(offsets)<.4,(width,'Controls replayed an entrance slide',offsets)
   assert page.locator('#filmScene .film-frame #sectionVideoSlot video').count()==1
   assert page.evaluate('v.currentTime')>=before
   assert not page.evaluate('v.paused')
   # A rapid close while opening must restore the same node and leave no animation.
-  tap('#filmExpand');tap('#filmFullscreenClose')
+  tap('#filmExpand');page.keyboard.press('Escape')
   page.wait_for_function('!filmFullscreen.open')
   assert not page.locator('#filmShooting').evaluate('e=>e.getAnimations().length')
   # Configure one future work with a real source and verify playback isolation.
@@ -83,7 +92,7 @@ with sync_playwright() as p:
   page.wait_for_function('MBFilmPlayer.workOpen&&filmFullscreen.open&&filmFullscreen.querySelectorAll("video")[1].readyState>=2')
   assert page.evaluate('v.paused')
   page.wait_for_function('!filmShooting.getAnimations().length')
-  tap('#filmFullscreenClose');page.wait_for_function('!filmFullscreen.open')
+  tap('#filmExpand');page.wait_for_function('!filmFullscreen.open')
   assert page.locator('#filmScene video').count()==1
   assert not page.evaluate('MBFilmPlayer.workOpen')
   assert not page.evaluate('v.paused')
@@ -100,7 +109,7 @@ with sync_playwright() as p:
   assert page.locator('#filmScene video').count()==0
   page.evaluate('MBSections.open(0)');assert not page.locator('#filmControls').is_visible()
   assert not errors,errors
-  print('PASS',width,'clean cards/close icon, immediate close-button removal, playback, animated open/close, works, scroll, reduced motion',flush=True)
+  print('PASS',width,'no fullscreen cross, steady return geometry, playback, animated open/close, works, scroll, reduced motion',flush=True)
   context.close()
  browser.close()
 server.shutdown()

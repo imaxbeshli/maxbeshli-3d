@@ -1083,17 +1083,18 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 .film-reveal{position:absolute;inset:0;z-index:2;width:100%;height:100%;border:0;background:transparent;cursor:pointer;border-radius:inherit}
 .film-reveal:focus-visible{outline:2px solid #e7c4a7;outline-offset:-5px}
 #filmShooting .film-start{z-index:3}
-.film-controls{position:absolute;z-index:4;left:0;right:0;bottom:0;padding:28px 16px 10px;background:linear-gradient(transparent,#06080bd9);color:#fff;animation:filmControlsIn .22s ease both}
+.film-controls{position:absolute;z-index:4;left:0;right:0;bottom:0;padding:28px max(16px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:linear-gradient(transparent,#06080bd9);color:#fff}
 #filmControls[hidden],#filmReveal[hidden],#filmPlayerMessage[hidden]{display:none!important}
 .film-control-row{display:flex;align-items:center;gap:8px}
-.film-control-row button,.film-fullscreen-close{display:grid;place-items:center;min-width:44px;min-height:44px;padding:10px;border:0;border-radius:8px;background:transparent;color:#fff;cursor:pointer}
+.film-control-row button{display:grid;place-items:center;min-width:44px;min-height:44px;padding:10px;border:0;border-radius:8px;background:transparent;color:#fff;cursor:pointer}
 .film-control-row button:hover{background:#ffffff20}
 .film-control-row button:focus-visible{outline:2px solid #e7c4a7;outline-offset:1px}
-.film-control-row svg,.film-fullscreen-close svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.film-control-row svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #filmTime{font:12px/1.3 monospace;margin-right:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
 .film-seek{display:block;width:100%;height:22px;accent-color:#e7c4a7;cursor:pointer;touch-action:pan-x}
-@keyframes filmControlsIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-#filmScene .section-float.is-player-expanded,#filmScene .section-float:has(#filmShooting):hover,#filmScene .section-float:has(#filmShooting):focus-within{animation-play-state:paused}
+#filmScene .section-float:has(#filmShooting):hover,#filmScene .section-float:has(#filmShooting):focus-within{animation-play-state:paused}
+/* The global story float rule must not move the return target during playback. */
+#ecosystem-modal.is-scroll-story #filmScene .section-float.is-player-expanded{animation-play-state:paused!important}
 #filmFullscreen{position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:#fff;overflow:hidden}
 #filmFullscreen[open]{display:block}
 #filmFullscreen::backdrop{background:#040608f5;animation:filmBackdropIn .5s ease both}
@@ -1101,10 +1102,6 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 .film-fullscreen-stage{position:absolute;inset:0}
 #filmFullscreen #filmShooting{position:absolute;inset:0 auto auto 0;width:100%;height:100%;overflow:hidden;background:#050607}
 #filmFullscreen #sectionVideoSlot{height:100%;width:100%;aspect-ratio:auto;border-radius:0;background:none!important}
-#filmFullscreen #filmControls{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:env(safe-area-inset-bottom);max-width:1100px;margin:auto}
-#filmFullscreen #filmFullscreenClose{position:absolute;z-index:5;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));background:transparent;border:0;box-shadow:none;outline:none;animation:none;-webkit-tap-highlight-color:transparent}
-#filmFullscreenClose[hidden]{display:none!important}
-#filmFullscreenClose:focus-visible svg{stroke:#e7c4a7;stroke-width:2.5}
 .film-player-message{position:absolute;inset:45% 24px auto;text-align:center;pointer-events:none;font-size:14px;color:#fff}
 @keyframes filmBackdropIn{from{background:#04060800}to{background:#040608f5}}
 @keyframes filmBackdropOut{from{background:#040608f5}to{background:#04060800}}
@@ -1113,8 +1110,8 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 #filmScene .film-work:disabled:hover{border-color:#dce8f449}
 #filmScene .film-work-caption{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;padding:24px 12px 10px}
 .film-work-caption b{font-size:12px;font-weight:500}.film-work-caption small{font-size:10px;color:#d7dce2}
-@media(max-width:600px){.film-controls{padding:15px 6px 4px}.film-control-row{gap:2px}#filmTime{font-size:10px}#filmScene .film-work-caption{padding:8px 7px 7px;justify-content:flex-end}#filmScene .film-work-caption b{display:none}.film-work-caption b{font-size:10px}.film-work-caption small{font-size:9px}}
-@media(prefers-reduced-motion:reduce){.film-controls,#filmFullscreen::backdrop,#filmFullscreen.is-closing::backdrop,#filmFullscreenClose{animation:none}}
+@media(max-width:600px){.film-controls{padding:15px max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}.film-control-row{gap:2px}#filmTime{font-size:10px}#filmScene .film-work-caption{padding:8px 7px 7px;justify-content:flex-end}#filmScene .film-work-caption b{display:none}.film-work-caption b{font-size:10px}.film-work-caption small{font-size:9px}}
+@media(prefers-reduced-motion:reduce){#filmFullscreen::backdrop,#filmFullscreen.is-closing::backdrop{animation:none}}
 
 /* Free vertical scrolling inside the selected environment. */
 #ecosystem-modal.is-scroll-story{display:block;overflow-y:auto;overflow-x:hidden;padding:24px clamp(20px,3vw,48px) 110px;scroll-padding-top:100px;scrollbar-width:thin;scrollbar-color:#aab5c540 transparent}
@@ -1349,7 +1346,6 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 </div>
 <dialog id="filmFullscreen" class="film-fullscreen" aria-label="Полноэкранный просмотр видео">
   <div id="filmFullscreenStage" class="film-fullscreen-stage"></div>
-  <button id="filmFullscreenClose" class="film-fullscreen-close" hidden type="button" aria-label="Закрыть полноэкранный просмотр" autofocus><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
   <p id="filmPlayerMessage" class="film-player-message" role="status" hidden></p>
 </dialog>
 
@@ -1935,8 +1931,8 @@ window.createTelegramGlass=function(root){
     if(media)events.forEach(event=>media.removeEventListener(event,sync));
     media=next;if(media){media.controls=false;events.forEach(event=>media.addEventListener(event,sync));sync()}
   }
-  function hideControls(){controls.hidden=true;$('filmReveal').hidden=false;$('filmReveal').setAttribute('aria-expanded','false')}
-  function reveal(){if(!active)return;controls.hidden=false;$('filmReveal').hidden=true;$('filmReveal').setAttribute('aria-expanded','true');sync()}
+  function hideControls(){controls.getAnimations().forEach(a=>a.cancel());controls.hidden=true;$('filmReveal').hidden=false;$('filmReveal').setAttribute('aria-expanded','false')}
+  function reveal(){if(!active)return;const first=controls.hidden;controls.hidden=false;$('filmReveal').hidden=true;$('filmReveal').setAttribute('aria-expanded','true');if(first&&!reduced.matches)controls.animate([{opacity:0},{opacity:1}],{duration:180});sync()}
   function play(){return media?.play().catch(()=>{})}
   function expandedLabel(value){$('filmExpand').setAttribute('aria-label',value?'Свернуть видео':'На весь экран');$('filmExpand').setAttribute('aria-expanded',String(value))}
   function boxFor(rect){const bounds=stage.getBoundingClientRect();return {left:(rect.left-bounds.left)+'px',top:(rect.top-bounds.top)+'px',width:rect.width+'px',height:rect.height+'px'}}
@@ -1949,9 +1945,9 @@ window.createTelegramGlass=function(root){
   }
   async function expand(origin=$('filmExpand')){
     if(!active||!main||dialog.open)return;
-    const rect=(origin.matches('[data-film-work]')?origin:shooting).getBoundingClientRect();
     home=shooting.parentElement;float=home.closest('.section-float');float?.classList.add('is-player-expanded');returnFocus=origin;
-    dialog.classList.remove('is-closing');$('filmFullscreenClose').hidden=false;dialog.showModal();stage.append(shooting);reveal();expandedLabel(true);
+    const rect=(origin.matches('[data-film-work]')?origin:shooting).getBoundingClientRect();
+    dialog.classList.remove('is-closing');dialog.showModal();stage.append(shooting);reveal();expandedLabel(true);$('filmExpand').focus({preventScroll:true});
     const token=++transition;
     await move(rect,stage.getBoundingClientRect(),false);
     if(token!==transition)return;
@@ -1976,8 +1972,6 @@ window.createTelegramGlass=function(root){
   }
   async function collapse(immediate=false,focus=true){
     if(!dialog.open)return;
-    // Remove the close control immediately, before the video starts shrinking.
-    $('filmFullscreenClose').hidden=true;
     const token=++transition;
     if(immediate){finishCollapse(focus);return}
     const from=shooting.getBoundingClientRect();
@@ -2014,7 +2008,6 @@ window.createTelegramGlass=function(root){
   $('filmMute').addEventListener('click',()=>{if(media){media.muted=!media.muted;sync()}});
   $('filmSeek').addEventListener('input',()=>{if(media&&Number.isFinite(media.duration))media.currentTime=Number($('filmSeek').value)/100*media.duration;sync()});
   $('filmExpand').addEventListener('click',()=>dialog.open?collapse():expand());
-  $('filmFullscreenClose').addEventListener('click',()=>collapse());
   dialog.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();collapse()});
   dialog.addEventListener('keydown',e=>e.stopPropagation());
   shooting.addEventListener('keydown',e=>{

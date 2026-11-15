@@ -33,8 +33,8 @@
     if(media)events.forEach(event=>media.removeEventListener(event,sync));
     media=next;if(media){media.controls=false;events.forEach(event=>media.addEventListener(event,sync));sync()}
   }
-  function hideControls(){controls.hidden=true;$('filmReveal').hidden=false;$('filmReveal').setAttribute('aria-expanded','false')}
-  function reveal(){if(!active)return;controls.hidden=false;$('filmReveal').hidden=true;$('filmReveal').setAttribute('aria-expanded','true');sync()}
+  function hideControls(){controls.getAnimations().forEach(a=>a.cancel());controls.hidden=true;$('filmReveal').hidden=false;$('filmReveal').setAttribute('aria-expanded','false')}
+  function reveal(){if(!active)return;const first=controls.hidden;controls.hidden=false;$('filmReveal').hidden=true;$('filmReveal').setAttribute('aria-expanded','true');if(first&&!reduced.matches)controls.animate([{opacity:0},{opacity:1}],{duration:180});sync()}
   function play(){return media?.play().catch(()=>{})}
   function expandedLabel(value){$('filmExpand').setAttribute('aria-label',value?'Свернуть видео':'На весь экран');$('filmExpand').setAttribute('aria-expanded',String(value))}
   function boxFor(rect){const bounds=stage.getBoundingClientRect();return {left:(rect.left-bounds.left)+'px',top:(rect.top-bounds.top)+'px',width:rect.width+'px',height:rect.height+'px'}}
@@ -47,9 +47,9 @@
   }
   async function expand(origin=$('filmExpand')){
     if(!active||!main||dialog.open)return;
-    const rect=(origin.matches('[data-film-work]')?origin:shooting).getBoundingClientRect();
     home=shooting.parentElement;float=home.closest('.section-float');float?.classList.add('is-player-expanded');returnFocus=origin;
-    dialog.classList.remove('is-closing');$('filmFullscreenClose').hidden=false;dialog.showModal();stage.append(shooting);reveal();expandedLabel(true);
+    const rect=(origin.matches('[data-film-work]')?origin:shooting).getBoundingClientRect();
+    dialog.classList.remove('is-closing');dialog.showModal();stage.append(shooting);reveal();expandedLabel(true);$('filmExpand').focus({preventScroll:true});
     const token=++transition;
     await move(rect,stage.getBoundingClientRect(),false);
     if(token!==transition)return;
@@ -74,8 +74,6 @@
   }
   async function collapse(immediate=false,focus=true){
     if(!dialog.open)return;
-    // Remove the close control immediately, before the video starts shrinking.
-    $('filmFullscreenClose').hidden=true;
     const token=++transition;
     if(immediate){finishCollapse(focus);return}
     const from=shooting.getBoundingClientRect();
@@ -112,7 +110,6 @@
   $('filmMute').addEventListener('click',()=>{if(media){media.muted=!media.muted;sync()}});
   $('filmSeek').addEventListener('input',()=>{if(media&&Number.isFinite(media.duration))media.currentTime=Number($('filmSeek').value)/100*media.duration;sync()});
   $('filmExpand').addEventListener('click',()=>dialog.open?collapse():expand());
-  $('filmFullscreenClose').addEventListener('click',()=>collapse());
   dialog.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();collapse()});
   dialog.addEventListener('keydown',e=>e.stopPropagation());
   shooting.addEventListener('keydown',e=>{
