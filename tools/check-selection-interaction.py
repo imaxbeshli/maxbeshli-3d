@@ -5,6 +5,9 @@ from playwright.sync_api import sync_playwright
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
     def log_message(self,*args):pass
+    def handle(self):
+        try:super().handle()
+        except (BrokenPipeError,ConnectionResetError):pass
 root=Path(__file__).resolve().parents[1]
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Quiet,directory=str(root)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
@@ -36,8 +39,26 @@ with sync_playwright() as p:
         def pointer_sweep():
             for x,y in [(15,85),(width-15,height-100),(width-15,85),(15,height-100),(width/2,height/2)]:
                 page.mouse.move(x,y);page.wait_for_timeout(120)
+        page.wait_for_function('Math.abs(parallaxX-mouseX)<.0001&&Math.abs(parallaxY-mouseY)<.0001')
+        rigid=page.evaluate('''()=>({rocks:__MB.rocks.map(r=>r.matrix.toArray()),backdrop:__MB.backdrop.matrix.toArray(),rotation:camera.quaternion.toArray()})''')
         before=page.evaluate(STILL);pointer_sweep()
         after=page.evaluate(STILL)
+        rigid_after=page.evaluate('''()=>({rocks:__MB.rocks.map(r=>r.matrix.toArray()),backdrop:__MB.backdrop.matrix.toArray(),rotation:camera.quaternion.toArray(),offset:camera.position.clone().sub(BASE_CAM_POS).toArray(),lookOffset:currentLookAt.clone().sub(BASE_LOOK_AT).toArray()})''')
+        assert rigid_after['rocks']==rigid['rocks'],'Rocks must not chase the cursor independently'
+        for key in ['backdrop','rotation']:
+            assert max(abs(a-b) for a,b in zip(rigid[key],rigid_after[key]))<1e-8,(key,'Parallax deforms the scene')
+        assert max(abs(a-b) for a,b in zip(rigid_after['offset'],rigid_after['lookOffset']))<1e-8,'Camera/look target lag behind each other'
+        page.evaluate('''()=>{
+          const saved=[mouseX,mouseY,parallaxX,parallaxY];
+          try{for(const fps of [10,30,60,120]){
+            mouseX=mouseY=1;parallaxX=parallaxY=0;let previous=0;
+            for(let i=0;i<Math.ceil(fps*.3);i++){updateHomeParallax(1/fps);if(parallaxX<previous||parallaxX>1)throw Error('Overshoot');previous=parallaxX}
+            if(parallaxX<.99)throw Error('Long elastic tail at '+fps+' fps');
+            mouseX=mouseY=-1;previous=parallaxX;
+            for(let i=0;i<Math.ceil(fps*.3);i++){updateHomeParallax(1/fps);if(parallaxX>previous||parallaxX< -1)throw Error('Reversal overshoot');previous=parallaxX}
+          }}finally{[mouseX,mouseY,parallaxX,parallaxY]=saved}
+        }''')
+        print('PASS rigid backdrop/rocks, shared camera motion and fast non-oscillating response',flush=True)
         assert after['camera']!=before['camera'] and after['rocks']!=before['rocks'],'Home parallax is disabled'
         # Select the card through the real pointer/touch handler.
         xy=page.evaluate(CENTER);page.mouse.move(*xy);page.wait_for_timeout(250)
