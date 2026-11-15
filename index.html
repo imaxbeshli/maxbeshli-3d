@@ -4839,6 +4839,8 @@ window.MBEnvironment={
     }
     function focusTile(index){
       if(!studioEntered||['entering','diving','section','returning','unfocusing'].includes(phase))return;
+      // A desktop selection stays locked until the camera returns to the orbit.
+      if(zoomState&&index!==selectedIndex&&matchMedia('(hover: hover) and (pointer: fine)').matches)return;
       initAudio();selectedIndex=index;
       targetProgress=currentProgress;velocity=coastVelocity=0;phase='focusing';zoomState=1;pendingDive=false;cursorLabel.textContent='ВОЙТИ';
       const initialProgress=currentProgress,finalProgress=index+SLATES_DATA.length*Math.round((currentProgress-index)/SLATES_DATA.length);
