@@ -12,7 +12,7 @@ for key in ['cinema', 'studio', 'digital', 'contact']:
 markup=(root/'assets/sections.html').read_text().replace('<!-- TELEGRAM_WORKSPACE -->',(root/'assets/telegram-workspace.html').read_text()).replace('<!-- FILM_STUDIO -->',(root/'assets/film-studio.html').read_text()).replace('<!-- WEB_STUDIO -->',(root/'assets/web-studio.html').read_text())
 block = '<!-- SECTIONS_START -->\n<style>\n'+css+'\n</style>\n'+markup
 scripts='\n'.join((root/'assets'/name).read_text() for name in ['telegram-glass.js','telegram-workspace.js','film-studio.js','web-studio.js','section-scroll.js','sections.js'])
-block += '\n<script>\nwindow.MB_SECTION_IMAGES='+json.dumps({k:v for k,v in assets.items() if k not in ['cinema','studio','digital','contact']})+';\n'+scripts+'\n</script>\n<!-- SECTIONS_END -->'
+block += '\n<script>\nwindow.MB_SECTION_IMAGES='+json.dumps({k:v for k,v in assets.items() if k in ['film-0','film-1','film-2','perfume']})+';\n'+scripts+'\n</script>\n<!-- SECTIONS_END -->'
 start,end='<!-- SECTIONS_START -->','<!-- SECTIONS_END -->'
 if start in html:
     a,b=html.index(start),html.index(end)+len(end)

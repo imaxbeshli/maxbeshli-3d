@@ -11,7 +11,7 @@ window.MBArchitectureDemo = {
     scene.background=skyDay.clone();scene.fog=new T.Fog(skyDay.clone(),30,95);
     const camera=new T.PerspectiveCamera(38,1200/548,.1,120);
     const renderer=new T.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
-    renderer.setPixelRatio(1);renderer.setSize(1000,457,false);renderer.setClearColor(0x000000,0);
+    renderer.setPixelRatio(1);let renderWidth=0;renderer.setClearColor(0x000000,0);
     renderer.outputEncoding=T.sRGBEncoding;renderer.toneMapping=T.ACESFilmicToneMapping;
     renderer.toneMappingExposure=1.15;
     renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
@@ -261,6 +261,10 @@ window.MBArchitectureDemo = {
       if(reset>0){ctx.save();ctx.globalAlpha=reset;rect(0,132,W,548,'#e6e4dd');ctx.restore()}
     }
     function render(t){
+      // Rasterize the 3D house for its displayed size; keep the 1200px text canvas sharp.
+      const displayed=canvas.clientWidth||Math.min(innerWidth*.7,1000);
+      const width=Math.min(1000,Math.max(400,Math.ceil(displayed*Math.min(devicePixelRatio,1.25)/32)*32));
+      if(width!==renderWidth){renderWidth=width;renderer.setSize(width,Math.round(width*548/1200),false);}
       renderedTime=((t%30)+30)%30;configure(renderedTime);
       renderer.render(scene,camera);site(renderedTime);onFrame();
     }

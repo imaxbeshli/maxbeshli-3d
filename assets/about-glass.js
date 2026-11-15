@@ -15,7 +15,7 @@ function createAboutGlass(dialog){
     if(!window.THREE)await import(assets.three);
     const THREE=window.THREE;
     const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
-    renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
+    renderer.setPixelRatio(1);renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
     const backgroundURL=getComputedStyle(world).backgroundImage.match(/url\(["']?(.*?)["']?\)/)[1];
     const background=await new THREE.TextureLoader().loadAsync(backgroundURL);
     background.encoding=THREE.sRGBEncoding;
@@ -35,7 +35,7 @@ function createAboutGlass(dialog){
     engine.backdrop.material.color.setHex(dialog.dataset.layout==='mobile'?0x080c10:0xffffff);
     const e=engine,w=panel.offsetWidth,h=panel.offsetHeight;if(!w||!h||(w===e.w&&h===e.h))return;
     e.w=w;e.h=h;e.unit=w/6;e.cw=w+e.pad*2;e.ch=h+e.pad*2;
-    canvas.style.left=-e.pad+'px';canvas.style.top=-e.pad+'px';canvas.style.width=e.cw+'px';canvas.style.height=e.ch+'px';e.renderer.setSize(e.cw,e.ch,false);
+    canvas.style.left=-e.pad+'px';canvas.style.top=-e.pad+'px';canvas.style.width=e.cw+'px';canvas.style.height=e.ch+'px';e.renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<=760?1:1.25,Math.sqrt(600000/(e.cw*e.ch))));e.renderer.setSize(e.cw,e.ch,false);
     const perspective=parseFloat(getComputedStyle(host).perspective)||1500;e.camera.fov=2*Math.atan(e.ch/(2*perspective))*180/Math.PI;e.camera.aspect=e.cw/e.ch;e.camera.position.set(0,0,perspective/e.unit);e.camera.lookAt(0,0,0);e.camera.updateProjectionMatrix();
     if(e.pane){e.scene.remove(e.pane);e.pane.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())})}
     e.pane=createAboutFramedGlass(e.THREE,{width:6,height:h/e.unit,environment:e.frameEnvironment});e.pane.matrixAutoUpdate=false;e.scene.add(e.pane);

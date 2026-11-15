@@ -78,10 +78,12 @@
   }
   function tick(now){
     if(!active)return;raf=requestAnimationFrame(tick);
-    const dt=last?Math.min((now-last)/1000,.05):0;last=now;
+    const dt=last?Math.max(0,(now-last)/1000):0;last=now;
     if(document.hidden||contact.open||$('aboutDialog').open){stopMedia();return}
     const ease=1-Math.exp(-4*dt);x+=(tx-x)*ease;y+=(ty-y)*ease;
-    root.style.setProperty('--sx',x.toFixed(3)+'px');root.style.setProperty('--sy',y.toFixed(3)+'px');
+    const sx=x.toFixed(3)+'px',sy=y.toFixed(3)+'px';
+    if(root.style.getPropertyValue('--sx')!==sx)root.style.setProperty('--sx',sx);
+    if(root.style.getPropertyValue('--sy')!==sy)root.style.setProperty('--sy',sy);
     const visible=window.MBSectionScroll.active?window.MBSectionScroll.update(now):true;
     if(!visible){stopMedia();wasMediaVisible=false;return}
     if(index===0){if(!wasMediaVisible)window.MBFilmStudio.resume();window.MBFilmStudio.update(now,dt);}
@@ -127,6 +129,6 @@
   contact.addEventListener('click',e=>{if(!e.target.closest('.contact-panel'))closeContact()});
   contact.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();closeContact()});
   contact.addEventListener('keydown',e=>{if(e.key==='Escape')e.stopPropagation()});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMedia();else if(active&&index===0&&!contact.open&&!$('aboutDialog').open)window.MBFilmStudio.resume()});
+  document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden)stopMedia();else if(active&&index===0&&!contact.open&&!$('aboutDialog').open)window.MBFilmStudio.resume()});
   window.MBSections={open,close,openContact,closeContact,selectTab:setTab,get state(){return {active,index,tab,webMode,contactOpen:contact.open}}};
 })();

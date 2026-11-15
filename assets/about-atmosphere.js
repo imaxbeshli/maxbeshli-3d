@@ -56,7 +56,8 @@ function createAboutAtmosphere(dialog){
   const uniforms=Object.fromEntries(['resolution','center','spread','time','mobile'].map(k=>[k,gl.getUniformLocation(program,k)]));
   let frame=0,running=false,last=0,elapsed=42,layout=null;
   function resize(){
-    const w=dialog.clientWidth,h=dialog.clientHeight;const scale=Math.min(.55,640/w,420/h);
+    const w=dialog.clientWidth,h=dialog.clientHeight;// Soft volumetric mist needs fewer pixels than the text and portrait.
+    const scale=Math.min(.45,480/w,320/h);
     canvas.width=Math.round(w*scale);canvas.height=Math.round(h*scale);gl.viewport(0,0,canvas.width,canvas.height);
     const r=dialog.querySelector('.about-visual').getBoundingClientRect();const stacked=w<=760&&h>w;
     layout={x:(r.left+r.width*(stacked?.25:.5))/w,y:(r.top+r.height*(stacked?.96:1.01))/h,sx:stacked?.40:.38,sy:stacked?Math.min(.075,r.height/h*.30):.22,mobile:stacked?1:0};

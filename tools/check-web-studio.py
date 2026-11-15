@@ -40,7 +40,7 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
  assert page.locator('#webScene button,#webScene input').count()==0
  player=page.locator('#webReadyVideo')
  assert player.evaluate('v=>v.muted&&v.defaultMuted&&v.loop&&v.playsInline&&!v.controls')
- assert player.evaluate("v=>v.currentSrc.includes('intro-scroll-60fps.mp4')")
+ assert player.evaluate("v=>v.src.includes('intro-scroll-60fps.mp4') && v.preload==='none'")
  assert page.locator('.web-ready .web-site-float').evaluate('e=>getComputedStyle(e).animationName')=='none'
  assert page.locator('.web-ready .scroll-media').evaluate('e=>getComputedStyle(e).transform')=='none'
  assert page.locator('#story-1-0 .web-site-float').evaluate('e=>getComputedStyle(e).animationName')!='none'

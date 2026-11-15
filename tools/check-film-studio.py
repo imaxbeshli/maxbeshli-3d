@@ -6,7 +6,9 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 html=(root/'index.html').read_text()
 block=html[html.index('<!-- SECTIONS_START -->'):html.index('<!-- SECTIONS_END -->')]
-encoded=re.search(r'<script[^>]*id="showreelVideoData"[^>]*>(.*?)</script>',html,re.S).group(1).strip()
+source=re.search(r'<script[^>]*id="showreelVideoData"([^>]*)>(.*?)</script>',html,re.S)
+stream=re.search(r'data-src="([^"]+)"',source[1])
+video_bytes=(root/stream[1]).read_bytes() if stream else base64.b64decode(source[2].strip())
 harness='''<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#0c1420;color:white;font-family:Arial}#ecosystem-modal{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:space-between}#ecosystem-modal:not(.active){visibility:hidden;opacity:0}</style><dialog id="aboutDialog"></dialog>'''+block
 harness+='''<script>(async()=>{const v=document.createElement('video');v.src=URL.createObjectURL(await(await fetch('showreel.mp4')).blob());v.muted=true;v.playsInline=true;v.loop=true;window.__MB={slateObjects:[{video:v,setPlaybackActive(){v.pause()}}]};MBSections.open(0);const e=document.getElementById('ecosystem-modal');e.classList.add('active');e.inert=false;e.style.opacity='1';})();</script>'''
 
@@ -18,7 +20,7 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
 
 with tempfile.TemporaryDirectory(prefix='mb-film-') as folder,sync_playwright() as p:
     Path(folder,'index.html').write_text(harness)
-    Path(folder,'showreel.mp4').write_bytes(base64.b64decode(encoded))
+    Path(folder,'showreel.mp4').write_bytes(video_bytes)
     server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Quiet,directory=folder))
     threading.Thread(target=server.serve_forever,daemon=True).start()
     browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
