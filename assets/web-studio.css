@@ -48,3 +48,9 @@
 #webReadyVideo{transform:translateZ(0)}
 .web-ready .web-preview-stage{isolation:isolate}
 #ecosystem-modal[data-scene="1"].is-web-video-playing .section-light{animation:none;filter:none}
+
+/* Native video posters can disappear as soon as play() starts buffering. */
+.web-video-surface{position:relative;border-radius:10px;overflow:hidden}
+#webReadyPoster{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.web-video-surface:not(.has-frame) #webReadyVideo{opacity:0}
+.web-video-surface.has-frame #webReadyPoster{visibility:hidden}

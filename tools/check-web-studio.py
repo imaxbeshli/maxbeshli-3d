@@ -1,8 +1,9 @@
 """Exercise the website previews and the real shared 3D renderer offline."""
 from pathlib import Path
-import re,tempfile,threading,http.server,functools,argparse
+import re,tempfile,threading,http.server,functools,argparse,io
+from PIL import Image
 from playwright.sync_api import sync_playwright
-parser=argparse.ArgumentParser();parser.add_argument('--mobile',action='store_true');args=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--mobile',action='store_true');parser.add_argument('--fallback',action='store_true');args=parser.parse_args()
 root=Path(__file__).resolve().parents[1]
 html=(root/'index.html').read_text()
 three=next(m.group(1) for m in re.finditer(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>',html) if len(m.group(1))>200000 and 'REVISION' in m.group(1) and 'Copyright 2010-2021 Three.js Authors' in m.group(1))
@@ -19,6 +20,7 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
  browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox','--enable-unsafe-swiftshader'])
  page=browser.new_page(**(p.devices['Pixel 7'] if args.mobile else {'viewport':{'width':1440,'height':960}}));page.set_default_timeout(45000)
  errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+ if args.fallback:page.add_init_script('HTMLVideoElement.prototype.requestVideoFrameCallback=undefined')
  # The intro must already be visible even when video bytes cannot load.
  page.route('**/avtolab77-intro-scroll*.mp4*',lambda r:r.abort())
  page.goto(f'http://127.0.0.1:{server.server_port}/index.html')
@@ -29,6 +31,12 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
    return image.naturalWidth===1280&&image.naturalHeight===720&&v.readyState===0;
  }""")
  page.wait_for_timeout(1600)
+ assert page.locator('#webReadyPoster').is_visible()
+ assert page.locator('.web-video-surface').evaluate("e=>!e.classList.contains('has-frame')")
+ # Inspect the rendered centre, not merely whether the poster URL can decode.
+ shot=Image.open(io.BytesIO(page.locator('.web-video-surface').screenshot())).convert('RGB')
+ w,h=shot.size;logo=shot.crop((int(w*.25),int(h*.4),int(w*.75),int(h*.6)))
+ assert sum(max(px)>90 for px in logo.getdata())>logo.width*logo.height*.03,'Logo disappeared while play() awaited video bytes'
  page.screenshot(path=f'/tmp/avtolab-intro-loading-{"mobile" if args.mobile else "desktop"}.png')
  page.unroute('**/avtolab77-intro-scroll*.mp4*')
  print('PASS intro poster remains visible while video loading is blocked',flush=True)
@@ -58,6 +66,8 @@ with tempfile.TemporaryDirectory(prefix='mb-web-') as folder,sync_playwright() a
   page.locator('#ecosystem-modal').evaluate('e=>e.scrollTop=e.scrollHeight')
   page.wait_for_function('!webReadyVideo.paused && webReadyVideo.currentTime>0')
   assert page.locator('.section-light').evaluate("e=>getComputedStyle(e).animationName==='none'&&getComputedStyle(e).filter==='none'")
+  page.wait_for_function("webReadyVideo.closest('.web-video-surface').classList.contains('has-frame')")
+  assert not page.locator('#webReadyPoster').is_visible()
   assert player.evaluate('v=>v.videoWidth===1280 && v.videoHeight===720 && Math.abs(v.duration-34.966667)<.04')
   page.wait_for_function('!__MB.slateObjects[1].architectureDemo.state.active')
   t=page.evaluate('MBWebStudio.state.time');page.wait_for_timeout(200);assert page.evaluate('MBWebStudio.state.time')==t

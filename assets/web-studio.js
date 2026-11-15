@@ -4,6 +4,25 @@
   const video=document.getElementById('webReadyVideo');
   let demo=null,view=-1,playing=false;
   video.muted=video.defaultMuted=true;
+  const surface=video.closest('.web-video-surface');
+  let firstFrameCallback=0,fallbackFrame=0;
+  function showFrame(){surface.classList.add('has-frame')}
+  function waitForFirstFrame(){
+    surface.classList.remove('has-frame');
+    if(video.requestVideoFrameCallback){
+      if(firstFrameCallback)video.cancelVideoFrameCallback(firstFrameCallback);
+      firstFrameCallback=video.requestVideoFrameCallback(()=>{firstFrameCallback=0;showFrame()});
+    }
+  }
+  video.addEventListener('emptied',()=>{cancelAnimationFrame(fallbackFrame);waitForFirstFrame()});
+  if(!video.requestVideoFrameCallback)video.addEventListener('playing',()=>{
+    // Older browsers: allow the decoded frame to reach the compositor first.
+    cancelAnimationFrame(fallbackFrame);
+    fallbackFrame=requestAnimationFrame(()=>{fallbackFrame=requestAnimationFrame(()=>{
+      if(video.readyState>=2&&video.videoWidth)showFrame();
+    })});
+  });
+  waitForFirstFrame();
   function playback(active,retry=false){
     if(active===playing&&!retry)return;
     playing=active;

@@ -1194,6 +1194,12 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 .web-ready .web-preview-stage{isolation:isolate}
 #ecosystem-modal[data-scene="1"].is-web-video-playing .section-light{animation:none;filter:none}
 
+/* Native video posters can disappear as soon as play() starts buffering. */
+.web-video-surface{position:relative;border-radius:10px;overflow:hidden}
+#webReadyPoster{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.web-video-surface:not(.has-frame) #webReadyVideo{opacity:0}
+.web-video-surface.has-frame #webReadyPoster{visibility:hidden}
+
 /* Shared editorial scale and viewport budget for every service section. */
 #ecosystem-modal.is-scroll-story{--chapter-title:clamp(28px,2.7vw,38px);--section-body:15px;padding-top:16px}
 #ecosystem-modal.is-scroll-story .section-layout{max-width:1520px;margin:16px auto 0;min-height:0}
@@ -1320,7 +1326,10 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
         <p class="web-hero-lead">AVTOLAB77 — услуги, работы и запись в студию. Всё, что нужно клиенту для первого шага.</p>
       </div>
       <div class="web-live-site"><div class="web-site-float"><div class="web-preview-stage">
+        <div class="web-video-surface">
         <video id="webReadyVideo" src="assets/avtolab77-intro-scroll-60fps.mp4?v=2" poster="assets/avtolab77-intro-poster.webp" muted loop playsinline preload="none" disablepictureinpicture disableremoteplayback tabindex="-1" aria-label="Готовый сайт AVTOLAB77"></video>
+        <img id="webReadyPoster" src="assets/avtolab77-intro-poster.webp" alt="" aria-hidden="true" width="1280" height="720">
+        </div>
       </div></div></div>
     </div>
   </section>
@@ -1845,6 +1854,25 @@ window.createTelegramGlass=function(root){
   const video=document.getElementById('webReadyVideo');
   let demo=null,view=-1,playing=false;
   video.muted=video.defaultMuted=true;
+  const surface=video.closest('.web-video-surface');
+  let firstFrameCallback=0,fallbackFrame=0;
+  function showFrame(){surface.classList.add('has-frame')}
+  function waitForFirstFrame(){
+    surface.classList.remove('has-frame');
+    if(video.requestVideoFrameCallback){
+      if(firstFrameCallback)video.cancelVideoFrameCallback(firstFrameCallback);
+      firstFrameCallback=video.requestVideoFrameCallback(()=>{firstFrameCallback=0;showFrame()});
+    }
+  }
+  video.addEventListener('emptied',()=>{cancelAnimationFrame(fallbackFrame);waitForFirstFrame()});
+  if(!video.requestVideoFrameCallback)video.addEventListener('playing',()=>{
+    // Older browsers: allow the decoded frame to reach the compositor first.
+    cancelAnimationFrame(fallbackFrame);
+    fallbackFrame=requestAnimationFrame(()=>{fallbackFrame=requestAnimationFrame(()=>{
+      if(video.readyState>=2&&video.videoWidth)showFrame();
+    })});
+  });
+  waitForFirstFrame();
   function playback(active,retry=false){
     if(active===playing&&!retry)return;
     playing=active;
