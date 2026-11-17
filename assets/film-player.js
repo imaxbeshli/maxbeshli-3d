@@ -62,7 +62,6 @@
     work.pause();work.removeAttribute('src');work.load();work.remove();work=null;
     main.style.removeProperty('display');bind(main);
     if(resume&&wasPlaying&&active&&!document.hidden)play();
-    $('filmShowreel').hidden=true;
     document.querySelectorAll('[data-film-work]').forEach(b=>b.setAttribute('aria-pressed','false'));
     message.hidden=true;
   }
@@ -88,14 +87,14 @@
     const item=works[index];if(!active||!item?.src||dialog.open)return;
     if(!work)wasPlaying=!main.paused;
     restoreWork(false);main.pause();main.style.display='none';
-    work=document.createElement('video');work.playsInline=true;work.preload='metadata';work.poster=item.poster||'';work.src=item.src;work.setAttribute('aria-label',item.title);
+    work=document.createElement('video');work.playsInline=true;work.preload='auto';work.autoplay=true;work.src=item.src;work.setAttribute('aria-label',item.title);
     slot.append(work);bind(work);dialog.setAttribute('aria-label',item.title);message.hidden=true;
     const token=++workRequest;
     work.addEventListener('error',()=>{if(token!==workRequest)return;message.textContent='Не удалось загрузить видео. Попробуйте открыть его ещё раз.';message.hidden=false});
-    hideControls();$('filmShowreel').hidden=false;
+    hideControls();
     document.querySelectorAll('[data-film-work]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
     button.scrollIntoView({behavior:reduced.matches?'instant':'smooth',block:'nearest',inline:'nearest'});
-    try{await work.play()}catch(e){if(token===workRequest)sync()}
+    try{await work.play()}catch(e){if(token===workRequest)reveal()}
   }
   function setWorks(items){
     works=defaults.map((item,i)=>({...item,...items?.[i]}));
@@ -112,7 +111,6 @@
   function setActive(value){active=value;if(!value){collapse(true,false);restoreWork();hideControls()}}
   function open(video){close();main=video;active=true;bind(video);hideControls();dialog.setAttribute('aria-label','Полноэкранный просмотр видео')}
   function close(){active=false;collapse(true,false);restoreWork();bind(null);main=null;hideControls()}
-  $('filmShowreel').addEventListener('click',()=>{restoreWork();hideControls();});
   const rail=$('filmChapters');
   let railTarget=0,railFrame=0,railTime=0,drag=null,suppressClickUntil=0;
   const railLimit=()=>Math.max(0,rail.scrollWidth-rail.clientWidth);

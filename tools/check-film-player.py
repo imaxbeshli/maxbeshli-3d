@@ -134,6 +134,7 @@ with sync_playwright() as p:
    tap(selector)
    page.wait_for_function('MBFilmPlayer.workOpen&&!filmFullscreen.open&&sectionVideoSlot.querySelectorAll("video")[1].readyState>=2')
    assert page.evaluate('v.paused')
+   assert page.locator('#sectionVideoSlot video').last.evaluate('(v)=>!v.hasAttribute("poster")&&v.autoplay')
    expected='/assets/'+['finistauto','pskov','backstage','inner-strength'][index]+'.mp4'
    assert page.locator('#sectionVideoSlot video').last.evaluate('(v)=>new URL(v.currentSrc).pathname')==expected
    page.wait_for_function('!sectionVideoSlot.querySelectorAll("video")[1].paused&&sectionVideoSlot.querySelectorAll("video")[1].currentTime>0')
@@ -146,9 +147,8 @@ with sync_playwright() as p:
    assert page.locator('#sectionVideoSlot video').count()==2
    assert page.evaluate('MBFilmPlayer.workOpen&&v.paused')
   assert page.locator('#filmChapters').evaluate('e=>e.scrollLeft>0&&e.scrollWidth>e.clientWidth')
-  tap('#filmShowreel')
-  assert not page.evaluate('MBFilmPlayer.workOpen')
-  page.wait_for_function('!v.paused')
+  assert page.locator('#filmShowreel').count()==0
+  assert page.locator('.film-control-row > :first-child').get_attribute('id')=='filmPlay'
   # Scroll into editing: controls must stay hidden there and reset on return.
   page.evaluate('MBSections.selectTab(1)');page.wait_for_function('MBSections.state.tab===1')
   assert not page.evaluate('v.controls')
