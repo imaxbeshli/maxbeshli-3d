@@ -96,7 +96,23 @@ with sync_playwright() as p:
     cdp.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x-dx,'y':y}]});page.wait_for_timeout(30)
    cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
   else:
+   page.evaluate("""()=>{window.railSamples=[];const start=performance.now();function sample(){railSamples.push(filmChapters.scrollLeft);if(performance.now()-start<700)requestAnimationFrame(sample)}sample()}""")
    page.mouse.move(x,y);page.mouse.wheel(0,220)
+   page.wait_for_timeout(800)
+   samples=page.evaluate('railSamples')
+   assert len(set(round(n) for n in samples))>5,samples
+   assert max(abs(b-a) for a,b in zip(samples,samples[1:]))<60,samples
+   assert 60<rail.evaluate('e=>e.scrollLeft')<rail.evaluate('e=>e.scrollWidth-e.clientWidth')
+   # Drag across an image: gradual movement, no native image drag or accidental playback.
+   before=rail.evaluate('e=>e.scrollLeft')
+   page.mouse.move(x,y);page.mouse.down()
+   for dx in [8,16,24,32,40]:
+    page.mouse.move(x+dx,y);page.wait_for_timeout(35)
+   page.mouse.up();page.wait_for_timeout(500)
+   after=rail.evaluate('e=>e.scrollLeft')
+   assert 25<before-after<55,(before,after)
+   assert not page.evaluate('MBFilmPlayer.workOpen')
+   assert not rail.evaluate('e=>e.classList.contains("is-dragging")')
   page.wait_for_function('filmChapters.scrollLeft>20')
   assert page.locator('#ecosystem-modal').evaluate('e=>e.scrollWidth<=e.clientWidth+1')
   # Verify all real works, captions and independent playback on desktop and mobile.

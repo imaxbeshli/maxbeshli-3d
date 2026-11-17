@@ -199,3 +199,10 @@
 #filmShowreel{width:auto;padding:0 8px;font-size:10px;white-space:nowrap}
 #filmShowreel[hidden]{display:none}
 @media(max-width:600px){#filmScene #filmChapters .film-work{flex-basis:68%;aspect-ratio:2.2}#filmScene #filmChapters .film-work-caption b,#filmScene #filmChapters .film-work-caption small{font-size:10px}}
+
+@media(hover:hover) and (pointer:fine){
+  #filmScene #filmChapters{scroll-snap-type:none;cursor:grab;user-select:none}
+  #filmScene #filmChapters .film-work{cursor:grab}
+  #filmScene #filmChapters.is-dragging,#filmScene #filmChapters.is-dragging .film-work{cursor:grabbing}
+  #filmScene #filmChapters img{-webkit-user-drag:none;user-select:none}
+}

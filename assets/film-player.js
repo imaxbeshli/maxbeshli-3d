@@ -114,7 +114,50 @@
   function close(){active=false;collapse(true,false);restoreWork();bind(null);main=null;hideControls()}
   $('filmShowreel').addEventListener('click',()=>{restoreWork();hideControls();});
   const rail=$('filmChapters');
-  rail.addEventListener('wheel',e=>{if(Math.abs(e.deltaX)>Math.abs(e.deltaY))return;const delta=e.deltaY;const can=delta>0?rail.scrollLeft<rail.scrollWidth-rail.clientWidth-1:rail.scrollLeft>1;if(can){e.preventDefault();rail.scrollLeft+=delta;}},{passive:false});
+  let railTarget=0,railFrame=0,railTime=0,drag=null,suppressClickUntil=0;
+  const railLimit=()=>Math.max(0,rail.scrollWidth-rail.clientWidth);
+  function stopRail(){cancelAnimationFrame(railFrame);railFrame=0;railTime=0;railTarget=rail.scrollLeft;}
+  function animateRail(now){
+    const dt=railTime?Math.min(40,now-railTime):16;railTime=now;
+    railTarget=Math.max(0,Math.min(railLimit(),railTarget));
+    const gap=railTarget-rail.scrollLeft;
+    if(reduced.matches||Math.abs(gap)<.8){rail.scrollLeft=railTarget;railFrame=0;railTime=0;return;}
+    rail.scrollLeft+=gap*(1-Math.exp(-dt/(drag?65:110)));
+    railFrame=requestAnimationFrame(animateRail);
+  }
+  function moveRail(target){railTarget=Math.max(0,Math.min(railLimit(),target));if(!railFrame)railFrame=requestAnimationFrame(animateRail);}
+  rail.addEventListener('wheel',e=>{
+    if(!railLimit())return;e.preventDefault();e.stopPropagation();
+    const unit=e.deltaMode===1?16:e.deltaMode===2?rail.clientWidth:1;
+    const delta=(Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY)*unit;
+    if(!railFrame)railTarget=rail.scrollLeft;
+    moveRail(railTarget+Math.max(-120,Math.min(120,delta*.65)));
+  },{passive:false});
+  rail.addEventListener('dragstart',e=>e.preventDefault());
+  rail.addEventListener('pointerdown',e=>{
+    if(e.pointerType!=='mouse'||e.button!==0)return;
+    stopRail();drag={id:e.pointerId,x:e.clientX,left:rail.scrollLeft,moved:false};
+  });
+  rail.addEventListener('pointermove',e=>{
+    if(!drag||e.pointerId!==drag.id)return;
+    const dx=e.clientX-drag.x;
+    if(!drag.moved&&Math.abs(dx)<5)return;
+    if(!drag.moved){drag.moved=true;rail.setPointerCapture(e.pointerId);rail.classList.add('is-dragging');}
+    e.preventDefault();moveRail(drag.left-dx);
+  });
+  function endDrag(e){
+    if(!drag||e.pointerId!==drag.id)return;
+    const moved=drag.moved;drag=null;rail.classList.remove('is-dragging');
+    if(moved)suppressClickUntil=performance.now()+350;
+    if(rail.hasPointerCapture(e.pointerId))rail.releasePointerCapture(e.pointerId);
+  }
+  rail.addEventListener('pointerup',endDrag);
+  rail.addEventListener('pointercancel',endDrag);
+  rail.addEventListener('lostpointercapture',endDrag);
+  rail.addEventListener('click',e=>{if(performance.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation();suppressClickUntil=0;}},true);
+  rail.addEventListener('touchstart',stopRail,{passive:true});
+  window.addEventListener('resize',stopRail);
+  reduced.addEventListener('change',stopRail);
   $('filmReveal').addEventListener('click',reveal);
   $('filmPlay').addEventListener('click',()=>{if(!media)return;media.paused?play():media.pause()});
   $('filmMute').addEventListener('click',()=>{if(media){media.muted=!media.muted;sync()}});
