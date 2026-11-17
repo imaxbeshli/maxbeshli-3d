@@ -40,30 +40,23 @@ with tempfile.TemporaryDirectory(prefix='mb-glass-scroll-') as folder, sync_play
             navigate(tab)
             if tab==0:
                 assert page.evaluate("""()=>{
-                    const trunk=document.getElementById('flowTrunk');
-                    if(innerWidth<=540)return trunk.getAttribute('d')==='';
-                    if(!trunk.getTotalLength())return false;
-                    const junction=trunk.getPointAtLength(trunk.getTotalLength());
-                    const phone=trunk.getPointAtLength(0),r=telegramApp.getBoundingClientRect();
-                    const b=document.querySelector('[data-port="1"]').getBoundingClientRect();
-                    if(Math.hypot(phone.x-(b.x+b.width/2-r.x),phone.y-(b.y+b.height/2-r.y))>2)return false;
+                    const r=telegramApp.getBoundingClientRect();
+                    const b=document.querySelector(innerWidth<=540?'.phone-bottom-port':'[data-port="1"]').getBoundingClientRect();
+                    if(document.getElementById('flowTrunk'))return false;
                     return [...document.querySelectorAll('.connection')].every((g,i)=>{
                         const p=g.children[0],a=p.getPointAtLength(0),z=p.getPointAtLength(p.getTotalLength());
                         const e=document.querySelectorAll('.flow-port')[i].getBoundingClientRect();
-                        const before=trunk.getPointAtLength(trunk.getTotalLength()-.1),after=p.getPointAtLength(.1);
-                        const ux=junction.x-before.x,uy=junction.y-before.y,vx=after.x-a.x,vy=after.y-a.y;
-                        const smooth=(ux*vx+uy*vy)/(Math.hypot(ux,uy)*Math.hypot(vx,vy))>.98;
-                        return smooth&&Math.hypot(a.x-junction.x,a.y-junction.y)<1&&Math.hypot(z.x-(e.x+e.width/2-r.x),z.y-(e.y+e.height/2-r.y))<2;
+                        return Math.hypot(a.x-(b.x+b.width/2-r.x),a.y-(b.y+b.height/2-r.y))<2&&Math.hypot(z.x-(e.x+e.width/2-r.x),z.y-(e.y+e.height/2-r.y))<2;
                     });
                 }""")
-            if tab==0 and not mobile:
-                assert page.evaluate("""()=>{
-                    MBTelegramStudio.update(520,0);
-                    const dots=[...document.querySelectorAll('.connection circle')];
-                    const initial=Number(flowTrunkPulse.style.opacity)>0&&dots.every(d=>Number(d.style.opacity)===0);
-                    MBTelegramStudio.update(2600,0);
-                    return initial&&Number(flowTrunkPulse.style.opacity)===0&&dots.every(d=>Number(d.style.opacity)>0);
-                }""")
+                if not mobile:
+                    assert page.evaluate("""()=>{
+                        MBTelegramStudio.update(1175,0);
+                        return [...document.querySelectorAll('.connection')].every(g=>{
+                            const p=g.children[1],dot=g.children[2],pos=p.getPointAtLength(p.getTotalLength()*.25);
+                            return Number(dot.style.opacity)>0&&Math.hypot(Number(dot.getAttribute('cx'))-pos.x,Number(dot.getAttribute('cy'))-pos.y)<1;
+                        });
+                    }""")
             for host in page.locator(selector).all():
                 assert 'glass-ready' in host.get_attribute('class')
                 assert host.locator('.tg-glass-canvas').evaluate('''c=>{
