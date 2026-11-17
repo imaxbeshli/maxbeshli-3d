@@ -180,9 +180,12 @@
     const mobile=innerWidth<=540,ends=[...root.querySelectorAll('.flow-port')].map(point),start=point(root.querySelector('.phone-bottom-port'));
     const phone=point(root.querySelector('[data-port="1"]'));
     const gap=Math.min(...ends.map(e=>e.x))-phone.x;
-    const junction={x:phone.x+gap*.36,y:ends[1].y};
+    // Split one continuous central Bezier; both halves share the same tangent.
+    const mix=(a,b,t)=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
+    const end=ends[1],c1={x:phone.x+(end.x-phone.x)/3,y:phone.y+6},c2={x:phone.x+(end.x-phone.x)*2/3,y:end.y+6};
+    const a=mix(phone,c1,.36),b=mix(c1,c2,.36),c=mix(c2,end,.36),d=mix(a,b,.36),exit=mix(b,c,.36),junction=mix(d,exit,.36);
     const spine=phone.x+gap*.72,trunk=$('flowTrunk'),pulse=$('flowTrunkPulse');
-    trunk.setAttribute('d',mobile?'':`M${phone.x},${phone.y} C${phone.x+gap*.14},${phone.y-8} ${junction.x-gap*.12},${junction.y+8} ${junction.x},${junction.y}`);
+    trunk.setAttribute('d',mobile?'':`M${phone.x},${phone.y} C${a.x},${a.y} ${d.x},${d.y} ${junction.x},${junction.y}`);
     const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,phase=(now%5200)/5200,split=.3;
     if(!mobile){
       const pos=trunk.getPointAtLength(trunk.getTotalLength()*Math.min(1,phase/split));
@@ -192,8 +195,8 @@
     root.querySelectorAll('.connection').forEach((g,i)=>{
       const s=mobile?start:junction,e=ends[i],mid=(s.y+e.y)/2;
       const d=mobile?`M${s.x},${s.y} C${s.x},${s.y+(e.y-s.y)*.5} ${e.x},${s.y+(e.y-s.y)*.5} ${e.x},${e.y}`:
-        i===1?`M${s.x},${s.y} C${spine},${s.y-5} ${spine},${e.y+5} ${e.x},${e.y}`:
-        `M${s.x},${s.y} C${spine},${s.y} ${spine},${s.y} ${spine},${mid} C${spine},${e.y} ${spine},${e.y} ${e.x},${e.y}`;
+        i===1?`M${s.x},${s.y} C${exit.x},${exit.y} ${c.x},${c.y} ${e.x},${e.y}`:
+        `M${s.x},${s.y} C${exit.x},${exit.y} ${spine},${s.y} ${spine},${mid} C${spine},${e.y} ${spine},${e.y} ${e.x},${e.y}`;
       const path=g.children[0],route=g.children[1],dot=g.children[2];path.setAttribute('d',d);route.setAttribute('d',d);
       const p=mobile?((now/4700+i*.32)%1):Math.max(0,(phase-split)/(1-split));
       const pos=route.getPointAtLength(route.getTotalLength()*p);

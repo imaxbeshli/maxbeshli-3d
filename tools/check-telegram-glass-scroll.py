@@ -50,7 +50,10 @@ with tempfile.TemporaryDirectory(prefix='mb-glass-scroll-') as folder, sync_play
                     return [...document.querySelectorAll('.connection')].every((g,i)=>{
                         const p=g.children[0],a=p.getPointAtLength(0),z=p.getPointAtLength(p.getTotalLength());
                         const e=document.querySelectorAll('.flow-port')[i].getBoundingClientRect();
-                        return Math.hypot(a.x-junction.x,a.y-junction.y)<1&&Math.hypot(z.x-(e.x+e.width/2-r.x),z.y-(e.y+e.height/2-r.y))<2;
+                        const before=trunk.getPointAtLength(trunk.getTotalLength()-.1),after=p.getPointAtLength(.1);
+                        const ux=junction.x-before.x,uy=junction.y-before.y,vx=after.x-a.x,vy=after.y-a.y;
+                        const smooth=(ux*vx+uy*vy)/(Math.hypot(ux,uy)*Math.hypot(vx,vy))>.98;
+                        return smooth&&Math.hypot(a.x-junction.x,a.y-junction.y)<1&&Math.hypot(z.x-(e.x+e.width/2-r.x),z.y-(e.y+e.height/2-r.y))<2;
                     });
                 }""")
             if tab==0 and not mobile:
