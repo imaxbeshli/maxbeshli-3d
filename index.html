@@ -1749,9 +1749,11 @@ window.createTelegramGlass=function(root){
     const svg=$('telegramConnections');svg.setAttribute('viewBox',`0 0 ${r.width} ${r.height}`);
     const point=el=>{const b=el.getBoundingClientRect();return {x:b.x+b.width/2-r.x,y:b.y+b.height/2-r.y}};
     const mobile=innerWidth<=540,ends=[...root.querySelectorAll('.flow-port')].map(point),start=point(root.querySelector('.phone-bottom-port'));
-    $('flowTrunk').setAttribute('d','');
+    const phone=point(root.querySelector('[data-port="1"]'));
+    const junction={x:phone.x+(Math.min(...ends.map(e=>e.x))-phone.x)*.45,y:phone.y};
+    $('flowTrunk').setAttribute('d',mobile?'':`M${phone.x},${phone.y} L${junction.x},${junction.y}`);
     root.querySelectorAll('.connection').forEach((g,i)=>{
-      const s=mobile?start:point(root.querySelector(`[data-port="${i}"]`)),e=ends[i],bend=Math.max(14,(e.x-s.x)*.48);
+      const s=mobile?start:junction,e=ends[i],bend=Math.max(14,(e.x-s.x)*.48);
       const d=mobile?`M${s.x},${s.y} C${s.x},${s.y+(e.y-s.y)*.5} ${e.x},${s.y+(e.y-s.y)*.5} ${e.x},${e.y}`:`M${s.x},${s.y} C${s.x+bend},${s.y} ${e.x-bend},${e.y} ${e.x},${e.y}`;
       const path=g.children[0],route=g.children[1],dot=g.children[2];path.setAttribute('d',d);
       route.setAttribute('d',d);
@@ -2382,6 +2384,8 @@ window.createTelegramGlass=function(root){
 
 </script>
 <!-- SECTIONS_END -->
+
+
 
 
 

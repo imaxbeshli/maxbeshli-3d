@@ -38,6 +38,21 @@ with tempfile.TemporaryDirectory(prefix='mb-glass-scroll-') as folder, sync_play
             page.wait_for_timeout(350)
         for tab,selector in [(0,'.automation-flow .tg-glass-host'),(1,'#telegramBot'),(2,'#telegramCRM')]:
             navigate(tab)
+            if tab==0:
+                assert page.evaluate("""()=>{
+                    const trunk=document.getElementById('flowTrunk');
+                    if(innerWidth<=540)return trunk.getAttribute('d')==='';
+                    if(!trunk.getTotalLength())return false;
+                    const junction=trunk.getPointAtLength(trunk.getTotalLength());
+                    const phone=trunk.getPointAtLength(0),r=telegramApp.getBoundingClientRect();
+                    const b=document.querySelector('[data-port="1"]').getBoundingClientRect();
+                    if(Math.hypot(phone.x-(b.x+b.width/2-r.x),phone.y-(b.y+b.height/2-r.y))>2)return false;
+                    return [...document.querySelectorAll('.connection')].every((g,i)=>{
+                        const p=g.children[0],a=p.getPointAtLength(0),z=p.getPointAtLength(p.getTotalLength());
+                        const e=document.querySelectorAll('.flow-port')[i].getBoundingClientRect();
+                        return Math.hypot(a.x-junction.x,a.y-junction.y)<1&&Math.hypot(z.x-(e.x+e.width/2-r.x),z.y-(e.y+e.height/2-r.y))<2;
+                    });
+                }""")
             for host in page.locator(selector).all():
                 assert 'glass-ready' in host.get_attribute('class')
                 assert host.locator('.tg-glass-canvas').evaluate('''c=>{
