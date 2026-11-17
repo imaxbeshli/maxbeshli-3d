@@ -45,6 +45,14 @@ with tempfile.TemporaryDirectory(prefix='mb-glass-scroll-') as folder, sync_play
                     return alpha>0 && alpha<180;
                 }'''), 'Glass must expose the live backdrop, not store an opaque background snapshot'
                 assert host.locator('.tg-glass-panel').evaluate('e=>getComputedStyle(e,"::before").backdropFilter')=='blur(5px)'
+                # The initial fallback and rendered glass must have identical matte fill.
+                assert host.evaluate("""h=>{
+                    const p=h.querySelector('.tg-glass-panel');
+                    const read=()=>{const s=getComputedStyle(p,'::before');return [s.content,s.backgroundImage,s.backdropFilter,s.opacity,s.transitionDuration]};
+                    const ready=read();h.classList.remove('glass-ready');const initial=read();h.classList.add('glass-ready');
+                    return JSON.stringify(initial)===JSON.stringify(ready)&&initial[0]!=='none'&&initial[4]==='0s';
+                }""")
+                assert host.evaluate("""h=>{const s=getComputedStyle(h.closest('.scroll-media'));return s.opacity==='1'&&s.transitionDuration==='0s'}""")
             assert page.locator('#ecosystem-modal').evaluate('e=>e.scrollWidth<=e.clientWidth+1')
             page.screenshot(path=f'/tmp/telegram-glass-{width}-{tab}.png')
         navigate(0)
