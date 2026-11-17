@@ -35,7 +35,7 @@ with sync_playwright() as p:
   page.wait_for_timeout(450)
   assert not page.locator('#filmControls').is_visible()
   assert not page.evaluate('v.controls')
-  assert page.locator('#filmChapters button:disabled').count()==1
+  assert page.locator('#filmChapters button:disabled').count()==0
   assert page.locator('[data-film-time]').count()==0
   assert page.locator('#filmChapters svg').count()==0
   page.mouse.move(250,250);assert not page.locator('#filmControls').is_visible()
@@ -87,11 +87,12 @@ with sync_playwright() as p:
   page.wait_for_function('!filmFullscreen.open')
   assert not page.locator('#filmShooting').evaluate('e=>e.getAnimations().length')
   # Verify both real works, captions and independent playback on desktop and mobile.
-  for index,title,category_text in [(0,'FINISTAUTO','Рекламный ролик'),(1,'Псков','Культурный проект')]:
+  for index,title,category_text in [(0,'FINISTAUTO','Рекламный ролик'),(1,'ПСКОВ','Культурный проект'),(2,'BACKSTAGE','Как это было')]:
    selector=f'[data-film-work="{index}"]'
    assert page.locator(selector+' b').inner_text()==title
    assert page.locator(selector+' small').inner_text()==category_text
    assert page.locator(selector+' b').is_visible()
+   assert page.locator(selector+' b').evaluate('(e)=>getComputedStyle(e).fontWeight')==page.locator('[data-film-work="0"] b').evaluate('(e)=>getComputedStyle(e).fontWeight')
    caption=page.locator(selector+' .film-work-caption').bounding_box()
    picture=page.locator(selector+' img').bounding_box()
    assert caption['y']>=picture['y']+picture['height']-2
@@ -102,7 +103,7 @@ with sync_playwright() as p:
    tap(selector)
    page.wait_for_function('MBFilmPlayer.workOpen&&filmFullscreen.open&&filmFullscreen.querySelectorAll("video")[1].readyState>=2')
    assert page.evaluate('v.paused')
-   expected='/assets/'+('finistauto' if index==0 else 'pskov')+'.mp4'
+   expected='/assets/'+['finistauto','pskov','backstage'][index]+'.mp4'
    assert page.locator('#filmFullscreen video').last.evaluate('(v)=>new URL(v.currentSrc).pathname')==expected
    page.wait_for_function('!filmFullscreen.querySelectorAll("video")[1].paused&&filmFullscreen.querySelectorAll("video")[1].currentTime>0')
    page.wait_for_function('!filmShooting.getAnimations().length')
