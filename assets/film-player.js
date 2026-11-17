@@ -12,7 +12,8 @@
   const defaults=[
     {src:'assets/finistauto.mp4',title:'FINISTAUTO',category:'Рекламный ролик',poster:'assets/finistauto-poster.webp'},
     {src:'assets/pskov.mp4',title:'ПСКОВ',category:'Культурный проект',poster:'assets/pskov-poster.webp'},
-    {src:'assets/backstage.mp4',title:'BACKSTAGE',category:'Как это было',poster:'assets/backstage-poster.webp'}
+    {src:'assets/backstage.mp4',title:'BACKSTAGE',category:'Как это было',poster:'assets/backstage-poster.webp'},
+    {src:'assets/inner-strength.mp4',title:'ВНУТРЕННЯЯ СИЛА',category:'Мотивационный ролик',poster:'assets/inner-strength-poster.webp'}
   ];
   let works=defaults;
   const format=value=>{const n=Number.isFinite(value)?Math.max(0,Math.floor(value)):0;return `${Math.floor(n/60)}:${String(n%60).padStart(2,'0')}`};
@@ -55,12 +56,14 @@
     if(token!==transition)return;
     animation?.cancel();animation=null;
   }
-  function restoreWork(){
+  function restoreWork(resume=true){
     workRequest++;
     if(!work)return;
     work.pause();work.removeAttribute('src');work.load();work.remove();work=null;
     main.style.removeProperty('display');bind(main);
-    if(wasPlaying&&active&&!document.hidden)play();
+    if(resume&&wasPlaying&&active&&!document.hidden)play();
+    $('filmShowreel').hidden=true;
+    document.querySelectorAll('[data-film-work]').forEach(b=>b.setAttribute('aria-pressed','false'));
     message.hidden=true;
   }
   function finishCollapse(focus){
@@ -68,7 +71,7 @@
     if(home)home.append(shooting);
     float?.classList.remove('is-player-expanded');
     if(dialog.open)dialog.close();dialog.classList.remove('is-closing');
-    restoreWork();expandedLabel(false);
+    expandedLabel(false);
     if(focus&&returnFocus?.isConnected)returnFocus.focus({preventScroll:true});
     home=float=returnFocus=null;
   }
@@ -83,12 +86,15 @@
   }
   async function openWork(index,button){
     const item=works[index];if(!active||!item?.src||dialog.open)return;
-    wasPlaying=!main.paused;main.pause();main.style.display='none';
+    if(!work)wasPlaying=!main.paused;
+    restoreWork(false);main.pause();main.style.display='none';
     work=document.createElement('video');work.playsInline=true;work.preload='metadata';work.poster=item.poster||'';work.src=item.src;work.setAttribute('aria-label',item.title);
     slot.append(work);bind(work);dialog.setAttribute('aria-label',item.title);message.hidden=true;
     const token=++workRequest;
     work.addEventListener('error',()=>{if(token!==workRequest)return;message.textContent='Не удалось загрузить видео. Попробуйте открыть его ещё раз.';message.hidden=false});
-    expand(button);
+    hideControls();$('filmShowreel').hidden=false;
+    document.querySelectorAll('[data-film-work]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+    button.scrollIntoView({behavior:reduced.matches?'instant':'smooth',block:'nearest',inline:'nearest'});
     try{await work.play()}catch(e){if(token===workRequest)sync()}
   }
   function setWorks(items){
@@ -103,9 +109,12 @@
       button.querySelector('small').textContent=ready?(item.category||'Смотреть'):'Скоро';
     });
   }
-  function setActive(value){active=value;if(!value){collapse(true,false);hideControls()}}
+  function setActive(value){active=value;if(!value){collapse(true,false);restoreWork();hideControls()}}
   function open(video){close();main=video;active=true;bind(video);hideControls();dialog.setAttribute('aria-label','Полноэкранный просмотр видео')}
-  function close(){active=false;collapse(true,false);bind(null);main=null;hideControls()}
+  function close(){active=false;collapse(true,false);restoreWork();bind(null);main=null;hideControls()}
+  $('filmShowreel').addEventListener('click',()=>{restoreWork();hideControls();});
+  const rail=$('filmChapters');
+  rail.addEventListener('wheel',e=>{if(Math.abs(e.deltaX)>Math.abs(e.deltaY))return;const delta=e.deltaY;const can=delta>0?rail.scrollLeft<rail.scrollWidth-rail.clientWidth-1:rail.scrollLeft>1;if(can){e.preventDefault();rail.scrollLeft+=delta;}},{passive:false});
   $('filmReveal').addEventListener('click',reveal);
   $('filmPlay').addEventListener('click',()=>{if(!media)return;media.paused?play():media.pause()});
   $('filmMute').addEventListener('click',()=>{if(media){media.muted=!media.muted;sync()}});
@@ -121,7 +130,7 @@
   document.addEventListener('visibilitychange',()=>{
     if(!work)return;
     if(document.hidden){resumeVisible=!work.paused;work.pause()}
-    else if(resumeVisible&&dialog.open)play();
+    else if(resumeVisible&&active)play();
   });
   window.addEventListener('resize',()=>animation?.finish());
   reduced.addEventListener('change',()=>animation?.finish());

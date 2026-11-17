@@ -14,7 +14,7 @@
     if(prepared.has(scene))return;prepared.add(scene);
     const container=$(sceneIds[scene]);container.classList.add('scroll-story');
     if(scene===0){
-      const first=container.querySelector('.section-float'),chapters=$('filmChapters'),views=['filmEditing','filmAI'].map($),content=document.createElement('div');content.append(first,chapters);
+      const first=container.querySelector('.section-float'),chapters=$('filmChapters'),views=['filmEditing','filmAI'].map($),content=document.createElement('div');content.append(first,chapters.closest('.film-carousel'));
       const visuals=[content,...views.map(view=>{
         const float=document.createElement('div');float.className='section-float';const glass=document.createElement('div');glass.className='section-glass film-frame';const viewport=document.createElement('div');viewport.className='film-viewport';viewport.append(view);glass.append(viewport);float.append(glass);return float;
       })];

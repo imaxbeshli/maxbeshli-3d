@@ -2,11 +2,13 @@
   <div class="film-viewport">
     <div id="filmShooting" class="film-view">
       <div id="sectionVideoSlot"></div>
+      <p id="filmPlayerMessage" class="film-player-message" role="status" hidden></p>
       <button class="film-reveal" id="filmReveal" aria-label="Показать управление видео" aria-controls="filmControls" aria-expanded="false"></button>
       <button class="film-start" id="filmStart" aria-label="Воспроизвести showreel">Смотреть showreel</button>
       <div class="film-controls" id="filmControls" hidden>
         <input id="filmSeek" class="film-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Позиция видео">
         <div class="film-control-row">
+          <button id="filmShowreel" type="button" hidden aria-label="Вернуться к шоурилу">Шоурил</button>
           <button id="filmPlay" type="button" aria-label="Пауза"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
           <output id="filmTime" aria-label="Время видео">0:00 / 0:00</output>
           <button id="filmMute" type="button" aria-label="Включить звук"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4Z M16 9l5 6m0-6-5 6"/></svg></button>
@@ -50,12 +52,13 @@
     </div>
   </div>
 </div></div>
+<div class="film-carousel">
 <div id="filmChapters" class="film-chapters" aria-label="Другие работы">
   <button class="film-work" data-film-work="0" type="button" disabled aria-label="Работа 01 — скоро"><img data-section-image="film-0" alt=""><span class="film-work-caption"><b>Работа 01</b><small>Скоро</small></span></button>
   <button class="film-work" data-film-work="1" type="button" disabled aria-label="Работа 02 — скоро"><img data-section-image="film-1" alt=""><span class="film-work-caption"><b>Работа 02</b><small>Скоро</small></span></button>
   <button class="film-work" data-film-work="2" type="button" disabled aria-label="Работа 03 — скоро"><img data-section-image="film-2" alt=""><span class="film-work-caption"><b>Работа 03</b><small>Скоро</small></span></button>
-</div>
+  <button class="film-work" data-film-work="3" type="button" aria-label="Смотреть: ВНУТРЕННЯЯ СИЛА"><img src="assets/inner-strength-poster.webp" alt=""><span class="film-work-caption"><b>ВНУТРЕННЯЯ СИЛА</b><small>Мотивационный ролик</small></span></button>
+</div></div>
 <dialog id="filmFullscreen" class="film-fullscreen" aria-label="Полноэкранный просмотр видео">
   <div id="filmFullscreenStage" class="film-fullscreen-stage"></div>
-  <p id="filmPlayerMessage" class="film-player-message" role="status" hidden></p>
 </dialog>

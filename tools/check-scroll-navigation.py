@@ -4,7 +4,8 @@ from pathlib import Path
 exec((Path(__file__).with_name('check-film-studio.py')).read_text().split('with tempfile.TemporaryDirectory')[0])
 with tempfile.TemporaryDirectory(prefix='mb-scroll-') as folder,sync_playwright() as p:
     Path(folder,'index.html').write_text(harness)
-    Path(folder,'showreel.mp4').write_bytes(base64.b64decode(encoded))
+    Path(folder,'showreel.mp4').write_bytes(video_bytes)
+    Path(folder,'assets').symlink_to(root/'assets',target_is_directory=True)
     server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Quiet,directory=folder))
     threading.Thread(target=server.serve_forever,daemon=True).start()
     browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])

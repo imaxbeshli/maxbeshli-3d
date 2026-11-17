@@ -86,9 +86,24 @@ with sync_playwright() as p:
   tap('#filmExpand');page.keyboard.press('Escape')
   page.wait_for_function('!filmFullscreen.open')
   assert not page.locator('#filmShooting').evaluate('e=>e.getAnimations().length')
-  # Verify both real works, captions and independent playback on desktop and mobile.
-  for index,title,category_text in [(0,'FINISTAUTO','Рекламный ролик'),(1,'ПСКОВ','Культурный проект'),(2,'BACKSTAGE','Как это было')]:
+  # Browse the rail using genuine wheel and touch input.
+  rail=page.locator('#filmChapters');rail.scroll_into_view_if_needed()
+  bounds=rail.bounding_box();x=bounds['x']+bounds['width']*.75;y=bounds['y']+25
+  if mobile:
+   cdp=context.new_cdp_session(page)
+   cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y}]})
+   for dx in [30,60,90,120,150]:
+    cdp.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x-dx,'y':y}]});page.wait_for_timeout(30)
+   cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
+  else:
+   page.mouse.move(x,y);page.mouse.wheel(0,220)
+  page.wait_for_function('filmChapters.scrollLeft>20')
+  assert page.locator('#ecosystem-modal').evaluate('e=>e.scrollWidth<=e.clientWidth+1')
+  # Verify all real works, captions and independent playback on desktop and mobile.
+  for index,title,category_text in [(0,'FINISTAUTO','Рекламный ролик'),(1,'ПСКОВ','Культурный проект'),(2,'BACKSTAGE','Как это было'),(3,'ВНУТРЕННЯЯ СИЛА','Мотивационный ролик')]:
    selector=f'[data-film-work="{index}"]'
+   page.locator(selector).scroll_into_view_if_needed()
+   page.wait_for_timeout(150)
    assert page.locator(selector+' b').inner_text()==title
    assert page.locator(selector+' small').inner_text()==category_text
    assert page.locator(selector+' b').is_visible()
@@ -101,16 +116,23 @@ with sync_playwright() as p:
    assert client['x']+client['width']<=category['x'],(client,category)
    page.screenshot(path=str(artifacts/f'film-work-{index}-{width}-card.png'))
    tap(selector)
-   page.wait_for_function('MBFilmPlayer.workOpen&&filmFullscreen.open&&filmFullscreen.querySelectorAll("video")[1].readyState>=2')
+   page.wait_for_function('MBFilmPlayer.workOpen&&!filmFullscreen.open&&sectionVideoSlot.querySelectorAll("video")[1].readyState>=2')
    assert page.evaluate('v.paused')
-   expected='/assets/'+['finistauto','pskov','backstage'][index]+'.mp4'
-   assert page.locator('#filmFullscreen video').last.evaluate('(v)=>new URL(v.currentSrc).pathname')==expected
-   page.wait_for_function('!filmFullscreen.querySelectorAll("video")[1].paused&&filmFullscreen.querySelectorAll("video")[1].currentTime>0')
+   expected='/assets/'+['finistauto','pskov','backstage','inner-strength'][index]+'.mp4'
+   assert page.locator('#sectionVideoSlot video').last.evaluate('(v)=>new URL(v.currentSrc).pathname')==expected
+   page.wait_for_function('!sectionVideoSlot.querySelectorAll("video")[1].paused&&sectionVideoSlot.querySelectorAll("video")[1].currentTime>0')
    page.wait_for_function('!filmShooting.getAnimations().length')
+   assert not page.locator('#filmControls').is_visible()
+   tap('#filmReveal');tap('#filmExpand')
+   page.wait_for_function('filmFullscreen.open&&!filmShooting.getAnimations().length')
+   assert page.locator('#filmFullscreen video').last.evaluate('(v)=>new URL(v.currentSrc).pathname')==expected
    tap('#filmExpand');page.wait_for_function('!filmFullscreen.open')
-   assert page.locator('#filmScene video').count()==1
-   assert not page.evaluate('MBFilmPlayer.workOpen')
-   assert not page.evaluate('v.paused')
+   assert page.locator('#sectionVideoSlot video').count()==2
+   assert page.evaluate('MBFilmPlayer.workOpen&&v.paused')
+  assert page.locator('#filmChapters').evaluate('e=>e.scrollLeft>0&&e.scrollWidth>e.clientWidth')
+  tap('#filmShowreel')
+  assert not page.evaluate('MBFilmPlayer.workOpen')
+  page.wait_for_function('!v.paused')
   # Scroll into editing: controls must stay hidden there and reset on return.
   page.evaluate('MBSections.selectTab(1)');page.wait_for_function('MBSections.state.tab===1')
   assert not page.evaluate('v.controls')

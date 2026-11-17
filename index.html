@@ -1123,6 +1123,20 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
 #filmScene .film-work.is-ready .film-work-caption small{text-align:right}
 @media(max-width:600px){#filmScene .film-work.is-ready .film-work-caption{gap:3px}#filmScene .film-work.is-ready .film-work-caption b,#filmScene .film-work.is-ready .film-work-caption small{font-size:8px;line-height:1.3}}
 
+/* Horizontally browsable work rail; captions remain below each image. */
+.film-carousel{position:relative;min-width:0}
+.film-carousel::before,.film-carousel::after{content:"";position:absolute;top:16px;bottom:24px;width:22px;z-index:2;pointer-events:none}
+.film-carousel::before{left:0;background:linear-gradient(90deg,#06090cb3,transparent)}
+.film-carousel::after{right:0;background:linear-gradient(270deg,#06090cb3,transparent)}
+#filmScene #filmChapters{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#ffffff55 transparent;padding:8px 12px 12px;gap:14px}
+#filmScene #filmChapters .film-work{flex:0 0 calc((100% - 28px)/3);scroll-snap-align:start;animation:none!important;will-change:auto;margin-bottom:36px}
+#filmScene #filmChapters .film-work-caption{gap:8px;line-height:1.3}
+#filmScene #filmChapters .film-work-caption b{white-space:normal;max-width:58%}
+#filmScene #filmChapters .film-work-caption small{max-width:42%}
+#filmShowreel{width:auto;padding:0 8px;font-size:10px;white-space:nowrap}
+#filmShowreel[hidden]{display:none}
+@media(max-width:600px){#filmScene #filmChapters .film-work{flex-basis:68%;aspect-ratio:2.2}#filmScene #filmChapters .film-work-caption b,#filmScene #filmChapters .film-work-caption small{font-size:10px}}
+
 /* Free vertical scrolling inside the selected environment. */
 #ecosystem-modal.is-scroll-story{display:block;overflow-y:auto;overflow-x:hidden;padding:24px clamp(20px,3vw,48px) 110px;scroll-padding-top:100px;scrollbar-width:thin;scrollbar-color:#aab5c540 transparent}
 #ecosystem-modal.is-scroll-story .section-header{position:relative;z-index:10;max-width:1600px;min-height:66px;margin:auto;padding:10px 0}
@@ -1301,11 +1315,13 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
   <div class="film-viewport">
     <div id="filmShooting" class="film-view">
       <div id="sectionVideoSlot"></div>
+      <p id="filmPlayerMessage" class="film-player-message" role="status" hidden></p>
       <button class="film-reveal" id="filmReveal" aria-label="Показать управление видео" aria-controls="filmControls" aria-expanded="false"></button>
       <button class="film-start" id="filmStart" aria-label="Воспроизвести showreel">Смотреть showreel</button>
       <div class="film-controls" id="filmControls" hidden>
         <input id="filmSeek" class="film-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Позиция видео">
         <div class="film-control-row">
+          <button id="filmShowreel" type="button" hidden aria-label="Вернуться к шоурилу">Шоурил</button>
           <button id="filmPlay" type="button" aria-label="Пауза"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
           <output id="filmTime" aria-label="Время видео">0:00 / 0:00</output>
           <button id="filmMute" type="button" aria-label="Включить звук"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4Z M16 9l5 6m0-6-5 6"/></svg></button>
@@ -1349,14 +1365,15 @@ body.contact-open #ecosystem-modal *,body.contact-open #mainHeader *,body.contac
     </div>
   </div>
 </div></div>
+<div class="film-carousel">
 <div id="filmChapters" class="film-chapters" aria-label="Другие работы">
   <button class="film-work" data-film-work="0" type="button" disabled aria-label="Работа 01 — скоро"><img data-section-image="film-0" alt=""><span class="film-work-caption"><b>Работа 01</b><small>Скоро</small></span></button>
   <button class="film-work" data-film-work="1" type="button" disabled aria-label="Работа 02 — скоро"><img data-section-image="film-1" alt=""><span class="film-work-caption"><b>Работа 02</b><small>Скоро</small></span></button>
   <button class="film-work" data-film-work="2" type="button" disabled aria-label="Работа 03 — скоро"><img data-section-image="film-2" alt=""><span class="film-work-caption"><b>Работа 03</b><small>Скоро</small></span></button>
-</div>
+  <button class="film-work" data-film-work="3" type="button" aria-label="Смотреть: ВНУТРЕННЯЯ СИЛА"><img src="assets/inner-strength-poster.webp" alt=""><span class="film-work-caption"><b>ВНУТРЕННЯЯ СИЛА</b><small>Мотивационный ролик</small></span></button>
+</div></div>
 <dialog id="filmFullscreen" class="film-fullscreen" aria-label="Полноэкранный просмотр видео">
   <div id="filmFullscreenStage" class="film-fullscreen-stage"></div>
-  <p id="filmPlayerMessage" class="film-player-message" role="status" hidden></p>
 </dialog>
 
       </section>
@@ -1920,7 +1937,8 @@ window.createTelegramGlass=function(root){
   const defaults=[
     {src:'assets/finistauto.mp4',title:'FINISTAUTO',category:'Рекламный ролик',poster:'assets/finistauto-poster.webp'},
     {src:'assets/pskov.mp4',title:'ПСКОВ',category:'Культурный проект',poster:'assets/pskov-poster.webp'},
-    {src:'assets/backstage.mp4',title:'BACKSTAGE',category:'Как это было',poster:'assets/backstage-poster.webp'}
+    {src:'assets/backstage.mp4',title:'BACKSTAGE',category:'Как это было',poster:'assets/backstage-poster.webp'},
+    {src:'assets/inner-strength.mp4',title:'ВНУТРЕННЯЯ СИЛА',category:'Мотивационный ролик',poster:'assets/inner-strength-poster.webp'}
   ];
   let works=defaults;
   const format=value=>{const n=Number.isFinite(value)?Math.max(0,Math.floor(value)):0;return `${Math.floor(n/60)}:${String(n%60).padStart(2,'0')}`};
@@ -1963,12 +1981,14 @@ window.createTelegramGlass=function(root){
     if(token!==transition)return;
     animation?.cancel();animation=null;
   }
-  function restoreWork(){
+  function restoreWork(resume=true){
     workRequest++;
     if(!work)return;
     work.pause();work.removeAttribute('src');work.load();work.remove();work=null;
     main.style.removeProperty('display');bind(main);
-    if(wasPlaying&&active&&!document.hidden)play();
+    if(resume&&wasPlaying&&active&&!document.hidden)play();
+    $('filmShowreel').hidden=true;
+    document.querySelectorAll('[data-film-work]').forEach(b=>b.setAttribute('aria-pressed','false'));
     message.hidden=true;
   }
   function finishCollapse(focus){
@@ -1976,7 +1996,7 @@ window.createTelegramGlass=function(root){
     if(home)home.append(shooting);
     float?.classList.remove('is-player-expanded');
     if(dialog.open)dialog.close();dialog.classList.remove('is-closing');
-    restoreWork();expandedLabel(false);
+    expandedLabel(false);
     if(focus&&returnFocus?.isConnected)returnFocus.focus({preventScroll:true});
     home=float=returnFocus=null;
   }
@@ -1991,12 +2011,15 @@ window.createTelegramGlass=function(root){
   }
   async function openWork(index,button){
     const item=works[index];if(!active||!item?.src||dialog.open)return;
-    wasPlaying=!main.paused;main.pause();main.style.display='none';
+    if(!work)wasPlaying=!main.paused;
+    restoreWork(false);main.pause();main.style.display='none';
     work=document.createElement('video');work.playsInline=true;work.preload='metadata';work.poster=item.poster||'';work.src=item.src;work.setAttribute('aria-label',item.title);
     slot.append(work);bind(work);dialog.setAttribute('aria-label',item.title);message.hidden=true;
     const token=++workRequest;
     work.addEventListener('error',()=>{if(token!==workRequest)return;message.textContent='Не удалось загрузить видео. Попробуйте открыть его ещё раз.';message.hidden=false});
-    expand(button);
+    hideControls();$('filmShowreel').hidden=false;
+    document.querySelectorAll('[data-film-work]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+    button.scrollIntoView({behavior:reduced.matches?'instant':'smooth',block:'nearest',inline:'nearest'});
     try{await work.play()}catch(e){if(token===workRequest)sync()}
   }
   function setWorks(items){
@@ -2011,9 +2034,12 @@ window.createTelegramGlass=function(root){
       button.querySelector('small').textContent=ready?(item.category||'Смотреть'):'Скоро';
     });
   }
-  function setActive(value){active=value;if(!value){collapse(true,false);hideControls()}}
+  function setActive(value){active=value;if(!value){collapse(true,false);restoreWork();hideControls()}}
   function open(video){close();main=video;active=true;bind(video);hideControls();dialog.setAttribute('aria-label','Полноэкранный просмотр видео')}
-  function close(){active=false;collapse(true,false);bind(null);main=null;hideControls()}
+  function close(){active=false;collapse(true,false);restoreWork();bind(null);main=null;hideControls()}
+  $('filmShowreel').addEventListener('click',()=>{restoreWork();hideControls();});
+  const rail=$('filmChapters');
+  rail.addEventListener('wheel',e=>{if(Math.abs(e.deltaX)>Math.abs(e.deltaY))return;const delta=e.deltaY;const can=delta>0?rail.scrollLeft<rail.scrollWidth-rail.clientWidth-1:rail.scrollLeft>1;if(can){e.preventDefault();rail.scrollLeft+=delta;}},{passive:false});
   $('filmReveal').addEventListener('click',reveal);
   $('filmPlay').addEventListener('click',()=>{if(!media)return;media.paused?play():media.pause()});
   $('filmMute').addEventListener('click',()=>{if(media){media.muted=!media.muted;sync()}});
@@ -2029,7 +2055,7 @@ window.createTelegramGlass=function(root){
   document.addEventListener('visibilitychange',()=>{
     if(!work)return;
     if(document.hidden){resumeVisible=!work.paused;work.pause()}
-    else if(resumeVisible&&dialog.open)play();
+    else if(resumeVisible&&active)play();
   });
   window.addEventListener('resize',()=>animation?.finish());
   reduced.addEventListener('change',()=>animation?.finish());
@@ -2117,7 +2143,7 @@ window.createTelegramGlass=function(root){
     if(prepared.has(scene))return;prepared.add(scene);
     const container=$(sceneIds[scene]);container.classList.add('scroll-story');
     if(scene===0){
-      const first=container.querySelector('.section-float'),chapters=$('filmChapters'),views=['filmEditing','filmAI'].map($),content=document.createElement('div');content.append(first,chapters);
+      const first=container.querySelector('.section-float'),chapters=$('filmChapters'),views=['filmEditing','filmAI'].map($),content=document.createElement('div');content.append(first,chapters.closest('.film-carousel'));
       const visuals=[content,...views.map(view=>{
         const float=document.createElement('div');float.className='section-float';const glass=document.createElement('div');glass.className='section-glass film-frame';const viewport=document.createElement('div');viewport.className='film-viewport';viewport.append(view);glass.append(viewport);float.append(glass);return float;
       })];
@@ -2305,6 +2331,8 @@ window.createTelegramGlass=function(root){
 
 </script>
 <!-- SECTIONS_END -->
+
+
 
 
 
