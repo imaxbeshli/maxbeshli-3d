@@ -53,6 +53,14 @@ with tempfile.TemporaryDirectory(prefix='mb-glass-scroll-') as folder, sync_play
                         return Math.hypot(a.x-junction.x,a.y-junction.y)<1&&Math.hypot(z.x-(e.x+e.width/2-r.x),z.y-(e.y+e.height/2-r.y))<2;
                     });
                 }""")
+            if tab==0 and not mobile:
+                assert page.evaluate("""()=>{
+                    MBTelegramStudio.update(520,0);
+                    const dots=[...document.querySelectorAll('.connection circle')];
+                    const initial=Number(flowTrunkPulse.style.opacity)>0&&dots.every(d=>Number(d.style.opacity)===0);
+                    MBTelegramStudio.update(2600,0);
+                    return initial&&Number(flowTrunkPulse.style.opacity)===0&&dots.every(d=>Number(d.style.opacity)>0);
+                }""")
             for host in page.locator(selector).all():
                 assert 'glass-ready' in host.get_attribute('class')
                 assert host.locator('.tg-glass-canvas').evaluate('''c=>{

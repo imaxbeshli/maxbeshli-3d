@@ -179,15 +179,26 @@
     const point=el=>{const b=el.getBoundingClientRect();return {x:b.x+b.width/2-r.x,y:b.y+b.height/2-r.y}};
     const mobile=innerWidth<=540,ends=[...root.querySelectorAll('.flow-port')].map(point),start=point(root.querySelector('.phone-bottom-port'));
     const phone=point(root.querySelector('[data-port="1"]'));
-    const junction={x:phone.x+(Math.min(...ends.map(e=>e.x))-phone.x)*.45,y:phone.y};
-    $('flowTrunk').setAttribute('d',mobile?'':`M${phone.x},${phone.y} L${junction.x},${junction.y}`);
+    const gap=Math.min(...ends.map(e=>e.x))-phone.x;
+    const junction={x:phone.x+gap*.36,y:ends[1].y};
+    const spine=phone.x+gap*.72,trunk=$('flowTrunk'),pulse=$('flowTrunkPulse');
+    trunk.setAttribute('d',mobile?'':`M${phone.x},${phone.y} C${phone.x+gap*.14},${phone.y-8} ${junction.x-gap*.12},${junction.y+8} ${junction.x},${junction.y}`);
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,phase=(now%5200)/5200,split=.3;
+    if(!mobile){
+      const pos=trunk.getPointAtLength(trunk.getTotalLength()*Math.min(1,phase/split));
+      pulse.setAttribute('cx',pos.x);pulse.setAttribute('cy',pos.y);
+    }
+    pulse.style.opacity=mobile||reduced||phase>=split?'0':String(Math.min(1,phase/.05)*.85);
     root.querySelectorAll('.connection').forEach((g,i)=>{
-      const s=mobile?start:junction,e=ends[i],bend=Math.max(14,(e.x-s.x)*.48);
-      const d=mobile?`M${s.x},${s.y} C${s.x},${s.y+(e.y-s.y)*.5} ${e.x},${s.y+(e.y-s.y)*.5} ${e.x},${e.y}`:`M${s.x},${s.y} C${s.x+bend},${s.y} ${e.x-bend},${e.y} ${e.x},${e.y}`;
-      const path=g.children[0],route=g.children[1],dot=g.children[2];path.setAttribute('d',d);
-      route.setAttribute('d',d);
-      const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,p=((now/4700+i*.32)%1),pos=route.getPointAtLength(route.getTotalLength()*p);
-      dot.setAttribute('cx',pos.x);dot.setAttribute('cy',pos.y);dot.style.opacity=reduced?'0':String(Math.sin(p*Math.PI)*.85);
+      const s=mobile?start:junction,e=ends[i],mid=(s.y+e.y)/2;
+      const d=mobile?`M${s.x},${s.y} C${s.x},${s.y+(e.y-s.y)*.5} ${e.x},${s.y+(e.y-s.y)*.5} ${e.x},${e.y}`:
+        i===1?`M${s.x},${s.y} C${spine},${s.y-5} ${spine},${e.y+5} ${e.x},${e.y}`:
+        `M${s.x},${s.y} C${spine},${s.y} ${spine},${s.y} ${spine},${mid} C${spine},${e.y} ${spine},${e.y} ${e.x},${e.y}`;
+      const path=g.children[0],route=g.children[1],dot=g.children[2];path.setAttribute('d',d);route.setAttribute('d',d);
+      const p=mobile?((now/4700+i*.32)%1):Math.max(0,(phase-split)/(1-split));
+      const pos=route.getPointAtLength(route.getTotalLength()*p);
+      dot.setAttribute('cx',pos.x);dot.setAttribute('cy',pos.y);
+      dot.style.opacity=reduced||(!mobile&&phase<split)?'0':String(mobile?Math.sin(p*Math.PI)*.85:Math.min(1,(1-p)/.15)*.85);
     });
   }
   let glass=null;
