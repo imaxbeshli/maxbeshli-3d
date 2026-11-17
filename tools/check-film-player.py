@@ -35,7 +35,7 @@ with sync_playwright() as p:
   page.wait_for_timeout(450)
   assert not page.locator('#filmControls').is_visible()
   assert not page.evaluate('v.controls')
-  assert page.locator('#filmChapters button:disabled').count()==2
+  assert page.locator('#filmChapters button:disabled').count()==1
   assert page.locator('[data-film-time]').count()==0
   assert page.locator('#filmChapters svg').count()==0
   page.mouse.move(250,250);assert not page.locator('#filmControls').is_visible()
@@ -86,25 +86,30 @@ with sync_playwright() as p:
   tap('#filmExpand');page.keyboard.press('Escape')
   page.wait_for_function('!filmFullscreen.open')
   assert not page.locator('#filmShooting').evaluate('e=>e.getAnimations().length')
-  # Exercise the published FINISTAUTO asset and playback isolation.
-  assert page.locator('[data-film-work="0"] b').inner_text()=='FINISTAUTO'
-  assert page.locator('[data-film-work="0"] small').inner_text()=='Рекламный ролик'
-  assert page.locator('[data-film-work="0"] b').is_visible()
-  caption=page.locator('[data-film-work="0"] .film-work-caption').bounding_box()
-  picture=page.locator('[data-film-work="0"] img').bounding_box()
-  assert caption['y']>=picture['y']+picture['height']-2
-  client=page.locator('[data-film-work="0"] b').bounding_box()
-  category=page.locator('[data-film-work="0"] small').bounding_box()
-  assert client['x']+client['width']<=category['x'],(client,category)
-  page.screenshot(path=str(artifacts/f'finistauto-{width}-card.png'))
-  tap('[data-film-work="0"]')
-  page.wait_for_function('MBFilmPlayer.workOpen&&filmFullscreen.open&&filmFullscreen.querySelectorAll("video")[1].readyState>=2')
-  assert page.evaluate('v.paused')
-  page.wait_for_function('!filmShooting.getAnimations().length')
-  tap('#filmExpand');page.wait_for_function('!filmFullscreen.open')
-  assert page.locator('#filmScene video').count()==1
-  assert not page.evaluate('MBFilmPlayer.workOpen')
-  assert not page.evaluate('v.paused')
+  # Verify both real works, captions and independent playback on desktop and mobile.
+  for index,title,category_text in [(0,'FINISTAUTO','Рекламный ролик'),(1,'Псков','Культурный проект')]:
+   selector=f'[data-film-work="{index}"]'
+   assert page.locator(selector+' b').inner_text()==title
+   assert page.locator(selector+' small').inner_text()==category_text
+   assert page.locator(selector+' b').is_visible()
+   caption=page.locator(selector+' .film-work-caption').bounding_box()
+   picture=page.locator(selector+' img').bounding_box()
+   assert caption['y']>=picture['y']+picture['height']-2
+   client=page.locator(selector+' b').bounding_box()
+   category=page.locator(selector+' small').bounding_box()
+   assert client['x']+client['width']<=category['x'],(client,category)
+   page.screenshot(path=str(artifacts/f'film-work-{index}-{width}-card.png'))
+   tap(selector)
+   page.wait_for_function('MBFilmPlayer.workOpen&&filmFullscreen.open&&filmFullscreen.querySelectorAll("video")[1].readyState>=2')
+   assert page.evaluate('v.paused')
+   expected='/assets/'+('finistauto' if index==0 else 'pskov')+'.mp4'
+   assert page.locator('#filmFullscreen video').last.evaluate('(v)=>new URL(v.currentSrc).pathname')==expected
+   page.wait_for_function('!filmFullscreen.querySelectorAll("video")[1].paused&&filmFullscreen.querySelectorAll("video")[1].currentTime>0')
+   page.wait_for_function('!filmShooting.getAnimations().length')
+   tap('#filmExpand');page.wait_for_function('!filmFullscreen.open')
+   assert page.locator('#filmScene video').count()==1
+   assert not page.evaluate('MBFilmPlayer.workOpen')
+   assert not page.evaluate('v.paused')
   # Scroll into editing: controls must stay hidden there and reset on return.
   page.evaluate('MBSections.selectTab(1)');page.wait_for_function('MBSections.state.tab===1')
   assert not page.evaluate('v.controls')
