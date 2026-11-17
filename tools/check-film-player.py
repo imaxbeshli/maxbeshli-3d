@@ -35,7 +35,7 @@ with sync_playwright() as p:
   page.wait_for_timeout(450)
   assert not page.locator('#filmControls').is_visible()
   assert not page.evaluate('v.controls')
-  assert page.locator('#filmChapters button:disabled').count()==3
+  assert page.locator('#filmChapters button:disabled').count()==2
   assert page.locator('[data-film-time]').count()==0
   assert page.locator('#filmChapters svg').count()==0
   page.mouse.move(250,250);assert not page.locator('#filmControls').is_visible()
@@ -86,8 +86,17 @@ with sync_playwright() as p:
   tap('#filmExpand');page.keyboard.press('Escape')
   page.wait_for_function('!filmFullscreen.open')
   assert not page.locator('#filmShooting').evaluate('e=>e.getAnimations().length')
-  # Configure one future work with a real source and verify playback isolation.
-  page.evaluate('(src)=>MBFilmPlayer.setWorks([{src,title:"Тестовая работа"}])','/'+source)
+  # Exercise the published FINISTAUTO asset and playback isolation.
+  assert page.locator('[data-film-work="0"] b').inner_text()=='FINISTAUTO'
+  assert page.locator('[data-film-work="0"] small').inner_text()=='Рекламный ролик'
+  assert page.locator('[data-film-work="0"] b').is_visible()
+  caption=page.locator('[data-film-work="0"] .film-work-caption').bounding_box()
+  picture=page.locator('[data-film-work="0"] img').bounding_box()
+  assert caption['y']>=picture['y']+picture['height']-2
+  client=page.locator('[data-film-work="0"] b').bounding_box()
+  category=page.locator('[data-film-work="0"] small').bounding_box()
+  assert client['x']+client['width']<=category['x'],(client,category)
+  page.screenshot(path=str(artifacts/f'finistauto-{width}-card.png'))
   tap('[data-film-work="0"]')
   page.wait_for_function('MBFilmPlayer.workOpen&&filmFullscreen.open&&filmFullscreen.querySelectorAll("video")[1].readyState>=2')
   assert page.evaluate('v.paused')

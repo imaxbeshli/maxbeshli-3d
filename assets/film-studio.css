@@ -177,3 +177,11 @@
 .film-work-caption b{font-size:12px;font-weight:500}.film-work-caption small{font-size:10px;color:#d7dce2}
 @media(max-width:600px){.film-controls{padding:15px max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}.film-control-row{gap:2px}#filmTime{font-size:10px}#filmScene .film-work-caption{padding:8px 7px 7px;justify-content:flex-end}#filmScene .film-work-caption b{display:none}.film-work-caption b{font-size:10px}.film-work-caption small{font-size:9px}}
 @media(prefers-reduced-motion:reduce){#filmFullscreen::backdrop,#filmFullscreen.is-closing::backdrop{animation:none}}
+
+/* Published work captions sit beneath the image, with client and format aligned. */
+#filmScene .film-work.is-ready{overflow:visible;margin-bottom:30px}
+#filmScene .film-work.is-ready img{border-radius:9px;opacity:1}
+#filmScene .film-work.is-ready .film-work-caption{top:100%;bottom:auto;padding:8px 0 0;background:none;align-items:flex-start;justify-content:space-between}
+#filmScene .film-work.is-ready .film-work-caption b{display:block;white-space:nowrap}
+#filmScene .film-work.is-ready .film-work-caption small{text-align:right}
+@media(max-width:600px){#filmScene .film-work.is-ready .film-work-caption{gap:3px}#filmScene .film-work.is-ready .film-work-caption b,#filmScene .film-work.is-ready .film-work-caption small{font-size:8px;line-height:1.3}}

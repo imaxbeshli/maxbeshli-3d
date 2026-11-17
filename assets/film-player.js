@@ -10,7 +10,7 @@
   // Supply each work's src, title and optional poster here when its video is ready.
   // Empty slots remain honest, non-interactive previews and load no media.
   const defaults=[
-    {src:'',title:'Работа 01',poster:window.MB_SECTION_IMAGES['film-0']},
+    {src:'assets/finistauto.mp4',title:'FINISTAUTO',category:'Рекламный ролик',poster:'assets/finistauto-poster.webp'},
     {src:'',title:'Работа 02',poster:window.MB_SECTION_IMAGES['film-1']},
     {src:'',title:'Работа 03',poster:window.MB_SECTION_IMAGES['film-2']}
   ];
@@ -95,11 +95,12 @@
     works=defaults.map((item,i)=>({...item,...items?.[i]}));
     document.querySelectorAll('[data-film-work]').forEach((button,i)=>{
       const item=works[i],ready=!!item.src;button.disabled=!ready;
+      button.classList.toggle('is-ready',ready);
       button.setAttribute('aria-label',ready?`Смотреть: ${item.title}`:`${item.title} — скоро`);
       button.querySelector('img').src=item.poster||defaults[i].poster;
       button.querySelector('img').removeAttribute('data-section-image');
       button.querySelector('b').textContent=item.title;
-      button.querySelector('small').textContent=ready?'Смотреть':'Скоро';
+      button.querySelector('small').textContent=ready?(item.category||'Смотреть'):'Скоро';
     });
   }
   function setActive(value){active=value;if(!value){collapse(true,false);hideControls()}}
