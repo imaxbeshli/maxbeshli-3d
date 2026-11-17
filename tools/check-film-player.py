@@ -6,7 +6,7 @@ root=Path(__file__).resolve().parents[1]
 html=(root/'index.html').read_text()
 block=html[html.index('<!-- SECTIONS_START -->'):html.index('<!-- SECTIONS_END -->')]
 source=re.search(r'<script[^>]*id="showreelVideoData"[^>]*data-src="([^"]+)"',html)[1]
-harness='''<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#0c1420;color:white;font-family:Arial}#ecosystem-modal{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:space-between}#ecosystem-modal:not(.active){visibility:hidden;opacity:0}</style><dialog id="aboutDialog"></dialog>'''+block+'''<script>(async()=>{window.v=document.createElement('video');v.src=URL.createObjectURL(await(await fetch('/FILM_SOURCE')).blob());v.muted=true;v.playsInline=true;v.loop=true;window.__MB={slateObjects:[{video:v,setPlaybackActive(){v.pause()}}]};MBSections.open(0);const e=document.getElementById('ecosystem-modal');e.classList.add('active');e.inert=false;e.style.opacity='1';})();</script>'''.replace('FILM_SOURCE',source)
+harness='''<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#0c1420;color:white;font-family:Arial}#ecosystem-modal{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:space-between}#ecosystem-modal:not(.active){visibility:hidden;opacity:0}</style><dialog id="aboutDialog"></dialog>'''+block+'''<script>(async()=>{window.v=document.createElement('video');v.src=URL.createObjectURL(await(await fetch('/FILM_SOURCE')).blob());v.muted=true;v.playsInline=true;v.loop=true;window.__MB={slateObjects:[{video:v,setPlaybackActive(){v.pause()}}]};const enter=document.createElement('button');enter.id='testEnterFilm';enter.textContent='Открыть видео';document.body.append(enter);enter.onclick=()=>{MBSections.open(0);const e=document.getElementById('ecosystem-modal');e.classList.add('active');e.inert=false;e.style.opacity='1';enter.remove()};})();</script>'''.replace('FILM_SOURCE',source)
 class Quiet(http.server.SimpleHTTPRequestHandler):
  def log_message(self,*a):pass
  def handle(self):
@@ -30,11 +30,13 @@ with sync_playwright() as p:
    if mobile:page.touchscreen.tap(x,y)
    else:page.mouse.click(x,y)
   page.goto(f'http://127.0.0.1:{server.server_port}/__film-player-check')
+  page.locator('#testEnterFilm').click()
   assert not errors,errors
   page.wait_for_function('window.v&&!v.paused&&v.readyState>=2')
   page.wait_for_timeout(450)
   assert not page.locator('#filmControls').is_visible()
   assert not page.evaluate('v.controls')
+  assert not page.evaluate('v.muted')
   assert page.locator('#filmChapters button:disabled').count()==0
   assert page.locator('[data-film-time]').count()==0
   assert page.locator('#filmChapters svg').count()==0
@@ -43,6 +45,7 @@ with sync_playwright() as p:
   tap('#filmReveal');assert page.locator('#filmControls').is_visible()
   tap('#filmPlay');page.wait_for_function('v.paused')
   page.locator('#filmSeek').fill('25');page.wait_for_function('Math.abs(v.currentTime-v.duration*.25)<.5')
+  tap('#filmMute');assert page.evaluate('v.muted')
   tap('#filmMute');assert not page.evaluate('v.muted')
   tap('#filmPlay');page.wait_for_function('!v.paused')
   before=page.evaluate('v.currentTime')
@@ -158,7 +161,7 @@ with sync_playwright() as p:
   page.emulate_media(reduced_motion='reduce')
   tap('#filmReveal');tap('#filmExpand')
   page.wait_for_function('!filmShooting.getAnimations().length')
-  page.evaluate('MBSections.close()');assert not page.locator('#filmFullscreen').evaluate('e=>e.open')
+  page.evaluate('MBSections.close()');assert page.evaluate('v.muted');assert not page.locator('#filmFullscreen').evaluate('e=>e.open')
   assert page.locator('#filmScene video').count()==0
   page.evaluate('MBSections.open(0)');assert not page.locator('#filmControls').is_visible()
   assert not errors,errors

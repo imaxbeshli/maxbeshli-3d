@@ -63,7 +63,7 @@
     $('sectionOptions').replaceChildren(...d.tabs.map((label,i)=>{const b=document.createElement('button');b.type='button';b.role='tab';b.textContent=label;b.addEventListener('click',()=>setTab(i));return b}));
     ['filmScene','webScene','telegramScene'].forEach((id,i)=>$(id).hidden=i!==n);
     if(n===0){
-      video=tiles()[0].video;video.controls=false;video.muted=true;video.playsInline=true;video.setAttribute('aria-label','Showreel MAX BESHLI');$('sectionVideoSlot').append(video);
+      video=tiles()[0].video;video.controls=false;video.muted=false;if(video.volume===0)video.volume=1;video.playsInline=true;video.setAttribute('aria-label','Showreel MAX BESHLI');$('sectionVideoSlot').append(video);
       window.MBFilmPlayer.open(video);
       video.onplay=()=>{$('filmStart').hidden=true};video.onpause=()=>{$('filmStart').hidden=false};
       $('filmStart').hidden=false;video.play().catch(()=>{$('filmStart').hidden=false});
@@ -76,7 +76,7 @@
     window.MBFilmPlayer.close();
     window.MBSectionScroll.close();cancelTabTransition();active=false;cancelAnimationFrame(raf);stopMedia();document.body.classList.remove('section-open');
     window.MBFilmStudio.setView(-1);
-    if(video){video.controls=false;video.onplay=video.onpause=null;video.remove()}
+    if(video){video.muted=true;video.controls=false;video.onplay=video.onpause=null;video.remove()}
   }
   function tick(now){
     if(!active)return;raf=requestAnimationFrame(tick);

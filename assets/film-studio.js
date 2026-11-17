@@ -2,7 +2,7 @@
 (()=>{
   const $=id=>document.getElementById(id), reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const edit=$('filmEditing'),ai=$('filmAI'),canvas=$('aiAtmosphere'),ctx=canvas.getContext('2d');
-  const clocks=[0,0,0],paused=[false,false,false],visited=[false,false,false],captures=new WeakMap();let view=-1,video=null,frame=0,texture=null,dragBounds=[],shootingTime=null,editingStarted=false,editingPosition=0;
+  const clocks=[0,0,0],paused=[false,false,false],visited=[false,false,false],captures=new WeakMap();let view=-1,video=null,frame=0,texture=null,dragBounds=[],shootingTime=null,shootingMuted=false,editingStarted=false,editingPosition=0;
   const clamp=x=>Math.max(0,Math.min(1,x)),smooth=(a,b,t)=>{const x=clamp((t-a)/(b-a));return x*x*(3-2*x)};
   const editStages=['Перенос исходного материала','Добавление звука','Цветокоррекция','Предпросмотр секвенции'];
   const arrivals=[2.1,4.2,6.3,8.4],duration=[0,22,18];
@@ -42,7 +42,9 @@
   function setView(n,v){
     const previous=view;if(v)video=v;
     if(previous===n)return;
+    if(video&&previous===0)shootingMuted=video.muted;
     window.MBFilmPlayer?.setActive(n===0);
+    if(video)video.muted=n===0?(previous<0?false:shootingMuted):true;
     if(previous<0&&n===0){
       visited.fill(false);clocks[1]=clocks[2]=0;editingPosition=0;editingStarted=false;
       paused[1]=paused[2]=reduced.matches;
