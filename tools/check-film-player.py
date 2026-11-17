@@ -29,11 +29,22 @@ with sync_playwright() as p:
    x,y=box['x']+box['width']/2,box['y']+box['height']/2
    if mobile:page.touchscreen.tap(x,y)
    else:page.mouse.click(x,y)
+  page.add_init_script('''const create=AudioContext.prototype.createGain;AudioContext.prototype.createGain=function(){const g=create.call(this);window.testFilmGain=g;return g}''')
   page.goto(f'http://127.0.0.1:{server.server_port}/__film-player-check')
+  page.wait_for_function('window.v&&v.readyState>=1')
+  page.evaluate('v.currentTime=12')
   page.locator('#testEnterFilm').click()
   assert not errors,errors
   page.wait_for_function('window.v&&!v.paused&&v.readyState>=2')
   page.wait_for_timeout(450)
+  assert page.evaluate('v.currentTime>=12'), 'Entry must preserve the playing position'
+  level=page.evaluate('testFilmGain.gain.value')
+  assert 0<level<.6,level
+  page.wait_for_timeout(1100)
+  middle=page.evaluate('testFilmGain.gain.value')
+  assert level<middle<.95,(level,middle)
+  page.wait_for_timeout(1600)
+  assert page.evaluate('testFilmGain.gain.value')>.99
   assert not page.locator('#filmControls').is_visible()
   assert not page.evaluate('v.controls')
   assert not page.evaluate('v.muted')
@@ -164,6 +175,13 @@ with sync_playwright() as p:
   page.evaluate('MBSections.close()');assert page.evaluate('v.muted');assert not page.locator('#filmFullscreen').evaluate('e=>e.open')
   assert page.locator('#filmScene video').count()==0
   page.evaluate('MBSections.open(0)');assert not page.locator('#filmControls').is_visible()
+  page.wait_for_function('!v.paused')
+  page.wait_for_timeout(150)
+  assert page.evaluate('testFilmGain.gain.value')<.4
+  page.evaluate('MBSections.close()')
+  assert page.evaluate('v.muted&&v.paused')
+  page.wait_for_timeout(300)
+  assert page.evaluate('v.muted&&testFilmGain.gain.value===1')
   assert not errors,errors
   print('PASS',width,'no fullscreen cross, steady return geometry, playback, animated open/close, works, scroll, reduced motion',flush=True)
   context.close()
